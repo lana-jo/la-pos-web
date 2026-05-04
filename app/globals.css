@@ -1,0 +1,887 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 60%;
+    --radius: 0.5rem;
+    --chart-1: 217 91% 60%;
+    --chart-2: 262 83% 58%;
+    --chart-3: 142 76% 44%;
+    --chart-4: 45 93% 47%;
+    --chart-5: 0 84% 60%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 70%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 262 83% 68%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 217 91% 70%;
+    --chart-1: 217 91% 70%;
+    --chart-2: 262 83% 68%;
+    --chart-3: 142 76% 54%;
+    --chart-4: 45 93% 57%;
+    --chart-5: 0 62.8% 30%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  }
+}
+
+/* Custom theme enhancements for POS System */
+@layer utilities {
+  .text-primary-brand {
+    color: hsl(217 91% 60%);
+  }
+  
+  .bg-primary-brand {
+    background-color: hsl(217 91% 60%);
+  }
+  
+  .border-primary-brand {
+    border-color: hsl(217 91% 60%);
+  }
+  
+  .hover-bg-primary-brand:hover {
+    background-color: hsl(217 91% 55%);
+  }
+
+  /* Cashier-specific POS theme utilities */
+  .pos-terminal {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 95%) 50%, hsl(var(--muted)) 100%);
+    min-height: 100vh;
+  }
+
+  .pos-scanner-active {
+    background: linear-gradient(135deg, hsl(217 91% 96%) 0%, hsl(217 91% 92%) 100%);
+    border-color: hsl(217 91% 60%);
+    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.15);
+  }
+
+  .pos-scanner-ready {
+    background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(217 91% 98%) 100%);
+    border: 1px solid hsl(var(--primary));
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+  }
+
+  .pos-payment-success {
+    background: linear-gradient(135deg, hsl(142 76% 96%) 0%, hsl(142 76% 44%) 100%);
+    color: hsl(142 76% 44%);
+    box-shadow: 0 8px 16px rgba(34, 197, 94, 0.15);
+  }
+
+  .pos-payment-pending {
+    background: linear-gradient(135deg, hsl(45 93% 96%) 0%, hsl(45 93% 92%) 100%);
+    color: hsl(45 93% 47%);
+    box-shadow: 0 8px 16px rgba(251, 191, 36, 0.15);
+  }
+
+  .pos-cart-item {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    transition: all 0.2s ease;
+  }
+
+  .pos-cart-item:hover {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  }
+
+  .pos-action-button {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(217 91% 55%) 100%);
+    color: hsl(var(--primary-foreground));
+    border: 1px solid hsl(var(--primary));
+    transition: all 0.3s ease;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pos-action-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .pos-action-button:hover::before {
+    left: 100%;
+  }
+
+  .pos-action-button:hover {
+    background: linear-gradient(135deg, hsl(217 91% 55%) 0%, hsl(217 91% 50%) 100%);
+    border-color: hsl(217 91% 50%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  }
+
+  .pos-cash-button {
+    background: linear-gradient(135deg, hsl(142 76% 44%) 0%, hsl(142 76% 54%) 100%);
+    color: white;
+    border: 1px solid hsl(142 76% 44%);
+    transition: all 0.3s ease;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pos-cash-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .pos-cash-button:hover::before {
+    left: 100%;
+  }
+
+  .pos-cash-button:hover {
+    background: linear-gradient(135deg, hsl(142 76% 54%) 0%, hsl(142 76% 64%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+  }
+
+  .pos-qris-button {
+    background: linear-gradient(135deg, hsl(262 83% 58%) 0%, hsl(262 83% 68%) 100%);
+    color: white;
+    border: 1px solid hsl(262 83% 58%);
+    transition: all 0.3s ease;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pos-qris-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .pos-qris-button:hover::before {
+    left: 100%;
+  }
+
+  .pos-qris-button:hover {
+    background: linear-gradient(135deg, hsl(262 83% 68%) 0%, hsl(262 83% 78%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(147, 51, 234, 0.3);
+  }
+  
+  /* Better focus states for accessibility */
+  .focus-ring:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  
+  /* Smooth transitions */
+  .transition-theme {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  /* Theme transition only for sidebar components */
+  .sidebar-theme-transition,
+  .sidebar-theme-transition * {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
+  }
+  
+  /* Prevent transitions on specific elements */
+  .no-transition * {
+    transition: none !important;
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    transition: all 0.2s ease;
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Better button states */
+  .btn-primary-enhanced {
+    background-color: hsl(217 91% 60%);
+    border: 1px solid hsl(217 91% 60%);
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary-enhanced:hover {
+    background-color: hsl(217 91% 55%);
+    border-color: hsl(217 91% 55%);
+    transform: translateY(-1px);
+  }
+  
+  /* Status colors */
+  .status-active {
+    color: hsl(142 76% 36%);
+    background-color: hsl(142 76% 96%);
+  }
+  
+  .status-inactive {
+    color: hsl(0 84% 60%);
+    background-color: hsl(0 84% 96%);
+  }
+  
+  .status-pending {
+    color: hsl(45 93% 47%);
+    background-color: hsl(45 93% 96%);
+  }
+  
+  /* Enhanced Modal Theme Classes for Cashier Interface */
+  .pos-modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+  
+  .pos-modal-content {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 98%) 50%, hsl(var(--card)) 100%);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px hsl(var(--primary) / 0.1);
+    backdrop-filter: blur(8px);
+  }
+  
+  .pos-modal-header {
+    background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(217 91% 96%) 100%);
+    border-bottom: 2px solid hsl(var(--primary));
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  }
+  
+  .pos-modal-title {
+    color: hsl(var(--primary));
+    font-weight: 700;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
+  }
+  
+  .pos-modal-body {
+    padding: 1.5rem;
+    background: hsl(var(--background));
+  }
+  
+  .pos-modal-footer {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 96%) 100%);
+    border-top: 1px solid hsl(var(--border));
+    padding: 1.5rem;
+    box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.05);
+  }
+  
+  .pos-product-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  
+  .pos-product-card {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 91% 98%) 100%);
+    border: 2px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .pos-product-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, hsl(var(--primary) / 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .pos-product-card:hover::before {
+    opacity: 1;
+  }
+  
+  .pos-product-card:hover {
+    border-color: hsl(var(--primary));
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.2);
+  }
+  
+  .pos-product-image {
+    background: hsl(var(--muted));
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+  }
+  
+  .pos-product-info {
+    padding: 0.75rem;
+  }
+  
+  .pos-product-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: hsl(var(--foreground));
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+  }
+  
+  .pos-product-price {
+    color: hsl(var(--primary));
+    font-weight: 700;
+    font-size: 0.875rem;
+  }
+  
+  .pos-product-stock {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+  }
+  
+  .pos-form-input {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 98%) 100%);
+    border: 2px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+
+  .pos-form-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
+    background: hsl(var(--background));
+  }
+  
+  .pos-form-label {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  .pos-button-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(217 91% 50%) 100%);
+    color: hsl(var(--primary-foreground));
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pos-button-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .pos-button-primary:hover::before {
+    left: 100%;
+  }
+
+  .pos-button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  }
+  
+  .pos-button-secondary {
+    background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(217 91% 96%) 100%);
+    color: hsl(var(--secondary-foreground));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .pos-button-secondary:hover {
+    background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(262 83% 96%) 100%);
+    color: hsl(var(--accent-foreground));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
+  }
+  
+  .pos-transaction-card {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 91% 98%) 100%);
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pos-transaction-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .pos-transaction-card:hover::before {
+    opacity: 1;
+  }
+
+  .pos-transaction-card:hover {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .pos-report-card {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 91% 96%) 100%);
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pos-report-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent 0%, hsl(var(--primary) / 0.03) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .pos-report-card:hover::before {
+    opacity: 1;
+  }
+
+  .pos-report-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 24px rgba(59, 130, 246, 0.15);
+  }
+  
+  .pos-report-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: hsl(var(--primary));
+    margin: 0.5rem 0;
+  }
+  
+  .pos-report-label {
+    color: hsl(var(--muted-foreground));
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+  
+  .pos-search-input {
+    background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 98%) 100%);
+    border: 2px solid hsl(var(--border));
+    border-radius: 2rem;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+  }
+
+  .pos-search-input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 4px 12px rgba(59, 130, 246, 0.15);
+    background: hsl(var(--background));
+    outline: none;
+  }
+  
+  .pos-loading-spinner {
+    border: 3px solid hsl(217 91% 96%);
+    border-top: 3px solid hsl(var(--primary));
+    border-radius: 50%;
+    width: 2rem;
+    height: 2rem;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Additional Color Schemes and Utility Classes */
+  
+  /* Success/Warning/Info states */
+  .pos-success {
+    background: linear-gradient(135deg, hsl(142 76% 96%) 0%, hsl(142 76% 44%) 100%);
+    color: hsl(142 76% 44%);
+    border-color: hsl(142 76% 44%);
+  }
+  
+  .pos-warning {
+    background: linear-gradient(135deg, hsl(45 93% 96%) 0%, hsl(45 93% 47%) 100%);
+    color: hsl(45 93% 47%);
+    border-color: hsl(45 93% 47%);
+  }
+  
+  .pos-info {
+    background: linear-gradient(135deg, hsl(174 88% 96%) 0%, hsl(174 88% 45%) 100%);
+    color: hsl(174 88% 45%);
+    border-color: hsl(174 88% 45%);
+  }
+  
+  .pos-danger {
+    background: linear-gradient(135deg, hsl(0 84% 96%) 0%, hsl(0 84% 60%) 100%);
+    color: hsl(0 84% 60%);
+    border-color: hsl(0 84% 60%);
+  }
+
+  /* Role-based color schemes */
+  .pos-admin-theme {
+    --role-primary: hsl(262 83% 58%);
+    --role-secondary: hsl(262 83% 96%);
+  }
+  
+  .pos-cashier-theme {
+    --role-primary: hsl(174 88% 45%);
+    --role-secondary: hsl(174 88% 96%);
+  }
+  
+  .pos-customer-theme {
+    --role-primary: hsl(142 76% 50%);
+    --role-secondary: hsl(142 76% 96%);
+  }
+
+  /* Enhanced button variants */
+  .pos-button-success {
+    background: linear-gradient(135deg, hsl(142 76% 44%) 0%, hsl(142 76% 54%) 100%);
+    color: white;
+    border: 1px solid hsl(142 76% 44%);
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+  
+  .pos-button-success:hover {
+    background: linear-gradient(135deg, hsl(142 76% 54%) 0%, hsl(142 76% 64%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+  }
+  
+  .pos-button-warning {
+    background: linear-gradient(135deg, hsl(45 93% 47%) 0%, hsl(45 93% 57%) 100%);
+    color: white;
+    border: 1px solid hsl(45 93% 47%);
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+  
+  .pos-button-warning:hover {
+    background: linear-gradient(135deg, hsl(45 93% 57%) 0%, hsl(45 93% 67%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+  }
+  
+  .pos-button-danger {
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(0 84% 70%) 100%);
+    color: white;
+    border: 1px solid hsl(0 84% 60%);
+    transition: all 0.3s ease;
+    font-weight: 600;
+  }
+  
+  .pos-button-danger:hover {
+    background: linear-gradient(135deg, hsl(0 84% 70%) 0%, hsl(0 84% 80%) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+  }
+
+  /* Enhanced card variants */
+  .pos-card-success {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(142 76% 98%) 100%);
+    border: 1px solid hsl(142 76% 44%);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1);
+  }
+  
+  .pos-card-warning {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(45 93% 98%) 100%);
+    border: 1px solid hsl(45 93% 47%);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.1);
+  }
+  
+  .pos-card-danger {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(0 84% 98%) 100%);
+    border: 1px solid hsl(0 84% 60%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+  }
+
+  /* Animation utilities */
+  .pos-pulse {
+    animation: posPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes posPulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .pos-bounce {
+    animation: posBounce 1s infinite;
+  }
+  
+  @keyframes posBounce {
+    0%, 100% {
+      transform: translateY(-25%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+
+  /* Responsive utilities */
+  .pos-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  @media (min-width: 640px) {
+    .pos-container {
+      padding: 0 2rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .pos-container {
+      padding: 0 4rem;
+    }
+  }
+
+  /* Accessibility enhancements */
+  .pos-focus-visible:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+  
+  .pos-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Print optimizations */
+  .pos-print-break {
+    page-break-after: always;
+  }
+  
+  .pos-print-no-break {
+    page-break-inside: avoid;
+  }
+}
+
+/* Dark mode full background */
+.dark body {
+  background: linear-gradient(135deg, hsl(217 91% 10%) 0%, hsl(217 91% 5%) 100%);
+}
+
+.dark .pos-terminal {
+  background: linear-gradient(135deg, hsl(217 91% 8%) 0%, hsl(217 91% 12%) 50%, hsl(217 91% 6%) 100%);
+}
+
+/* Dark mode card backgrounds */
+
+.dark .pos-scanner-active {
+  background: linear-gradient(135deg, hsl(217 91% 20%) 0%, hsl(217 91% 10%) 100%);
+}
+
+.dark .pos-scanner-ready {
+  background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(217 91% 12%) 100%);
+}
+
+.dark .pos-cart-item {
+  background: hsl(var(--card));
+}
+
+.dark .pos-cart-item:hover {
+  background: hsl(217 91% 8%);
+}
+
+.dark .pos-modal-content {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 8%) 50%, hsl(var(--card)) 100%);
+}
+
+.dark .pos-modal-header {
+  background: linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(217 91% 12%) 100%);
+}
+
+.dark .pos-modal-footer {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 8%) 100%);
+}
+
+.dark .pos-product-card {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 91% 8%) 100%);
+}
+
+.dark .pos-product-card:hover {
+  background: linear-gradient(135deg, hsl(217 91% 8%) 0%, hsl(217 91% 6%) 100%);
+}
+
+.dark .pos-form-input {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 8%) 100%);
+}
+
+.dark .pos-form-input:focus {
+  background: hsl(var(--background));
+}
+
+.dark .pos-button-primary {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(217 91% 65%) 100%);
+}
+
+.dark .pos-button-secondary {
+  background: linear-gradient(135deg, hsl(var(--secondary)) 0%, hsl(217 91% 12%) 100%);
+}
+
+.dark .pos-button-secondary:hover {
+  background: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(262 83% 15%) 100%);
+}
+
+.dark .pos-transaction-card {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 91% 8%) 100%);
+}
+
+.dark .pos-transaction-card:hover {
+  background: linear-gradient(135deg, hsl(217 91% 8%) 0%, hsl(217 91% 6%) 100%);
+}
+
+.dark .pos-report-card {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(217 91% 8%) 100%);
+}
+
+.dark .pos-report-card:hover {
+  background: linear-gradient(135deg, hsl(217 91% 8%) 0%, hsl(217 91% 6%) 100%);
+}
+
+.dark .pos-search-input {
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(217 91% 8%) 100%);
+}
+
+.dark .pos-search-input:focus {
+  background: hsl(var(--background));
+}
+
+.dark .pos-card-success {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(142 76% 8%) 100%);
+}
+
+.dark .pos-card-warning {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(45 93% 8%) 100%);
+}
+
+.dark .pos-card-danger {
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(0 84% 8%) 100%);
+}
+
+
+/* Print styles for receipts */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  body {
+     -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    background: white !important;
+    color: black !important;
+  }
+  
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+}
