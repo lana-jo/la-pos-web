@@ -1,6 +1,10 @@
 // types/index.ts
 
 export type { Database } from './database'
+export type { Cashier, CashierFormData, CashierStats, CashierFilters, CashierModalType } from './cashier'
+export { EMPTY_CASHIER_FORM, ITEMS_PER_PAGE } from './cashier'
+export type { ShiftFormData, ShiftCloseData, ShiftStats, ShiftModalType, ShiftFilters } from './shift'
+export { EMPTY_SHIFT_FORM, EMPTY_CLOSE_FORM, calculateShiftDuration, formatCurrency, formatDuration } from './shift'
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
@@ -145,6 +149,8 @@ export interface Shift {
     opened_at:       string
     closed_at:       string | null
     cashier?:        Profile         // joined
+    transaction_count?: number        // computed
+    total_sales?: number              // computed
 }
 
 export interface Customer {
