@@ -56,6 +56,18 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
   })
 
   try {
+    // Check for duplicate product name
+    const { data: existingProduct, error: checkError } = await supabaseUntyped
+      .from('products')
+      .select('id')
+      .eq('name', payload.product.name.trim())
+      .single()
+
+    if (existingProduct) {
+      console.error('❌ [ERROR] Product name already exists', { name: payload.product.name })
+      return { success: false, error: 'Nama produk sudah ada' }
+    }
+
     // Insert product first
     console.log('📝 [DEBUG] Creating product', payload.product)
     
@@ -162,6 +174,19 @@ export async function updateProductWithVariants(
   })
 
   try {
+    // Check for duplicate product name (excluding current product)
+    const { data: existingProduct, error: checkError } = await supabaseUntyped
+      .from('products')
+      .select('id')
+      .eq('name', payload.product.name.trim())
+      .neq('id', productId)
+      .single()
+
+    if (existingProduct) {
+      console.error('❌ [ERROR] Product name already exists', { name: payload.product.name })
+      return { success: false, error: 'Nama produk sudah ada' }
+    }
+
     let finalImageUrl: string | null = payload.product.image_url
 
     // Handle image upload if new image provided
@@ -439,6 +464,22 @@ export async function createVariant(payload: VariantPayload) {
   console.log('➕ [DEBUG] createVariant called', { payload })
 
   try {
+    // Check for duplicate variant name within the same product
+    const { data: existingVariant, error: checkError } = await supabaseUntyped
+      .from('product_variants')
+      .select('id')
+      .eq('product_id', payload.product_id)
+      .eq('variant_name', payload.variant_name.trim())
+      .single()
+
+    if (existingVariant) {
+      console.error('❌ [ERROR] Variant name already exists for this product', { 
+        product_id: payload.product_id, 
+        variant_name: payload.variant_name 
+      })
+      return { success: false, error: 'Nama varian sudah ada untuk produk ini' }
+    }
+
     const { error } = await supabaseUntyped
       .from('product_variants')
       .insert(payload as any)
@@ -461,6 +502,23 @@ export async function updateVariant(variantId: string, payload: VariantPayload) 
   console.log('🔄 [DEBUG] updateVariant called', { variantId, payload })
 
   try {
+    // Check for duplicate variant name within the same product (excluding current variant)
+    const { data: existingVariant, error: checkError } = await supabaseUntyped
+      .from('product_variants')
+      .select('id')
+      .eq('product_id', payload.product_id)
+      .eq('variant_name', payload.variant_name.trim())
+      .neq('id', variantId)
+      .single()
+
+    if (existingVariant) {
+      console.error('❌ [ERROR] Variant name already exists for this product', { 
+        product_id: payload.product_id, 
+        variant_name: payload.variant_name 
+      })
+      return { success: false, error: 'Nama varian sudah ada untuk produk ini' }
+    }
+
     const { error } = await supabaseUntyped
       .from('product_variants')
       .update({

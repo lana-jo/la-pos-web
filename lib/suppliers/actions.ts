@@ -44,6 +44,18 @@ export async function createSupplier(payload: SupplierPayload) {
   console.log('➕ [DEBUG] createSupplier called', { payload })
 
   try {
+    // Check for duplicate name
+    const { data: existingSupplier, error: checkError } = await supabaseUntyped
+      .from('suppliers')
+      .select('id')
+      .eq('name', payload.name.trim())
+      .single()
+
+    if (existingSupplier) {
+      console.error('❌ [ERROR] Supplier name already exists', { name: payload.name })
+      return { success: false, error: 'Nama pemasok sudah ada' }
+    }
+
     const { data, error } = await supabaseUntyped
       .from('suppliers')
       .insert(payload)
@@ -68,6 +80,19 @@ export async function updateSupplier(supplierId: string, payload: SupplierPayloa
   console.log('🔄 [DEBUG] updateSupplier called', { supplierId, payload })
 
   try {
+    // Check for duplicate name (excluding current supplier)
+    const { data: existingSupplier, error: checkError } = await supabaseUntyped
+      .from('suppliers')
+      .select('id')
+      .eq('name', payload.name.trim())
+      .neq('id', supplierId)
+      .single()
+
+    if (existingSupplier) {
+      console.error('❌ [ERROR] Supplier name already exists', { name: payload.name })
+      return { success: false, error: 'Nama pemasok sudah ada' }
+    }
+
     const { data, error } = await supabaseUntyped
       .from('suppliers')
       .update({

@@ -145,6 +145,18 @@ export default function CategoriesPage() {
 
     setIsSubmitting(true)
     try {
+      // Check for duplicate category name
+      const { data: existingCategory, error: checkError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', formData.name.trim())
+        .single()
+
+      if (existingCategory) {
+        toast.error('Nama kategori sudah ada')
+        return
+      }
+
       // Get current session and user info for debugging
       const { data: { session } } = await supabase.auth.getSession()
       console.log('🔍 Current session:', session ? {
@@ -212,6 +224,19 @@ export default function CategoriesPage() {
 
     setIsSubmitting(true)
     try {
+      // Check for duplicate category name (excluding current category)
+      const { data: existingCategory, error: checkError } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('name', formData.name.trim())
+        .neq('id', selectedCategory.id)
+        .single()
+
+      if (existingCategory) {
+        toast.error('Nama kategori sudah ada')
+        return
+      }
+
       const categoryData = {
         name: formData.name.trim(),
         slug: formData.slug.trim() || formData.name.trim().toLowerCase().replace(/\s+/g, '-'),

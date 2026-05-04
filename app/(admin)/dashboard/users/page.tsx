@@ -34,6 +34,8 @@ type FormData = {
   password: string;
   password_confirm?: string;
   role: Role;
+  phone: string;
+  is_active: boolean;
 };
 
 const EMPTY_FORM: FormData = {
@@ -41,6 +43,8 @@ const EMPTY_FORM: FormData = {
   email: "",
   password: "",
   role: "cashier",
+  phone: "",
+  is_active: true,
 };
 
 // Cast query builder to avoid `never` parameter errors without generated schema
@@ -66,7 +70,7 @@ function UserFormFields({
   isEdit = false,
 }: {
   formData: FormData;
-  setFormData: (d: FormData) => void;
+  setFormData: React.Dispatch<React.SetStateAction<FormData>>;
   isSubmitting: boolean;
   idPrefix?: string;
   showRequiredInfo?: boolean;
@@ -302,6 +306,52 @@ function UserFormFields({
           className="w-full"
         />
       </div>
+
+      <div>
+        <Label htmlFor={field("phone")}>
+          Nomor Telepon
+        </Label>
+        <Input
+          id={field("phone")}
+          type="tel"
+          value={formData.phone}
+          onChange={(e) =>
+            setFormData({ ...formData, phone: e.target.value })
+          }
+          placeholder="08xx-xxxx-xxxx"
+          disabled={isSubmitting}
+          className="border-primary/50 focus:border-primary"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Opsional. Nomor telepon untuk kontak.
+        </p>
+      </div>
+
+      {isEdit && (
+        <div className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-lg">
+          <input
+            type="checkbox"
+            id={field("is_active")}
+            checked={formData.is_active}
+            onChange={(e) =>
+              setFormData({ ...formData, is_active: e.target.checked })
+            }
+            disabled={isSubmitting}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+          />
+          <div className="flex-1">
+            <Label htmlFor={field("is_active")} className="cursor-pointer">
+              User Aktif
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Nonaktifkan untuk menonaktifkan akses user tanpa menghapus data
+            </p>
+          </div>
+          <Badge variant={formData.is_active ? "default" : "secondary"}>
+            {formData.is_active ? "Aktif" : "Nonaktif"}
+          </Badge>
+        </div>
+      )}
     </div>
   );
 }
@@ -460,6 +510,7 @@ export default function UsersPage() {
         email: formData.email.trim(),
         password: formData.password,
         role: formData.role,
+        phone: formData.phone?.trim() || undefined,
       });
 
       if (!result.success) {
@@ -528,6 +579,8 @@ export default function UsersPage() {
         email: formData.email?.trim() || undefined,
         password: formData.password?.trim() || undefined,
         role: formData.role,
+        phone: formData.phone?.trim() || undefined,
+        is_active: formData.is_active,
       });
 
       if (!result.success) {
@@ -574,8 +627,15 @@ export default function UsersPage() {
 
   const openEdit = async (user: Profile) => {
   setSelected(user)
-  setFormData({ full_name: user.full_name ?? '', email: '', password: '', role: user.role })
-  setModal('edit') // open modal immediately
+  setFormData({
+    full_name: user.full_name ?? '',
+    email: '',
+    password: '',
+    role: user.role,
+    phone: user.phone ?? '',
+    is_active: user.is_active
+  })
+  setModal('edit')
 
   try {
     const { getUserEmail } = await import('@/lib/auth/user-actions')
@@ -650,10 +710,16 @@ export default function UsersPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Name
+                    User
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Telepon
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Joined
@@ -665,22 +731,45 @@ export default function UsersPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users.map((user) => (
-                  <tr key={user.id}>
+                  <tr key={user.id} className={!user.is_active ? "opacity-60" : ""}>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {user.full_name ?? "—"}
-                        </span>
-                        {isSelf(user) && (
-                          <Badge variant="outline" className="text-xs">
-                            You
-                          </Badge>
+                      <div className="flex items-center gap-3">
+                        {user.avatar_url ? (
+                          <img
+                            src={user.avatar_url}
+                            alt={user.full_name ?? "User"}
+                            className="h-10 w-10 rounded-full object-cover border"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border">
+                            <span className="text-sm font-semibold text-primary">
+                              {(user.full_name ?? "?").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
                         )}
+                        <div>
+                          <span className="text-sm font-medium block">
+                            {user.full_name ?? "—"}
+                          </span>
+                          {isSelf(user) && (
+                            <Badge variant="outline" className="text-xs mt-1">
+                              You
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge variant={roleVariant(user.role)}>
                         {capitalize(user.role)}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                      {user.phone ?? "—"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Badge variant={user.is_active ? "default" : "secondary"}>
+                        {user.is_active ? "Aktif" : "Nonaktif"}
                       </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">

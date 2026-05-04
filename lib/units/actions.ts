@@ -40,6 +40,18 @@ export async function createUnit(payload: UnitPayload) {
   console.log('➕ [DEBUG] createUnit called', { payload })
 
   try {
+    // Check for duplicate name
+    const { data: existingUnit, error: checkError } = await supabaseUntyped
+      .from('units')
+      .select('id')
+      .eq('name', payload.name.trim())
+      .single()
+
+    if (existingUnit) {
+      console.error('❌ [ERROR] Unit name already exists', { name: payload.name })
+      return { success: false, error: 'Nama satuan sudah ada' }
+    }
+
     const { data, error } = await supabaseUntyped
       .from('units')
       .insert(payload)
@@ -64,6 +76,19 @@ export async function updateUnit(unitId: string, payload: UnitPayload) {
   console.log('🔄 [DEBUG] updateUnit called', { unitId, payload })
 
   try {
+    // Check for duplicate name (excluding current unit)
+    const { data: existingUnit, error: checkError } = await supabaseUntyped
+      .from('units')
+      .select('id')
+      .eq('name', payload.name.trim())
+      .neq('id', unitId)
+      .single()
+
+    if (existingUnit) {
+      console.error('❌ [ERROR] Unit name already exists', { name: payload.name })
+      return { success: false, error: 'Nama satuan sudah ada' }
+    }
+
     const { data, error } = await supabaseUntyped
       .from('units')
       .update(payload)

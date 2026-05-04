@@ -28,6 +28,7 @@ export async function createUser(formData: {
   email: string
   password: string
   role: 'admin' | 'cashier' | 'customer'
+  phone?: string
 }) {
   try {
     const supabase = supabaseServer as any
@@ -94,7 +95,7 @@ export async function createUser(formData: {
     // Verify profile was created by trigger and update if needed
     const { data: existingProfile } = await supabase
       .from('profiles')
-      .select('id, role, full_name')
+      .select('id, role, full_name, phone')
       .eq('id', authData.user.id)
       .maybeSingle()
 
@@ -109,7 +110,8 @@ export async function createUser(formData: {
           id: authData.user.id,
           full_name: formData.full_name.trim(),
           role: formData.role,
-          email: email
+          email: email,
+          phone: formData.phone?.trim() || null
         })
         .select()
         .single()
@@ -120,11 +122,12 @@ export async function createUser(formData: {
         profileData = newProfile
         console.log('Profile created manually:', newProfile)
       }
-    } else if (existingProfile.role !== formData.role || existingProfile.full_name !== formData.full_name.trim()) {
+    } else if (existingProfile.role !== formData.role || existingProfile.full_name !== formData.full_name.trim() || existingProfile.phone !== (formData.phone?.trim() || null)) {
       // Profile exists but needs update
       const profileUpdate = {
         full_name: formData.full_name.trim(),
         role: formData.role,
+        phone: formData.phone?.trim() || null,
         updated_at: new Date().toISOString()
       }
 
@@ -168,6 +171,8 @@ export async function updateUser(userId: string, formData: {
   email?: string
   password?: string
   role: 'admin' | 'cashier' | 'customer'
+  phone?: string
+  is_active?: boolean
 }) {
   try {
     const supabase = supabaseServer as any
@@ -202,10 +207,18 @@ export async function updateUser(userId: string, formData: {
     }
 
     // Update profile
-    const profileUpdate = {
+    const profileUpdate: Record<string, unknown> = {
       full_name: formData.full_name.trim(),
       role: formData.role,
-      updated_at: new Date().toLocaleTimeString()
+      updated_at: new Date().toISOString()
+    }
+
+    if (formData.phone !== undefined) {
+      profileUpdate.phone = formData.phone?.trim() || null
+    }
+
+    if (formData.is_active !== undefined) {
+      profileUpdate.is_active = formData.is_active
     }
 
     const { error: profileError } = await supabase
