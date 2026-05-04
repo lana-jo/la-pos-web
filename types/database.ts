@@ -91,6 +91,7 @@ export type Database = {
           price: number
           cost_price: number
           conversion_qty: number
+          min_qty: number
           is_active: boolean
           is_default: boolean
           created_at: string

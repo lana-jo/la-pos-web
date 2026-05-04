@@ -37,6 +37,7 @@ export function VariantSelectionModal({
       barcode: variant.barcode,
       price: variant.price,
       conversion_qty: variant.conversion_qty,
+      min_qty: variant.min_qty,
       quantity: variantQuantity
     });
     
@@ -96,24 +97,24 @@ export function VariantSelectionModal({
                 <div
                   key={variant.id}
                   className={`pos-variant-card cursor-pointer transition-all p-4 rounded-lg border ${
-                    (product.stock || 0) <= 0 
+                    (product.stock || 0) <= 0 || variantQuantity < variant.min_qty
                       ? 'opacity-50 cursor-not-allowed bg-muted/30' 
                       : 'hover:bg-muted/50 hover:shadow-sm hover:scale-[1.02]'
                   }`}
-                  onClick={() => (product.stock || 0) > 0 && handleVariantSelection(variant)}
+                  onClick={() => (product.stock || 0) > 0 && variantQuantity >= variant.min_qty && handleVariantSelection(variant)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-md flex items-center justify-center border ${
-                        (product.stock || 0) <= 0 ? 'bg-red-50 border-red-200' : 'bg-muted'
+                        (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'bg-red-50 border-red-200' : 'bg-muted'
                       }`}>
                         <Package className={`h-5 w-5 ${
-                          (product.stock || 0) <= 0 ? 'text-red-500' : 'text-muted-foreground'
+                          (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-red-500' : 'text-muted-foreground'
                         }`} />
                       </div>
                       <div>
                         <h4 className={`font-medium ${
-                          (product.stock || 0) <= 0 ? 'text-muted-foreground' : ''
+                          (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-muted-foreground' : ''
                         }`}>{variant.variant_name}</h4>
                         <p className="text-sm text-muted-foreground">
                           {variant.barcode ? `Barcode: ${variant.barcode}` : 'No barcode'}
@@ -123,19 +124,24 @@ export function VariantSelectionModal({
                             Conversion: {variant.conversion_qty} units
                           </p>
                         )}
+                        {variant.min_qty > 1 && (
+                          <p className="text-xs text-blue-600 font-medium">
+                            Min. qty: {variant.min_qty}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="text-right">
                       <p className={`font-semibold ${
-                        (product.stock || 0) <= 0 ? 'text-muted-foreground line-through' : 'text-primary-brand'
+                        (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-muted-foreground line-through' : 'text-primary-brand'
                       }`}>
                         Rp {variant.price.toLocaleString("id-ID")}
                       </p>
                       <div className="flex items-center gap-2 justify-end">
                         <p className={`text-xs ${
-                          (product.stock || 0) <= 0 ? 'text-red-500 font-medium' : 'text-muted-foreground'
+                          (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-red-500 font-medium' : 'text-muted-foreground'
                         }`}>
-                          {(product.stock || 0) <= 0 ? 'Out of Stock' : `Stock: ${product.stock}`}
+                          {(product.stock || 0) <= 0 ? 'Out of Stock' : variantQuantity < variant.min_qty ? `Min. qty: ${variant.min_qty}` : `Stock: ${product.stock}`}
                         </p>
                         {variant.is_default && (
                           <Badge variant="secondary" className="text-xs">Default</Badge>

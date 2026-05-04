@@ -269,7 +269,8 @@ export default function POSPage() {
             barcode: v.barcode,
             price: v.price,
             cost_price: v.cost_price,
-            conversion_qty: v.conversion_qty
+            conversion_qty: v.conversion_qty,
+            min_qty: v.min_qty
           }))
         );
         return {
@@ -342,6 +343,7 @@ export default function POSPage() {
       barcode: variant.barcode,
       price: variant.price,
       conversion_qty: variant.conversion_qty,
+      min_qty: variant.min_qty,
       quantity: variantQuantity
     });
     addItem(product, variantQuantity, variant);
@@ -374,7 +376,8 @@ export default function POSPage() {
           variant_name: variant.variant_name,
           product_name: variant.product.name,
           price: variant.price,
-          conversion_qty: variant.conversion_qty
+          conversion_qty: variant.conversion_qty,
+          min_qty: variant.min_qty
         });
         // Found variant, add to cart
         const productStock = variant.product.stock || 0

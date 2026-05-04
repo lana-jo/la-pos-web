@@ -97,6 +97,7 @@ export interface ProductVariant {
     price:          number          // variant-specific price
     cost_price:     number
     conversion_qty: number          // faktor pengali stok
+    min_qty:        number          // minimum kuantitas beli agar varian ini berlaku
     is_active:      boolean
     is_default:     boolean         // default variant for this product
     created_at:     string
