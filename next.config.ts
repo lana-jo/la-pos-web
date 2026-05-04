@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
        '@': './',
     },
   },
+  // Use proxy function instead of deprecated middleware
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/((?!_next/static|_next/image|favicon.ico|api/).*)',
+  //       destination: '/api/proxy/:path*',
+  //     },
+  //   ];
+  // },
 };
 
 export default nextConfig;

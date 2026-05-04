@@ -32,6 +32,18 @@ export interface Profile {
     updated_at:       string
 }
 
+export interface VariantPayload {
+  product_id: string
+  variant_name: string
+  barcode: string | null
+  price: number
+  cost_price: number
+  conversion_qty: number
+  min_qty: number
+  is_active: boolean
+  is_default: boolean
+}
+
 export interface Unit {
     id:         string
     name:       string

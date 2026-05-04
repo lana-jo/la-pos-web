@@ -6,11 +6,11 @@ import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Plus, Package, Scan, Camera } from 'lucide-react'
 import { toast } from 'sonner'
-import { Category, Product, ProductVariant, Unit } from '@/types'
+import { Category, Product, ProductVariant, Unit, Supplier } from '@/types'
 import { FormVariant } from '@/components/admin/dashboard/products'
 import { useAdminBarcodeScanner } from '@/hooks/useAdminBarcodeScanner'
 import { CameraScanner } from '@/components/camera/CameraScanner'
-import { createProductWithVariants, updateProductWithVariants, deleteProduct, fetchProductsWithVariants } from '@/lib/products/actions'
+import { createProductWithVariants, updateProductWithVariants, deleteProduct, fetchProductsWithVariants, fetchUnits, fetchSuppliers } from '@/lib/products/actions'
 import {
     CategoryFilter,
     EmptyState,
@@ -55,7 +55,7 @@ export default function ProductsPage() {
     const [products, setProducts] = useState<ProductWithCategory[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [units, setUnits] = useState<Unit[]>([])
-    const [suppliers, setSuppliers] = useState<any[]>([])
+    const [suppliers, setSuppliers] = useState<Supplier[]>([])
     const [loading, setLoading] = useState(true)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [modal, setModal] = useState<'add' | 'edit' | 'delete' | null>(null)
@@ -105,6 +105,22 @@ export default function ProductsPage() {
                 throw new Error(result.error)
             }
             setProducts(result.data ?? [])
+
+            // Fetch units from database
+            const unitsResult = await fetchUnits()
+            if (unitsResult.success) {
+                setUnits(unitsResult.data ?? [])
+            } else {
+                console.error('Error fetching units:', unitsResult.error)
+            }
+
+            // Fetch suppliers from database
+            const suppliersResult = await fetchSuppliers()
+            if (suppliersResult.success) {
+                setSuppliers(suppliersResult.data ?? [])
+            } else {
+                console.error('Error fetching suppliers:', suppliersResult.error)
+            }
         } catch (error) {
             console.error('Error fetching products:', error)
             toast.error('Gagal mengambil data produk')

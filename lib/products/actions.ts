@@ -32,11 +32,13 @@ interface ProductWithImagePayload extends ProductWithVariantsPayload {
 
 interface VariantPayload {
   id?: string
+  product_id?: string
   variant_name: string
   barcode: string | null
   price: number
   cost_price: number
   conversion_qty: number
+  min_qty?: number
   is_active: boolean
   is_default: boolean
 }
@@ -329,10 +331,10 @@ export async function deleteProduct(productId: string) {
 
 export async function fetchProductsWithVariants() {
   console.log('📊 [DEBUG] fetchProductsWithVariants called')
-  
+
   try {
     console.log('📝 [DEBUG] Fetching products with categories')
-    
+
     // Fetch products with categories
     const { data: products, error: productsError } = await supabaseUntyped
       .from('products')
@@ -343,11 +345,11 @@ export async function fetchProductsWithVariants() {
       console.error('❌ [ERROR] Products fetch failed', productsError)
       return { success: false, error: productsError.message }
     }
-    
+
     console.log('✅ [SUCCESS] Products fetched successfully', { count: products?.length || 0 })
 
     console.log('📝 [DEBUG] Fetching active variants')
-    
+
     // Fetch all active variants
     const { data: variants, error: variantsError } = await supabaseUntyped
       .from('product_variants')
@@ -358,11 +360,11 @@ export async function fetchProductsWithVariants() {
       console.error('❌ [ERROR] Variants fetch failed', variantsError)
       return { success: false, error: variantsError.message }
     }
-    
+
     console.log('✅ [SUCCESS] Variants fetched successfully', { count: variants?.length || 0 })
 
     console.log('🔗 [DEBUG] Attaching variants to products')
-    
+
     // Attach variants to products
     const productsWithVariants = (products ?? []).map((p: any) => {
       const productVariants = (variants ?? []).filter((v: any) => v.product_id === p.id)
@@ -371,8 +373,8 @@ export async function fetchProductsWithVariants() {
         variants: productVariants
       }
     })
-    
-    console.log('🎉 [SUCCESS] fetchProductsWithVariants completed', { 
+
+    console.log('🎉 [SUCCESS] fetchProductsWithVariants completed', {
       productsCount: productsWithVariants.length,
       totalVariants: (variants ?? []).length
     })
@@ -381,5 +383,178 @@ export async function fetchProductsWithVariants() {
   } catch (error) {
     console.error('💥 [CRITICAL] Unexpected error in fetchProductsWithVariants', error)
     return { success: false, error: 'Failed to fetch products' }
+  }
+}
+
+// ─── Product Variants Server Actions ─────────────────────────────────────────
+
+interface VariantPayload {
+  product_id?: string
+  variant_name: string
+  barcode: string | null
+  price: number
+  cost_price: number
+  conversion_qty: number
+  min_qty?: number
+  is_active: boolean
+  is_default: boolean
+}
+
+export async function fetchAllVariants() {
+  console.log('📊 [DEBUG] fetchAllVariants called')
+
+  try {
+    const { data: variants, error } = await supabaseUntyped
+      .from('product_variants')
+      .select(`
+        *,
+        products!inner(
+          id,
+          name,
+          unit_id
+        )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('❌ [ERROR] Variants fetch failed', error)
+      return { success: false, error: error.message }
+    }
+
+    const formattedData = variants?.map((variant: any) => ({
+      ...variant,
+      product_name: variant.products.name,
+      unit_id: variant.products.unit_id
+    })) || []
+
+    console.log('✅ [SUCCESS] Variants fetched successfully', { count: formattedData.length })
+    return { success: true, data: formattedData }
+  } catch (error) {
+    console.error('💥 [CRITICAL] Unexpected error in fetchAllVariants', error)
+    return { success: false, error: 'Failed to fetch variants' }
+  }
+}
+
+export async function createVariant(payload: VariantPayload) {
+  console.log('➕ [DEBUG] createVariant called', { payload })
+
+  try {
+    const { error } = await supabaseUntyped
+      .from('product_variants')
+      .insert(payload as any)
+
+    if (error) {
+      console.error('❌ [ERROR] Variant creation failed', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ [SUCCESS] Variant created successfully')
+    revalidatePath('/dashboard/products/variants')
+    return { success: true }
+  } catch (error) {
+    console.error('💥 [CRITICAL] Unexpected error in createVariant', error)
+    return { success: false, error: 'Failed to create variant' }
+  }
+}
+
+export async function updateVariant(variantId: string, payload: VariantPayload) {
+  console.log('🔄 [DEBUG] updateVariant called', { variantId, payload })
+
+  try {
+    const { error } = await supabaseUntyped
+      .from('product_variants')
+      .update({
+        ...payload,
+        updated_at: new Date().toISOString()
+      } as any)
+      .eq('id', variantId)
+
+    if (error) {
+      console.error('❌ [ERROR] Variant update failed', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ [SUCCESS] Variant updated successfully')
+    revalidatePath('/dashboard/products/variants')
+    return { success: true }
+  } catch (error) {
+    console.error('💥 [CRITICAL] Unexpected error in updateVariant', error)
+    return { success: false, error: 'Failed to update variant' }
+  }
+}
+
+export async function deactivateVariant(variantId: string) {
+  console.log('🗑️ [DEBUG] deactivateVariant called', { variantId })
+
+  try {
+    const { error } = await supabaseUntyped
+      .from('product_variants')
+      .update({
+        is_active: false,
+        updated_at: new Date().toISOString()
+      } as any)
+      .eq('id', variantId)
+
+    if (error) {
+      console.error('❌ [ERROR] Variant deactivation failed', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ [SUCCESS] Variant deactivated successfully')
+    revalidatePath('/dashboard/products/variants')
+    return { success: true }
+  } catch (error) {
+    console.error('💥 [CRITICAL] Unexpected error in deactivateVariant', error)
+    return { success: false, error: 'Failed to deactivate variant' }
+  }
+}
+
+// ─── Suppliers Server Action ─────────────────────────────────────────────────
+
+export async function fetchSuppliers() {
+  console.log('📊 [DEBUG] fetchSuppliers called')
+
+  try {
+    const { data: suppliers, error } = await supabaseUntyped
+      .from('suppliers')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (error) {
+      console.error('❌ [ERROR] Suppliers fetch failed', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ [SUCCESS] Suppliers fetched successfully', { count: suppliers?.length || 0 })
+    return { success: true, data: suppliers || [] }
+  } catch (error) {
+    console.error('💥 [CRITICAL] Unexpected error in fetchSuppliers', error)
+    return { success: false, error: 'Failed to fetch suppliers' }
+  }
+}
+
+// ─── Units Server Action ─────────────────────────────────────────────────────
+
+export async function fetchUnits() {
+  console.log('📊 [DEBUG] fetchUnits called')
+
+  try {
+    const { data: units, error } = await supabaseUntyped
+      .from('units')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+
+    if (error) {
+      console.error('❌ [ERROR] Units fetch failed', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ [SUCCESS] Units fetched successfully', { count: units?.length || 0 })
+    return { success: true, data: units || [] }
+  } catch (error) {
+    console.error('💥 [CRITICAL] Unexpected error in fetchUnits', error)
+    return { success: false, error: 'Failed to fetch units' }
   }
 }

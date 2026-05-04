@@ -8,12 +8,11 @@ const adminRoutes = ['/admin','/dashboard']
 const cashierRoutes = ['/pos']
 const customerRoutes = ['/catalog']
 
-// export async function proxy(req: NextRequest) {
-export default async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const res = NextResponse.next()
   const path = req.nextUrl.pathname
 
-  // Skip middleware for static files and API routes
+  // Skip proxy for static files and API routes
   if (
     path.startsWith('/_next/') ||
     path.startsWith('/api/') ||
@@ -118,6 +117,3 @@ export default async function middleware(req: NextRequest) {
   return res
 }
 
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
-}

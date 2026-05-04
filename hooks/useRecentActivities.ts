@@ -24,7 +24,7 @@ export const useRecentActivities = () => {
                     total,
                     payment_status,
                     created_at,
-                    profiles!inner(
+                    profiles!transactions_cashier_id_fkey(
                         full_name
                     )
                 `,
