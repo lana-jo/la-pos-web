@@ -6,13 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Edit2, Trash2, Package } from 'lucide-react'
 import { toast } from 'sonner'
-import { createClient } from '@supabase/supabase-js'
 import { Unit } from '@/types'
-
-// Untyped client to bypass TypeScript issues (same pattern as products/actions.ts)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { fetchUnits, createUnit, updateUnit, deactivateUnit } from '@/lib/units/actions'
 
 export default function UnitsPage() {
   const [units, setUnits] = useState<Unit[]>([])
@@ -27,15 +22,14 @@ export default function UnitsPage() {
   })
 
 
-  const fetchUnits = async () => {
+  const loadUnits = async () => {
     try {
-      const { data, error } = await supabase
-        .from('units')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-      setUnits(data || [])
+      const result = await fetchUnits()
+      if (result.success) {
+        setUnits(result.data || [])
+      } else {
+        toast.error('Gagal memuat data satuan')
+      }
     } catch (error) {
       console.error('Error fetching units:', error)
       toast.error('Gagal memuat data satuan')
@@ -45,7 +39,7 @@ export default function UnitsPage() {
   }
 
   useEffect(() => {
-    fetchUnits()
+    loadUnits()
   }, [])
 
   const resetForm = () => {
@@ -64,31 +58,24 @@ export default function UnitsPage() {
       }
 
       if (editingUnit) {
-        const { error } = await supabase
-          .from('units')
-          .update({
-            name: formData.name.trim(),
-            symbol: formData.symbol.trim(),
-            is_active: formData.is_active
-          })
-          .eq('id', editingUnit.id)
-
-        if (error) throw error
+        const result = await updateUnit(editingUnit.id, {
+          name: formData.name.trim(),
+          symbol: formData.symbol.trim(),
+          is_active: formData.is_active
+        })
+        if (!result.success) throw new Error(result.error)
         toast.success('Satuan berhasil diperbarui')
       } else {
-        const { error } = await supabase
-          .from('units')
-          .insert({
-            name: formData.name.trim(),
-            symbol: formData.symbol.trim(),
-            is_active: formData.is_active
-          })
-
-        if (error) throw error
+        const result = await createUnit({
+          name: formData.name.trim(),
+          symbol: formData.symbol.trim(),
+          is_active: formData.is_active
+        })
+        if (!result.success) throw new Error(result.error)
         toast.success('Satuan berhasil ditambahkan')
       }
 
-      await fetchUnits()
+      await loadUnits()
       setIsModalOpen(false)
       resetForm()
     } catch (error) {
@@ -115,14 +102,10 @@ export default function UnitsPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('units')
-        .update({ is_active: false })
-        .eq('id', unit.id)
-
-      if (error) throw error
+      const result = await deactivateUnit(unit.id)
+      if (!result.success) throw new Error(result.error)
       toast.success('Satuan berhasil dinonaktifkan')
-      await fetchUnits()
+      await loadUnits()
     } catch (error) {
       console.error('Error deleting unit:', error)
       toast.error('Gagal menghapus satuan')
