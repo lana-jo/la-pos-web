@@ -164,16 +164,36 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
     
     const adminItems = [
       {
-        href: "/dashboard/products",
+        type: "dropdown" as const,
         label: "Produk",
         icon: Package,
-        description: "Kelola produk",
-      },
-      {
-        href: "/dashboard/categories",
-        label: "Kategori",
-        icon: Tag,
-        description: "Kelola kategori",
+        items: [
+          {
+            href: "/dashboard/products",
+            label: "Daftar Produk",
+            description: "Kelola semua produk",
+          },
+          {
+            href: "/dashboard/products/variants",
+            label: "Varian Produk",
+            description: "Kelola varian harga produk",
+          },
+          {
+            href: "/dashboard/categories",
+            label: "Kategori",
+            description: "Kelola kategori produk",
+          },
+          {
+            href: "/dashboard/units",
+            label: "Satuan",
+            description: "Kelola satuan ukuran",
+          },
+          {
+            href: "/dashboard/suppliers",
+            label: "Pemasok",
+            description: "Kelola data pemasok",
+          },
+        ],
       },
       {
         type: "dropdown" as const,
