@@ -57,6 +57,7 @@ export function AddProductModal({
     onSubmit,
 }: AddProductModalProps) {
     if (!isOpen) return null
+    console.log('[ProductModal] AddProductModal opened', { formData, categories: categories.length, suppliers: suppliers.length, units: units.length })
 
     return (
         <Modal title="Tambah Produk Baru" onClose={onClose}>
@@ -70,8 +71,8 @@ export function AddProductModal({
                 idPrefix="add-"
             />
             <div className="flex justify-end gap-2 mt-6">
-                <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Batal</Button>
-                <Button onClick={onSubmit} disabled={isSubmitting || !isFormValid}>
+                <Button variant="outline" onClick={() => { console.log('[ProductModal] Add cancelled'); onClose(); }} disabled={isSubmitting}>Batal</Button>
+                <Button onClick={() => { console.log('[ProductModal] Add submit clicked', formData); onSubmit(); }} disabled={isSubmitting || !isFormValid}>
                     {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                 </Button>
             </div>
@@ -107,6 +108,7 @@ export function EditProductModal({
     onSubmit,
 }: EditProductModalProps) {
     if (!isOpen || !selectedProduct) return null
+    console.log('[ProductModal] EditProductModal opened', { selectedProduct: selectedProduct.id, formData })
 
     return (
         <Modal title="Edit Produk" onClose={onClose}>
@@ -120,8 +122,8 @@ export function EditProductModal({
                 idPrefix="edit-"
             />
             <div className="flex justify-end gap-2 mt-6">
-                <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Batal</Button>
-                <Button onClick={onSubmit} disabled={isSubmitting || !isFormValid}>
+                <Button variant="outline" onClick={() => { console.log('[ProductModal] Edit cancelled'); onClose(); }} disabled={isSubmitting}>Batal</Button>
+                <Button onClick={() => { console.log('[ProductModal] Edit submit clicked', { id: selectedProduct.id, formData }); onSubmit(); }} disabled={isSubmitting || !isFormValid}>
                     {isSubmitting ? 'Menyimpan...' : 'Perbarui'}
                 </Button>
             </div>
@@ -145,6 +147,7 @@ export function DeleteProductModal({
     onConfirm,
 }: DeleteProductModalProps) {
     if (!isOpen || !selectedProduct) return null
+    console.log('[ProductModal] DeleteProductModal opened', { selectedProduct: selectedProduct.id, name: selectedProduct.name })
 
     return (
         <Modal title="Hapus Produk" onClose={onClose}>
@@ -157,8 +160,8 @@ export function DeleteProductModal({
                 </p>
             </div>
             <div className="flex justify-end gap-2 mt-6">
-                <Button variant="outline" onClick={onClose} disabled={isSubmitting}>Batal</Button>
-                <Button variant="destructive" onClick={onConfirm} disabled={isSubmitting}>
+                <Button variant="outline" onClick={() => { console.log('[ProductModal] Delete cancelled'); onClose(); }} disabled={isSubmitting}>Batal</Button>
+                <Button variant="destructive" onClick={() => { console.log('[ProductModal] Delete confirmed for:', selectedProduct.id); onConfirm(); }} disabled={isSubmitting}>
                     {isSubmitting ? 'Menghapus...' : 'Hapus'}
                 </Button>
             </div>

@@ -6,13 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Edit2, Trash2, Building, Phone, Mail, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
-import { createClient } from '@supabase/supabase-js'
 import { Supplier } from '@/types'
-
-// Untyped client to bypass TypeScript issues (same pattern as products/actions.ts)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
+import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } from '@/lib/suppliers/actions'
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -31,15 +26,14 @@ export default function SuppliersPage() {
   })
 
 
-  const fetchSuppliers = async () => {
+  const loadSuppliers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .order('name')
-
-      if (error) throw error
-      setSuppliers(data || [])
+      const result = await fetchSuppliers()
+      if (result.success) {
+        setSuppliers(result.data || [])
+      } else {
+        toast.error('Gagal memuat data pemasok')
+      }
     } catch (error) {
       console.error('Error fetching suppliers:', error)
       toast.error('Gagal memuat data pemasok')
@@ -49,7 +43,7 @@ export default function SuppliersPage() {
   }
 
   useEffect(() => {
-    fetchSuppliers()
+    loadSuppliers()
   }, [])
 
   const resetForm = () => {
@@ -86,23 +80,16 @@ export default function SuppliersPage() {
       }
 
       if (editingSupplier) {
-        const { error } = await supabase
-          .from('suppliers')
-          .update(supplierData)
-          .eq('id', editingSupplier.id)
-
-        if (error) throw error
+        const result = await updateSupplier(editingSupplier.id, supplierData)
+        if (!result.success) throw new Error(result.error)
         toast.success('Pemasok berhasil diperbarui')
       } else {
-        const { error } = await supabase
-          .from('suppliers')
-          .insert(supplierData)
-
-        if (error) throw error
+        const result = await createSupplier(supplierData)
+        if (!result.success) throw new Error(result.error)
         toast.success('Pemasok berhasil ditambahkan')
       }
 
-      await fetchSuppliers()
+      await loadSuppliers()
       setIsModalOpen(false)
       resetForm()
     } catch (error) {
@@ -133,14 +120,10 @@ export default function SuppliersPage() {
     }
 
     try {
-      const { error } = await supabase
-        .from('suppliers')
-        .update({ is_active: false })
-        .eq('id', supplier.id)
-
-      if (error) throw error
+      const result = await deactivateSupplier(supplier.id)
+      if (!result.success) throw new Error(result.error)
       toast.success('Pemasok berhasil dinonaktifkan')
-      await fetchSuppliers()
+      await loadSuppliers()
     } catch (error) {
       console.error('Error deleting supplier:', error)
       toast.error('Gagal menghapus pemasok')

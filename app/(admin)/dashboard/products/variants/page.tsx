@@ -37,7 +37,9 @@ export default function ProductVariantsPage() {
   })
 
   const loadVariants = useCallback(async (unitsData: Unit[]) => {
+    console.log('[Variants] Loading variants...')
     const result = await fetchAllVariants()
+    console.log('[Variants] fetchAllVariants result:', result)
     if (result.success) {
       // Attach unit name to each variant based on product's unit_id
       const variantsWithUnit = (result.data || []).map((v: ProductVariant & { product_name: string; unit_id?: string | null }) => {
@@ -48,14 +50,18 @@ export default function ProductVariantsPage() {
         }
       })
       setVariants(variantsWithUnit)
+      console.log('[Variants] Loaded', variantsWithUnit.length, 'variants')
     } else {
+      console.error('[Variants] Failed to load variants:', result.error)
       toast.error('Gagal memuat data varian')
     }
   }, [])
 
   const loadProducts = useCallback(async () => {
+    console.log('[Variants] Loading products...')
     const { fetchProductsWithVariants } = await import('@/lib/products/actions')
     const result = await fetchProductsWithVariants()
+    console.log('[Variants] fetchProductsWithVariants result:', result)
     if (result.success) {
       setProducts((result.data || []).map((p: { id: string; name: string; barcode: string; unit_id?: string | null }) => ({
         id: p.id,
@@ -63,23 +69,32 @@ export default function ProductVariantsPage() {
         barcode: p.barcode,
         unit_id: p.unit_id
       })))
+      console.log('[Variants] Loaded', result.data?.length || 0, 'products')
+    } else {
+      console.error('[Variants] Failed to load products:', result.error)
     }
   }, [])
 
   const loadUnits = useCallback(async () => {
+    console.log('[Variants] Loading units...')
     const result = await fetchUnits()
+    console.log('[Variants] fetchUnits result:', result)
     if (result.success) {
       setUnits(result.data || [])
+      console.log('[Variants] Loaded', result.data?.length || 0, 'units')
       return result.data || []
     }
+    console.error('[Variants] Failed to load units:', result.error)
     return []
   }, [])
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('[Variants] Initial data load started')
       setLoading(true)
       const [unitsData] = await Promise.all([loadUnits(), loadProducts()])
       await loadVariants(unitsData)
+      console.log('[Variants] Initial data load completed')
       setLoading(false)
     }
     loadData()
@@ -131,6 +146,7 @@ export default function ProductVariantsPage() {
         is_active: formData.is_active,
         is_default: formData.is_default
       }
+      console.log('[Variants] Submitting variant payload:', variantPayload)
 
       let result
       if (editingVariant) {
@@ -139,6 +155,7 @@ export default function ProductVariantsPage() {
         result = await createVariant(variantPayload)
       }
 
+      console.log('[Variants] Save result:', result)
       if (!result.success) {
         throw new Error(result.error)
       }
@@ -156,6 +173,7 @@ export default function ProductVariantsPage() {
   }
 
   const handleEdit = (variant: ProductVariant & { product_name: string }) => {
+    console.log('[Variants] Editing variant:', variant)
     setEditingVariant(variant)
     setFormData({
       product_id: variant.product_id,
@@ -172,19 +190,22 @@ export default function ProductVariantsPage() {
   }
 
   const handleDelete = async (variant: ProductVariant & { product_name: string }) => {
+    console.log('[Variants] Deactivating variant:', variant)
     if (!confirm(`Apakah Anda yakin ingin menghapus varian "${variant.variant_name}" dari produk "${variant.product_name}"?`)) {
       return
     }
 
     try {
+      console.log('[Variants] Calling deactivateVariant for ID:', variant.id)
       const result = await deactivateVariant(variant.id)
       if (!result.success) {
         throw new Error(result.error)
       }
+      console.log('[Variants] Deactivate result:', result)
       toast.success('Varian berhasil dinonaktifkan')
       await loadVariants(units)
     } catch (error) {
-      console.error('Error deactivating variant:', error)
+      console.error('[Variants] Error deactivating variant:', error)
       toast.error('Gagal menonaktifkan varian')
     }
   }
