@@ -19,11 +19,20 @@ console.log('🔐 [AUTH] Product actions initialized', {
 interface ProductPayload {
   name: string
   barcode: string
+  description: string | null
+  cost_price: number
   price: number
   stock: number
+  min_stock: number | null
+  max_stock: number | null
+  track_stock: boolean
+  low_stock_threshold: number
   category_id: string | null
+  unit_id: string | null
+  supplier_id: string | null
   image_url: string | null
   is_active: boolean
+  is_consignment: boolean
 }
 
 interface ProductWithImagePayload extends ProductWithVariantsPayload {

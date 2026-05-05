@@ -46,6 +46,8 @@ async function insertTransaction(
   orderId: string,
   method: "cash" | "qris",
 ) {
+  console.log("[POS Payment] Inserting transaction:", { cashierId, total, orderId, method });
+  
   const { data, error } = await db("transactions")
     .insert({
       cashier_id: cashierId,
@@ -64,18 +66,23 @@ async function insertTransaction(
     .single();
 
   if (error) {
-    console.error("[insertTransaction] Database error:", error);
+    console.error("[POS Payment] Database error inserting transaction:", error);
     throw new Error(`Failed to create transaction: ${error.message}`);
   }
+  
+  console.log("[POS Payment] Transaction inserted successfully:", { transactionId: data.id, method });
   return data;
 }
 
 async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
+  console.log("[POS Payment] Inserting transaction items:", { transactionId, itemCount: cart.length });
+  
   const items: Database["public"]["Tables"]["transaction_items"]["Insert"][] =
     cart.map((item) => {
       const unitPrice = item.variant ? item.variant.price : item.product.price;
       const costPrice = item.variant ? item.variant.cost_price : item.product.cost_price || 0;
-      return {
+      
+      const transactionItem = {
         transaction_id: transactionId,
         // Set product_id to null for manual products (non-UUID format IDs)
         // to avoid foreign key constraint violation
@@ -91,10 +98,25 @@ async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
         discount_amount: 0,
         subtotal: unitPrice * item.quantity,
       };
+      
+      console.log("[POS Payment] Creating transaction item:", {
+        productName: item.product.name,
+        variantName: item.variant?.variant_name,
+        quantity: item.quantity,
+        unitPrice,
+        subtotal: transactionItem.subtotal
+      });
+      
+      return transactionItem;
     });
 
   const { error } = await db("transaction_items").insert(items);
-  if (error) throw new Error("Failed to create transaction items");
+  if (error) {
+    console.error("[POS Payment] Error inserting transaction items:", error);
+    throw new Error("Failed to create transaction items");
+  }
+  
+  console.log("[POS Payment] Transaction items inserted successfully:", { itemCount: items.length });
 }
 
 // Helper to check if a string is a valid UUID format
@@ -104,26 +126,35 @@ function isValidUUID(str: string): boolean {
 }
 
 async function deductStock(cart: CartItem[]) {
-  // Run sequentially — preserve the transaction even if a stock update fails
+  console.log("[POS Payment] Starting stock deduction for:", { itemCount: cart.length });
+  
+  // Run sequentially — preserve transaction even if a stock update fails
   for (const item of cart) {
     // Skip stock deduction for manual products (non-UUID IDs)
-    // since they don't exist in the products table
+    // since they don't exist in products table
     if (!isValidUUID(item.product.id)) {
-      console.log(`[deductStock] Skipping manual product: ${item.product.id}`);
+      console.log(`[POS Payment] Skipping manual product stock deduction: ${item.product.id}`);
       continue;
     }
 
+    console.log(`[POS Payment] Deducting stock for product: ${item.product.name}, quantity: ${item.quantity}, current stock: ${item.product.stock}`);
+    
     // Always deduct from main product stock (variants don't have separate stock)
     const { error } = await db("products")
       .update({ stock: item.product.stock - item.quantity })
       .eq("id", item.product.id);
 
-    if (error)
+    if (error) {
       console.error(
-        `Stock update failed for product ${item.product.id}:`,
+        `[POS Payment] Stock update failed for product ${item.product.id}:`,
         error,
       );
+    } else {
+      console.log(`[POS Payment] Stock deducted successfully for product: ${item.product.name}, new stock: ${item.product.stock - item.quantity}`);
+    }
   }
+  
+  console.log("[POS Payment] Stock deduction process completed");
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -133,30 +164,42 @@ export async function createCashPayment(
   total: number,
 ): Promise<PaymentResult> {
   try {
-    console.log("[createCashPayment] Starting, cart items:", cart.length);
+    console.log("[POS Payment] Starting cash payment process:", { itemCount: cart.length, total });
+    
     const { user } = await getServerSession();
-    console.log("[createCashPayment] Got user:", user.id);
+    console.log("[POS Payment] Cash payment - authenticated user:", user.id);
+    
     const orderId = `POS-CASH-${Date.now()}`;
+    console.log("[POS Payment] Generated order ID for cash payment:", orderId);
+    
     const transaction = await insertTransaction(
       user.id,
       total,
       orderId,
       "cash",
     );
-    console.log("[createCashPayment] Transaction created:", transaction.id);
+    console.log("[POS Payment] Cash transaction created:", { transactionId: transaction.id });
 
     await insertTransactionItems(transaction.id, cart);
+    console.log("[POS Payment] Cash transaction items inserted");
+    
     await deductStock(cart);
+    console.log("[POS Payment] Stock deducted for cash payment");
+    
     revalidatePath("/cashier/pos");
+    console.log("[POS Payment] Path revalidated for cash payment");
 
-    return {
+    const result: PaymentResult = {
       success: true,
       transactionId: transaction.id,
       paymentMethod: "cash",
       total,
     };
+    
+    console.log("[POS Payment] Cash payment completed successfully:", result);
+    return result;
   } catch (error) {
-    console.error("[createCashPayment] Error:", error);
+    console.error("[POS Payment] Cash payment error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Cash payment failed",
@@ -169,28 +212,42 @@ export async function createQRISPayment(
   total: number,
 ): Promise<PaymentResult> {
   try {
-    console.log("[createQRISPayment] Starting, cart items:", cart.length);
+    console.log("[POS Payment] Starting QRIS payment process:", { itemCount: cart.length, total });
+    
     const session = await getSession();
-    console.log("[createQRISPayment] Got user:", session.user.id);
+    console.log("[POS Payment] QRIS payment - authenticated user:", session.user.id);
+    
     const orderId = `POS-${Date.now()}`;
+    console.log("[POS Payment] Generated order ID for QRIS payment:", orderId);
+    
     const transaction = await insertTransaction(
       session.user.id,
       total,
       orderId,
       "qris",
     );
-    console.log("[createQRISPayment] Transaction created:", transaction.id);
+    console.log("[POS Payment] QRIS transaction created:", { transactionId: transaction.id });
 
     await insertTransactionItems(transaction.id, cart);
+    console.log("[POS Payment] QRIS transaction items inserted");
 
+    console.log("[POS Payment] Creating QRIS charge with Midtrans:", { orderId, total });
     const qrisResponse: QRISChargeResponse = await createQRISCharge(
       orderId,
       total,
     );
+    console.log("[POS Payment] QRIS charge created:", { 
+      qrisUrl: qrisResponse.qris_url, 
+      expiryTime: qrisResponse.expiry_time 
+    });
+    
     await saveQRISToDatabase(transaction.id, qrisResponse);
+    console.log("[POS Payment] QRIS data saved to database");
+    
     revalidatePath("/cashier/pos");
+    console.log("[POS Payment] Path revalidated for QRIS payment");
 
-    return {
+    const result: PaymentResult = {
       success: true,
       transactionId: transaction.id,
       paymentMethod: "qris",
@@ -199,8 +256,11 @@ export async function createQRISPayment(
       qrisString: qrisResponse.qris_string,
       expiryTime: qrisResponse.expiry_time,
     };
+    
+    console.log("[POS Payment] QRIS payment initiated successfully:", result);
+    return result;
   } catch (error) {
-    console.error("QRIS payment error:", error);
+    console.error("[POS Payment] QRIS payment error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Payment failed",

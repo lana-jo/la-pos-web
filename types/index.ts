@@ -92,6 +92,9 @@ export interface Product {
     cost_price:      number
     price:           number
     stock:           number
+    cached_stock:     number
+    track_stock:     boolean
+    low_stock_threshold: number
     min_stock:       number
     max_stock:       number | null
     image_url:       string | null

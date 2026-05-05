@@ -16,20 +16,26 @@ export function BarcodeScanner() {
   useUSBScanner()
 
   const toggleMode = () => {
+    console.log("[POS Scanner] Toggling scan mode from:", scanMode);
     if (scanMode === 'webcam') {
+      console.log("[POS Scanner] Switching to USB mode");
       stopScanner()
       setScanMode('usb')
     } else {
+      console.log("[POS Scanner] Switching to webcam mode");
       setScanMode('webcam')
     }
   }
 
   useEffect(() => {
+    console.log("[POS Scanner] Scan mode changed to:", scanMode);
     if (scanMode === 'webcam') {
+      console.log("[POS Scanner] Starting webcam scanner");
       startScanner()
     }
     return () => {
       if (webcamScanning) {
+        console.log("[POS Scanner] Cleaning up webcam scanner");
         stopScanner()
       }
     }

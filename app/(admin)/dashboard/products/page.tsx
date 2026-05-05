@@ -192,7 +192,7 @@ export default function ProductsPage() {
     }, [checkUserRole, fetchData])
 
     // ── Helpers ────────────────────────────────────────────────────────────────
-    const isFormValid = !!(formData.name.trim() && formData.barcode.trim() && formData.price && formData.stock)
+    const isFormValid = !!(formData.name.trim() && formData.barcode.trim() && formData.price && formData.cost_price && formData.stock)
 
     const closeModal = () => {
         setModal(null)
@@ -228,9 +228,14 @@ export default function ProductsPage() {
     const buildPayload = () => {
         const price = parseInt(formData.price, 10)
         const stock = parseInt(formData.stock, 10)
+        const costPrice = parseInt(formData.cost_price, 10) || 0
 
         if (price > PG_INT_MAX || price < 0) {
-            toast.error(`Harga tidak valid: maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`)
+            toast.error(`Harga jual tidak valid: maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`)
+            return null
+        }
+        if (costPrice > PG_INT_MAX || costPrice < 0) {
+            toast.error(`Harga beli tidak valid: maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`)
             return null
         }
         if (stock > PG_INT_MAX || stock < 0) {
@@ -257,15 +262,28 @@ export default function ProductsPage() {
             is_default: v.is_default,
         }))
 
+        const minStock = parseInt(formData.min_stock, 10) || null
+        const maxStock = parseInt(formData.max_stock, 10) || null
+        const lowStockThreshold = parseInt(formData.low_stock_threshold, 10) || 5
+
         return {
             product: {
                 name: formData.name.trim(),
                 barcode: formData.barcode.trim(),
+                description: formData.description.trim() || null,
+                cost_price: costPrice,
                 price,
                 stock,
+                min_stock: minStock,
+                max_stock: maxStock,
+                track_stock: formData.track_stock,
+                low_stock_threshold: lowStockThreshold,
                 category_id: formData.category_id || null,
+                unit_id: formData.unit_id || null,
+                supplier_id: formData.supplier_id || null,
                 image_url: (formData.image_url || '').trim() || null,
                 is_active: formData.is_active,
+                is_consignment: formData.is_consignment,
             },
             variants: variantPayloads,
             imageFile: formData.imageFile,
@@ -274,7 +292,7 @@ export default function ProductsPage() {
 
     // ── CRUD Handlers ──────────────────────────────────────────────────────────
     const handleAdd = async () => {
-        if (!isFormValid) { toast.error('Nama, barcode, harga, dan stok harus diisi'); return }
+        if (!isFormValid) { toast.error('Nama, barcode, harga beli, harga jual, dan stok harus diisi'); return }
 
         const payload = buildPayload()
         if (!payload) {
@@ -302,7 +320,7 @@ export default function ProductsPage() {
     }
 
     const handleEdit = async () => {
-        if (!selectedProduct || !isFormValid) { toast.error('Nama, barcode, harga, dan stok harus diisi'); return }
+        if (!selectedProduct || !isFormValid) { toast.error('Nama, barcode, harga beli, harga jual, dan stok harus diisi'); return }
 
         const payload = buildPayload()
         if (!payload) {

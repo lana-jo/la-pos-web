@@ -84,6 +84,9 @@ CREATE TYPE public.movement_type AS ENUM (
   'damage',
   'void'
 );
+-- Membuat ENUM untuk tipe pergerakan dan referensi
+CREATE TYPE movement_type AS ENUM ('purchase', 'sale', 'adjustment', 'return_in', 'return_out', 'damage', 'void');
+CREATE TYPE reference_type AS ENUM ('transaction', 'purchase_order', 'refund', 'manual');
 
 CREATE TYPE public.shift_status AS ENUM (
   'open',
@@ -196,6 +199,9 @@ CREATE TABLE IF NOT EXISTS public.products (
   stock          INTEGER     NOT NULL DEFAULT 0 CHECK (stock >= 0),
   min_stock      INTEGER     NOT NULL DEFAULT 0 CHECK (min_stock >= 0),
   max_stock      INTEGER     CHECK (max_stock >= 0),
+  track_stock    BOOLEAN     NOT NULL DEFAULT true,
+  cached_stock   INTEGER     NOT NULL DEFAULT 0,
+  low_stock_threshold INTEGER NOT NULL DEFAULT 5,
   image_url      TEXT,
   is_active      BOOLEAN     NOT NULL DEFAULT true,
   is_consignment BOOLEAN     NOT NULL DEFAULT false,
@@ -221,6 +227,7 @@ CREATE TABLE IF NOT EXISTS public.product_variants (
   cost_price     INTEGER     NOT NULL DEFAULT 0 CHECK (cost_price >= 0),
   conversion_qty INTEGER     NOT NULL DEFAULT 1 CHECK (conversion_qty > 0),  -- 1 Dus = 12 pcs → 12
   min_qty        INTEGER     NOT NULL DEFAULT 1,         -- min beli agar varian ini berlaku
+  cached_stock   INTEGER     NOT NULL DEFAULT 0,
   is_active      BOOLEAN     NOT NULL DEFAULT true,
   is_default     BOOLEAN     NOT NULL DEFAULT false,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -393,7 +400,8 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
   product_variant_id UUID                 REFERENCES public.product_variants(id)  ON DELETE SET NULL,
   movement_type      public.movement_type NOT NULL,
   reference_id       UUID,
-  reference_type     TEXT,
+  reference_type     public.reference_type,
+  unit_cost          NUMERIC(12, 2) DEFAULT 0,
   qty_before         INTEGER              NOT NULL,
   qty_change         INTEGER              NOT NULL,
   qty_after          INTEGER              NOT NULL,
@@ -405,7 +413,28 @@ COMMENT ON TABLE public.stock_movements IS 'Mutasi stok — setiap pergerakan st
 
 
 -- -------------------------------------------------------------------
--- 3.15 CUSTOMER DEBTS
+-- 3.15 INVENTORY MOVEMENTS (Enhanced Stock Tracking)
+-- -------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.inventory_movements (
+  id               UUID                 DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id       UUID                 NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  product_variant_id UUID               REFERENCES public.product_variants(id) ON DELETE CASCADE,
+  movement_type    public.movement_type NOT NULL,
+  reference_type   public.reference_type,
+  reference_id     UUID,
+  qty_change       INTEGER              NOT NULL,
+  qty_before       INTEGER              NOT NULL DEFAULT 0,
+  qty_after        INTEGER              NOT NULL DEFAULT 0,
+  unit_cost        NUMERIC(12, 2)       DEFAULT 0,
+  notes            TEXT,
+  created_by       UUID                 NOT NULL REFERENCES auth.users(id),
+  created_at       TIMESTAMPTZ          NOT NULL DEFAULT NOW()
+);
+COMMENT ON TABLE public.inventory_movements IS 'Buku besar stok — tracking pergerakan dengan cost dan row locking';
+
+
+-- -------------------------------------------------------------------
+-- 3.16 CUSTOMER DEBTS
 -- -------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.customer_debts (
   id             UUID               DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -575,6 +604,12 @@ CREATE INDEX IF NOT EXISTS idx_cashier_actions_created_at  ON public.cashier_act
 
 -- settings
 CREATE INDEX IF NOT EXISTS idx_settings_category_key ON public.settings(category, key);
+
+-- inventory_movements
+CREATE INDEX IF NOT EXISTS idx_inventory_movements_product_id ON public.inventory_movements(product_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_movements_variant_id ON public.inventory_movements(product_variant_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_movements_created_at ON public.inventory_movements(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_inventory_movements_reference ON public.inventory_movements(reference_type, reference_id);
 
 
 -- =====================================================================
@@ -1240,6 +1275,71 @@ END;
 $$;
 
 
+-- -------------------------------------------------------------------
+-- 5.22 INVENTORY MOVEMENTS — Process atomic stock movement with row locking
+-- -------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.fn_process_inventory_movement()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  current_stock INTEGER;
+  is_tracking BOOLEAN;
+BEGIN
+  -- Cek apakah produk melacak stok
+  SELECT track_stock INTO is_tracking FROM public.products WHERE id = NEW.product_id;
+  
+  -- Jika tidak melacak stok (jasa/digital), log dicatat tapi abaikan hitungan
+  IF NOT is_tracking THEN
+    NEW.qty_before := 0;
+    NEW.qty_after := 0;
+    RETURN NEW;
+  END IF;
+
+  -- Row Locking untuk mencegah race condition
+  IF NEW.product_variant_id IS NOT NULL THEN
+    SELECT cached_stock INTO current_stock 
+    FROM public.product_variants 
+    WHERE id = NEW.product_variant_id 
+    FOR UPDATE;
+  ELSE
+    SELECT cached_stock INTO current_stock 
+    FROM public.products 
+    WHERE id = NEW.product_id 
+    FOR UPDATE;
+  END IF;
+
+  current_stock := COALESCE(current_stock, 0);
+
+  -- Kalkulasi stok sebelum dan sesudah
+  NEW.qty_before := current_stock;
+  NEW.qty_after := current_stock + NEW.qty_change;
+
+  -- Validasi overselling untuk movement type tertentu
+  IF NEW.qty_after < 0 AND NEW.movement_type IN ('sale', 'return_out', 'damage') THEN 
+    RAISE EXCEPTION 'Insufficient stock. Transaction aborted.';
+  END IF;
+
+  -- Update master tabel dengan stok baru
+  IF NEW.product_variant_id IS NOT NULL THEN
+    UPDATE public.product_variants 
+    SET cached_stock = NEW.qty_after 
+    WHERE id = NEW.product_variant_id;
+  ELSE
+    UPDATE public.products 
+    SET cached_stock = NEW.qty_after 
+    WHERE id = NEW.product_id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_inventory_movement_process ON public.inventory_movements;
+CREATE TRIGGER trg_inventory_movement_process
+BEFORE INSERT ON public.inventory_movements
+FOR EACH ROW EXECUTE FUNCTION public.fn_process_inventory_movement();
+
+
 -- =====================================================================
 -- 6. ROW LEVEL SECURITY (RLS)
 -- =====================================================================
@@ -1258,6 +1358,7 @@ ALTER TABLE public.transaction_items    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchase_orders      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchase_order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stock_movements      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inventory_movements   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.customer_debts       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.debt_payments        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cashier_actions      ENABLE ROW LEVEL SECURITY;
@@ -1797,6 +1898,37 @@ CREATE POLICY "stock_mov:service_role"
 
 
 -- =====================================================================
+-- INVENTORY MOVEMENTS
+-- =====================================================================
+DROP POLICY IF EXISTS "inventory_mov:admin_all"      ON public.inventory_movements;
+DROP POLICY IF EXISTS "inventory_mov:admin_insert"   ON public.inventory_movements;
+DROP POLICY IF EXISTS "inventory_mov:admin_update"   ON public.inventory_movements;
+DROP POLICY IF EXISTS "inventory_mov:admin_delete"   ON public.inventory_movements;
+DROP POLICY IF EXISTS "inventory_mov:cashier_insert"  ON public.inventory_movements;
+DROP POLICY IF EXISTS "inventory_mov:cashier_select" ON public.inventory_movements;
+DROP POLICY IF EXISTS "inventory_mov:service_role"    ON public.inventory_movements;
+
+CREATE POLICY "inventory_mov:admin_all"
+  ON public.inventory_movements FOR ALL TO authenticated
+  USING (public.fn_is_admin()) WITH CHECK (public.fn_is_admin());
+
+CREATE POLICY "inventory_mov:cashier_insert"
+  ON public.inventory_movements FOR INSERT TO authenticated
+  WITH CHECK (
+    movement_type IN ('sale', 'return_in', 'void') 
+    AND created_by = auth.uid()
+  );
+
+CREATE POLICY "inventory_mov:cashier_select"
+  ON public.inventory_movements FOR SELECT TO authenticated
+  USING (public.fn_is_cashier_or_admin());
+
+CREATE POLICY "inventory_mov:service_role"
+  ON public.inventory_movements FOR ALL TO service_role
+  USING (true) WITH CHECK (true);
+
+
+-- =====================================================================
 -- CUSTOMER DEBTS
 -- =====================================================================
 DROP POLICY IF EXISTS "debts:admin_all"      ON public.customer_debts;
@@ -2105,6 +2237,27 @@ INSERT INTO public.settings (category, key, value, description, data_type) VALUE
   ('shift',       'single_session',   'true',                              'Satu kasir hanya bisa punya satu shift aktif',      'boolean')
 ON CONFLICT (category, key) DO NOTHING;
 
+-- Initialize cached_stock for existing products
+UPDATE public.products 
+SET cached_stock = COALESCE(stock, 0) 
+WHERE cached_stock = 0 AND stock IS NOT NULL;
+
+-- Initialize cached_stock for existing product_variants
+UPDATE public.product_variants pv
+SET cached_stock = COALESCE(p.stock, 0) 
+FROM public.products p
+WHERE pv.product_id = p.id AND pv.cached_stock = 0;
+
+-- Update reference_type for existing stock_movements
+UPDATE public.stock_movements 
+SET reference_type = CASE 
+    WHEN reference_type::text = 'transaction' THEN 'transaction'::reference_type
+    WHEN reference_type::text = 'purchase_order' THEN 'purchase_order'::reference_type
+    WHEN reference_type::text = 'refund' THEN 'refund'::reference_type
+    ELSE 'manual'::reference_type
+END
+WHERE reference_type IS NOT NULL;
+
 
 -- =====================================================================
 -- 9. VIEWS
@@ -2190,9 +2343,15 @@ COMMENT ON TYPE public.purchase_status IS 'Status pembelian: draft | ordered | r
 -- ✓ Trigger functions  : 21
 -- ✓ Triggers           : 21
 -- ✓ RLS enabled        : 18 tables
--- ✓ RLS policies       : 100+ (ALL dipecah per-operasi)
--- ✓ Storage buckets    : 4
--- ✓ Storage policies   : 16
--- ✓ Seed data          : 14 units, 20 settings
+-- GRANT permissions for inventory_movements
+GRANT SELECT, INSERT, UPDATE ON public.inventory_movements TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.inventory_movements TO service_role;
+
+-- ✓ Tables             : 18
+-- ✓ Enums              : 8
+-- ✓ Functions          : 22
+-- ✓ Triggers           : 15
+-- ✓ Indexes            : 27
+-- ✓ RLS Policies       : 67
 -- ✓ Views              : 3
 -- =====================================================================

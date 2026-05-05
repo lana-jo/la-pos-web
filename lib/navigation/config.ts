@@ -71,6 +71,11 @@ const adminItems: NavigationConfig = [
         label: "Pemasok",
         description: "Kelola data pemasok",
       },
+      {
+        href: "/dashboard/stock",
+        label: "Manajemen Stock",
+        description: "Monitor dan kelola inventory",
+      },
     ],
   },
   {

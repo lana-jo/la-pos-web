@@ -36,6 +36,7 @@ export function CartPanel() {
     paymentMethod: string,
     paidAt?: string
   ) => {
+    console.log("[POS Cart] Starting receipt printing:", { transactionId, total, paymentMethod, paidAt });
     const printManager = PrintManager.getInstance();
 
     
@@ -79,7 +80,7 @@ export function CartPanel() {
           discount_amount: 0,
           subtotal: item.unit_price * item.quantity,
         };
-        console.log("[product_variant] Cart item for transaction:", {
+        console.log("[POS Cart] Cart item for transaction:", {
           product_name: item.product.name,
           variant_name: item.variant?.variant_name || null,
           variant_id: item.variant?.id || null,
@@ -91,29 +92,36 @@ export function CartPanel() {
       }),
     };
 
-    console.log("[printReceipt] Transaction items:", transaction.items.length);
-    console.log("[printReceipt] Transaction data:", transaction);
+    console.log("[POS Cart] Transaction items:", transaction.items.length);
+    console.log("[POS Cart] Transaction data:", transaction);
 
+    console.log("[POS Cart] Sending to print manager");
     const success = await printManager.printReceipt(transaction, "Cashier", {
       silent: false,
     });
 
     if (success) {
+      console.log("[POS Cart] Receipt printed successfully");
       toast.success("Receipt printed successfully!");
     } else {
+      console.error("[POS Cart] Failed to print receipt");
       toast.error("Failed to print receipt");
     }
   };
 
   const handleCashPayment = async () => {
+    console.log("[POS Cart] Starting cash payment process");
     if (cart.length === 0) {
+      console.log("[POS Cart] Cart is empty, cannot process payment");
       toast.error("Cart is empty");
       return;
     }
 
+    console.log("[POS Cart] Cart items for payment:", { itemCount: cart.length, total: getTotal() });
     setIsProcessing(true);
     try {
       const total = getTotal();
+      console.log("[POS Cart] Serializing cart for server action:", { itemCount: cart.length, total });
       // Serialize cart to plain JSON for Server Action
       const serializedCart = cart.map(item => ({
         product: {
@@ -151,11 +159,15 @@ export function CartPanel() {
         } : null,
         quantity: item.quantity
       }));
+      
+      console.log("[POS Cart] Calling createCashPayment server action");
       const result = await createCashPayment(serializedCart, total);
 
       if (result.success) {
+        console.log("[POS Cart] Cash payment successful:", result);
         toast.success("Cash payment completed successfully!");
         // Print receipt
+        console.log("[POS Cart] Printing receipt for cash payment");
         await printReceipt(
           result.transactionId,
           result.total,
@@ -163,27 +175,33 @@ export function CartPanel() {
           new Date().toISOString()
         );
         clearCart();
-        console.log("Cash payment completed:", result);
+        console.log("[POS Cart] Cart cleared after successful payment");
       } else {
+        console.error("[POS Cart] Cash payment failed:", result.error);
         toast.error(result.error || "Cash payment failed");
       }
     } catch (error) {
-      console.error("Cash payment error:", error);
+      console.error("[POS Cart] Cash payment error:", error);
       toast.error("Cash payment failed. Please try again.");
     } finally {
       setIsProcessing(false);
+      console.log("[POS Cart] Cash payment process completed");
     }
   };
 
   const handlePayment = async () => {
+    console.log("[POS Cart] Starting QRIS payment process");
     if (cart.length === 0) {
+      console.log("[POS Cart] Cart is empty, cannot process payment");
       toast.error("Cart is empty");
       return;
     }
 
+    console.log("[POS Cart] Cart items for QRIS payment:", { itemCount: cart.length, total: getTotal() });
     setIsProcessing(true);
     try {
       const total = getTotal();
+      console.log("[POS Cart] Serializing cart for QRIS server action:", { itemCount: cart.length, total });
       // Serialize cart to plain JSON for Server Action
       const serializedCart = cart.map(item => ({
         product: {
@@ -221,11 +239,15 @@ export function CartPanel() {
         } : null,
         quantity: item.quantity
       }));
+      
+      console.log("[POS Cart] Calling createQRISPayment server action");
       const result = await createQRISPayment(serializedCart, total);
 
       if (result.success) {
+        console.log("[POS Cart] QRIS payment initiated successfully:", result);
         toast.success("Payment initiated successfully!");
         // Print receipt (Note: For QRIS, ideally print after webhook confirms payment)
+        console.log("[POS Cart] Printing receipt for QRIS payment");
         await printReceipt(
           result.transactionId,
           result.total,
@@ -233,16 +255,19 @@ export function CartPanel() {
           new Date().toISOString()
         );
         clearCart();
+        console.log("[POS Cart] Cart cleared after QRIS payment initiation");
         // TODO: Show QRIS modal with result.qrisUrl, result.qrisString, result.expiryTime
-        console.log("Payment QRIS data:", result);
+        console.log("[POS Cart] QRIS data for modal:", result);
       } else {
+        console.error("[POS Cart] QRIS payment failed:", result.error);
         toast.error(result.error || "Payment failed");
       }
     } catch (error) {
-      console.error("Payment error:", error);
+      console.error("[POS Cart] QRIS payment error:", error);
       toast.error("Payment failed. Please try again.");
     } finally {
       setIsProcessing(false);
+      console.log("[POS Cart] QRIS payment process completed");
     }
   };
 

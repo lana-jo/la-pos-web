@@ -98,12 +98,11 @@ export const MenuNavigation = () => (
           description: "Organize products by categories",
         },
         {
-          href: "#",
+          href: "/dashboard/stock",
           icon: Database,
-          color: "text-gray-400",
+          color: "text-indigo-600",
           title: "Stock Management",
-          description: "Track inventory levels (Coming Soon)",
-          disabled: true,
+          description: "Track inventory levels",
         },
       ]}
     />

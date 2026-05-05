@@ -346,20 +346,35 @@ export default function POSPage() {
   };
 
   // Handle variant selection
-  const handleVariantSelection = (product: Product & { variants?: ProductVariant[] }, variant: ProductVariant) => {
+  const handleVariantSelection = (product: Product & { variants?: ProductVariant[] }, variant: ProductVariant, quantity: number) => {
+    // 1. Ambil stok aktual varian
+    const variantStock = (variant.cached_stock || 0) > 0 ? variant.cached_stock : (variant.stock || 0);
+
+    // 2. Blokir jika stok kosong
+    if (variantStock <= 0) {
+      toast.error(`Varian "${variant.variant_name}" sedang kosong (Out of Stock)`);
+      return;
+    }
+
+    // 3. Blokir jika kasir memasukkan Qty melebihi sisa stok
+    if (quantity > variantStock) {
+      toast.error(`Gagal! Sisa stok "${variant.variant_name}" hanya ${variantStock} item`);
+      return;
+    }
+
+    // 4. Jika lolos validasi, masukkan ke keranjang
     console.log("[product_variant] Variant selected:", {
       product_id: product.id,
-      product_name: product.name,
       variant_id: variant.id,
       variant_name: variant.variant_name,
-      barcode: variant.barcode,
-      price: variant.price,
-      conversion_qty: variant.conversion_qty,
-      min_qty: variant.min_qty,
-      quantity: variantQuantity
+      quantity: quantity,
+      available_stock: variantStock
     });
-    addItem(product, variantQuantity, variant);
-    toast.success(`Added ${variantQuantity}x ${product.name} - ${variant.variant_name} to cart`);
+
+    addItem(product, quantity, variant);
+    toast.success(`Added ${quantity}x ${product.name} - ${variant.variant_name} to cart`);
+    
+    // Reset state modal
     setShowVariantSelection(false);
     setShowProductSelection(false);
     setSelectedProductForVariants(null);
@@ -900,40 +915,40 @@ export default function POSPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {transactions.map((transaction) => (
-                  <div key={transaction.id} className="pos-transaction-card">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-primary">
-                          Transaction #{transaction.id.slice(-6)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.created_at).toLocaleString(
-                            "id-ID",
-                          )}
-                        </p>
-                        <Badge
-                          variant={
-                            transaction.payment_status === "paid"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="mt-2"
-                        >
-                          {transaction.payment_status}
-                        </Badge>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-primary">
-                          Rp {transaction.total.toLocaleString("id-ID")}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {transaction.items?.length || 0} items
-                        </p>
+                {transactions.map((transaction) => {
+                  return (
+                    <div key={transaction.id} className="pos-transaction-card">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium text-primary">
+                            Transaction #{transaction.id.slice(-6)}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(transaction.created_at).toLocaleString("id-ID")}
+                          </p>
+                          <Badge
+                            variant={
+                              transaction.payment_status === "paid"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className="mt-2"
+                          >
+                            {transaction.payment_status}
+                          </Badge>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-lg text-primary">
+                            Rp {transaction.total.toLocaleString("id-ID")}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {transaction.items?.length || 0} items
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1041,115 +1056,18 @@ export default function POSPage() {
       </Dialog>
 
       {/* Variant Selection Modal */}
-      <Dialog open={showVariantSelection} onOpenChange={setShowVariantSelection}>
-        <DialogContent className="sm:max-w-[500px] pos-modal-content">
-          <DialogHeader className="pos-modal-header">
-            <DialogTitle className="pos-modal-title">
-              <Grid3x3 className="h-5 w-5" />
-              Select Variant - {selectedProductForVariants?.name}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="pos-modal-body">
-            {/* Quantity Selector */}
-            <div className="mb-6 p-4 bg-muted/30 rounded-lg">
-              <Label className="pos-form-label mb-2 block">Quantity</Label>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVariantQuantity(Math.max(1, variantQuantity - 1))}
-                  disabled={variantQuantity <= 1}
-                  className="h-8 w-8 p-0"
-                >
-                  -
-                </Button>
-                <div className="w-16 text-center">
-                  <span className="font-medium text-lg">{variantQuantity}</span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setVariantQuantity(variantQuantity + 1)}
-                  className="h-8 w-8 p-0"
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-
-            {selectedProductForVariants?.variants && selectedProductForVariants.variants.length > 0 ? (
-              <div className="space-y-3">
-                {selectedProductForVariants.variants.map((variant) => (
-                  <div
-                    key={variant.id}
-                    className={`pos-variant-card cursor-pointer transition-all p-4 rounded-lg border ${
-                      (variant.product?.stock || 0) <= 0 
-                        ? 'opacity-50 cursor-not-allowed bg-muted/30' 
-                        : 'hover:bg-muted/50 hover:shadow-sm hover:scale-[1.02]'
-                    }`}
-                    onClick={() => (variant.product?.stock || 0) > 0 && handleVariantSelection(selectedProductForVariants, variant)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-md flex items-center justify-center border ${
-                          (variant.product?.stock || 0) <= 0 ? 'bg-red-50 border-red-200' : 'bg-muted'
-                        }`}>
-                          <Package className={`h-5 w-5 ${
-                            (variant.product?.stock || 0) <= 0 ? 'text-red-500' : 'text-muted-foreground'
-                          }`} />
-                        </div>
-                        <div>
-                          <h4 className={`font-medium ${
-                            (variant.product?.stock || 0) <= 0 ? 'text-muted-foreground' : ''
-                          }`}>{variant.variant_name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {variant.barcode ? `Barcode: ${variant.barcode}` : 'No barcode'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`font-semibold ${
-                          (variant.product?.stock || 0) <= 0 ? 'text-muted-foreground line-through' : 'text-primary-brand'
-                        }`}>
-                          Rp {variant.price.toLocaleString("id-ID")}
-                        </p>
-                        <div className="flex items-center gap-2 justify-end">
-                          <p className={`text-xs ${
-                            (variant.product?.stock || 0) <= 0 ? 'text-red-500 font-medium' : 'text-muted-foreground'
-                          }`}>
-                            {(variant.product?.stock || 0) <= 0 ? 'Out of Stock' : `Stock: ${variant.product?.stock}`}
-                          </p>
-                          {variant.is_default && (
-                            <Badge variant="secondary" className="text-xs">Default</Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No variants available</p>
-              </div>
-            )}
-          </div>
-          <DialogFooter className="pos-modal-footer">
-            <Button
-              className="pos-button-secondary"
-              onClick={() => {
-                setShowVariantSelection(false);
-                setSelectedProductForVariants(null);
-                setVariantQuantity(1);
-              }}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <VariantSelectionModal
+        isOpen={showVariantSelection}
+        onClose={() => {
+          setShowVariantSelection(false);
+          setSelectedProductForVariants(null);
+          setVariantQuantity(1);
+        }}
+        product={selectedProductForVariants}
+        onVariantSelect={handleVariantSelection}
+        variantQuantity={variantQuantity}
+        onVariantQuantityChange={setVariantQuantity}
+      />
 
       {/* Camera Scanner Modal */}
       <CameraScanner
