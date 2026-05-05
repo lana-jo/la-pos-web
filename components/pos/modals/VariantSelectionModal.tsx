@@ -93,64 +93,95 @@ export function VariantSelectionModal({
 
           {product.variants && product.variants.length > 0 ? (
             <div className="space-y-3">
-              {product.variants.map((variant) => (
-                <div
-                  key={variant.id}
-                  className={`pos-variant-card cursor-pointer transition-all p-4 rounded-lg border ${
-                    (product.stock || 0) <= 0 || variantQuantity < variant.min_qty
-                      ? 'opacity-50 cursor-not-allowed bg-muted/30' 
-                      : 'hover:bg-muted/50 hover:shadow-sm hover:scale-[1.02]'
-                  }`}
-                  onClick={() => (product.stock || 0) > 0 && variantQuantity >= variant.min_qty && handleVariantSelection(variant)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-md flex items-center justify-center border ${
-                        (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'bg-red-50 border-red-200' : 'bg-muted'
-                      }`}>
-                        <Package className={`h-5 w-5 ${
-                          (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-red-500' : 'text-muted-foreground'
-                        }`} />
-                      </div>
-                      <div>
-                        <h4 className={`font-medium ${
-                          (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-muted-foreground' : ''
-                        }`}>{variant.variant_name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {variant.barcode ? `Barcode: ${variant.barcode}` : 'No barcode'}
-                        </p>
-                        {variant.conversion_qty > 1 && (
-                          <p className="text-xs text-muted-foreground">
-                            Conversion: {variant.conversion_qty} units
-                          </p>
-                        )}
-                        {variant.min_qty > 1 && (
-                          <p className="text-xs text-blue-600 font-medium">
-                            Min. qty: {variant.min_qty}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-semibold ${
-                        (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-muted-foreground line-through' : 'text-primary-brand'
-                      }`}>
-                        Rp {variant.price.toLocaleString("id-ID")}
-                      </p>
-                      <div className="flex items-center gap-2 justify-end">
-                        <p className={`text-xs ${
-                          (product.stock || 0) <= 0 || variantQuantity < variant.min_qty ? 'text-red-500 font-medium' : 'text-muted-foreground'
+              {product.variants.map((variant) => {
+                // Calculate actual available stock for this variant based on conversion quantity
+                const conversionQty = variant.conversion_qty || 1;
+                // Try cached_stock first, fallback to stock if cached_stock is 0 or null
+                const productStock = (product.cached_stock || 0) > 0 ? product.cached_stock : (product.stock || 0);
+                const availableVariantStock = conversionQty > 1 
+                  ? Math.floor(productStock / conversionQty)
+                  : productStock;
+                
+                const isOutOfStock = availableVariantStock <= 0;
+                const isBelowMinQty = variantQuantity < variant.min_qty;
+                const isDisabled = isOutOfStock || isBelowMinQty;
+                
+                // Debug logging
+                console.log(`[Variant Selection] ${variant.variant_name}:`, {
+                  stock: product.stock,
+                  cached_stock: product.cached_stock,
+                  productStock,
+                  conversionQty,
+                  availableVariantStock,
+                  minQty: variant.min_qty,
+                  currentQty: variantQuantity,
+                  isOutOfStock,
+                  isBelowMinQty,
+                  isDisabled
+                });
+                
+                return (
+                  <div
+                    key={variant.id}
+                    className={`pos-variant-card cursor-pointer transition-all p-4 rounded-lg border ${
+                      isDisabled
+                        ? 'opacity-50 cursor-not-allowed bg-muted/30' 
+                        : 'hover:bg-muted/50 hover:shadow-sm hover:scale-[1.02]'
+                    }`}
+                    onClick={() => !isDisabled && handleVariantSelection(variant)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-md flex items-center justify-center border ${
+                          isDisabled ? 'bg-red-50 border-red-200' : 'bg-muted'
                         }`}>
-                          {(product.stock || 0) <= 0 ? 'Out of Stock' : variantQuantity < variant.min_qty ? `Min. qty: ${variant.min_qty}` : `Stock: ${product.stock}`}
+                          <Package className={`h-5 w-5 ${
+                            isDisabled ? 'text-red-500' : 'text-muted-foreground'
+                          }`} />
+                        </div>
+                        <div>
+                          <h4 className={`font-medium ${
+                            isDisabled ? 'text-muted-foreground' : ''
+                          }`}>{variant.variant_name}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {variant.barcode ? `Barcode: ${variant.barcode}` : 'No barcode'}
+                          </p>
+                          {variant.conversion_qty > 1 && (
+                            <p className="text-xs text-muted-foreground">
+                              Conversion: {variant.conversion_qty} units = 1 {variant.variant_name}
+                            </p>
+                          )}
+                          {variant.min_qty > 1 && (
+                            <p className="text-xs text-blue-600 font-medium">
+                              Min. qty: {variant.min_qty}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${
+                          isDisabled ? 'text-muted-foreground line-through' : 'text-primary-brand'
+                        }`}>
+                          Rp {variant.price.toLocaleString("id-ID")}
                         </p>
-                        {variant.is_default && (
-                          <Badge variant="secondary" className="text-xs">Default</Badge>
-                        )}
+                        <div className="flex items-center gap-2 justify-end">
+                          <p className={`text-xs ${
+                            isDisabled ? 'text-red-500 font-medium' : 'text-muted-foreground'
+                          }`}>
+                            {isOutOfStock ? 'Out of Stock' : 
+                             isBelowMinQty ? `Min. qty: ${variant.min_qty}` : 
+                             conversionQty > 1 ? `Available: ${availableVariantStock} ${variant.variant_name}` :
+                             `Stock: ${availableVariantStock}`}
+                          </p>
+                          {variant.is_default && (
+                            <Badge variant="secondary" className="text-xs">Default</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">

@@ -31,6 +31,8 @@ export type FormData = {
     stock: string
     min_stock: string
     max_stock: string
+    track_stock: boolean
+    low_stock_threshold: string
     category_id: string
     unit_id: string
     supplier_id: string
@@ -164,43 +166,92 @@ export function ProductFormFields({
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-                <div>
-                    <Label htmlFor={field('stock')}>Stok *</Label>
-                    <Input
-                        id={field('stock')}
-                        type="number"
-                        min={0}
-                        value={formData.stock}
-                        onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                        placeholder="0"
+            <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id={field('track_stock')}
+                        checked={formData.track_stock}
+                        onChange={(e) => setFormData({ ...formData, track_stock: e.target.checked })}
                         disabled={isSubmitting}
                     />
+                    <Label htmlFor={field('track_stock')} className="font-medium">
+                        Lacak Stok Otomatis
+                    </Label>
+                    <span className="text-xs text-muted-foreground">
+                        (Aktifkan untuk tracking stok real-time)
+                    </span>
                 </div>
-                <div>
-                    <Label htmlFor={field('min_stock')}>Stok Minimum</Label>
-                    <Input
-                        id={field('min_stock')}
-                        type="number"
-                        min={0}
-                        value={formData.min_stock}
-                        onChange={(e) => setFormData({ ...formData, min_stock: e.target.value })}
-                        placeholder="0"
-                        disabled={isSubmitting}
-                    />
-                </div>
-                <div>
-                    <Label htmlFor={field('max_stock')}>Stok Maksimum</Label>
-                    <Input
-                        id={field('max_stock')}
-                        type="number"
-                        min={0}
-                        value={formData.max_stock}
-                        onChange={(e) => setFormData({ ...formData, max_stock: e.target.value })}
-                        placeholder="Kosongkan jika tidak ada batas"
-                        disabled={isSubmitting}
-                    />
-                </div>
+
+                {formData.track_stock && (
+                    <div className="grid grid-cols-3 gap-4 pl-6 border-l-2 border-blue-200">
+                        <div>
+                            <Label htmlFor={field('stock')}>Stok Awal *</Label>
+                            <Input
+                                id={field('stock')}
+                                type="number"
+                                min={0}
+                                value={formData.stock}
+                                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                                placeholder="0"
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor={field('min_stock')}>Stok Minimum</Label>
+                            <Input
+                                id={field('min_stock')}
+                                type="number"
+                                min={0}
+                                value={formData.min_stock}
+                                onChange={(e) => setFormData({ ...formData, min_stock: e.target.value })}
+                                placeholder="0"
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor={field('max_stock')}>Stok Maksimum</Label>
+                            <Input
+                                id={field('max_stock')}
+                                type="number"
+                                min={0}
+                                value={formData.max_stock}
+                                onChange={(e) => setFormData({ ...formData, max_stock: e.target.value })}
+                                placeholder="Kosongkan jika tidak ada batas"
+                                disabled={isSubmitting}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {formData.track_stock && (
+                    <div className="pl-6 border-l-2 border-blue-200">
+                        <Label htmlFor={field('low_stock_threshold')}>
+                            Threshold Alert Stok Rendah
+                        </Label>
+                        <Input
+                            id={field('low_stock_threshold')}
+                            type="number"
+                            min={1}
+                            value={formData.low_stock_threshold}
+                            onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
+                            placeholder="5"
+                            disabled={isSubmitting}
+                            className="mt-1"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Alert akan muncul saat stok mencapai angka ini atau lebih rendah
+                        </p>
+                    </div>
+                )}
+
+                {!formData.track_stock && (
+                    <div className="pl-6 border-l-2 border-gray-200">
+                        <p className="text-sm text-muted-foreground">
+                            Stok tidak akan dilacak secara otomatis. Produk ini cocok untuk jasa atau barang digital.
+                        </p>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

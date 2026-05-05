@@ -126,7 +126,7 @@ export function CartPanel() {
           description: item.product.description,
           cost_price: item.product.cost_price,
           price: item.product.price,
-          stock: item.product.stock,
+          stock: item.product.track_stock ? item.product.cached_stock : item.product.stock,
           min_stock: item.product.min_stock,
           max_stock: item.product.max_stock,
           image_url: item.product.image_url,
@@ -196,7 +196,7 @@ export function CartPanel() {
           description: item.product.description,
           cost_price: item.product.cost_price,
           price: item.product.price,
-          stock: item.product.stock,
+          stock: item.product.track_stock ? item.product.cached_stock : item.product.stock,
           min_stock: item.product.min_stock,
           max_stock: item.product.max_stock,
           image_url: item.product.image_url,
@@ -343,7 +343,7 @@ export function CartPanel() {
                     onClick={() =>
                       updateItemQuantity(item.product.id, item.quantity + 1)
                     }
-                    disabled={item.quantity >= (item.product.stock)}
+                    disabled={item.quantity >= (item.product.track_stock ? item.product.cached_stock : item.product.stock)}
                   >
                     <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
                   </Button>

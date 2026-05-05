@@ -16,21 +16,27 @@ export function useBarcodeQueue() {
       // First try to find variant by barcode
       const { data: variant, error: variantError } = await supabase
         .from('product_variants')
-        .select('*, products(*)')
+        .select('*, product:products(*)')
         .eq('barcode', barcode)
         .eq('is_active', true)
         .single() as { data: any, error: any }
 
       if (variant && !variantError) {
         // Found variant, check stock and add to cart
-        // Check product stock (variants don't have separate stock)
-        const productStock = variant.products?.stock || 0
-        if (productStock <= 0) {
+        // Calculate actual available stock for this variant based on conversion quantity
+        const conversionQty = variant.conversion_qty || 1;
+        // Try cached_stock first, fallback to stock if cached_stock is 0 or null
+        const productStock = (variant.product?.cached_stock || 0) > 0 ? variant.product?.cached_stock : (variant.product?.stock || 0);
+        const availableVariantStock = conversionQty > 1 
+          ? Math.floor(productStock / conversionQty)
+          : productStock;
+        
+        if (availableVariantStock <= 0) {
           toast.warning(`Product out of stock: ${variant.variant_name}`)
           return
         }
 
-        const product = variant.products as Product
+        const product = variant.product as Product
         addItem(product, 1, variant)
         toast.success(`Added: ${product.name} - ${variant.variant_name}`)
         

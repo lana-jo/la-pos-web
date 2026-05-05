@@ -185,6 +185,9 @@ export default function POSPage() {
         cost_price: 0,
         price: price,
         stock: 999999,
+        cached_stock: 999999,
+        track_stock: false,
+        low_stock_threshold: 0,
         min_stock: 0,
         max_stock: null,
         barcode: "",
@@ -273,6 +276,15 @@ export default function POSPage() {
             min_qty: v.min_qty
           }))
         );
+        
+        // Debug product stock
+        console.log(`[product_variant] Product ${product.name} stock:`, {
+          productId: product.id,
+          stock: product.stock,
+          cached_stock: product.cached_stock,
+          track_stock: product.track_stock
+        });
+        
         return {
           ...product,
           variants: productVariants
@@ -300,7 +312,7 @@ export default function POSPage() {
         supplier_id: p.supplier_id || null,
         description: p.description || null,
         cost_price: p.cost_price || 0,
-        min_stock: p.min_stock || 0,
+        min_stock: p.low_stock_threshold || 0,
         max_stock: p.max_stock || null,
         is_consignment: p.is_consignment || false,
       } as Product));
@@ -380,9 +392,21 @@ export default function POSPage() {
           min_qty: variant.min_qty
         });
         // Found variant, add to cart
-        const productStock = variant.product.stock || 0
-        if (productStock <= 0) {
-          console.log("[product_variant] Product out of stock:", { variant_name: variant.variant_name, stock: productStock });
+        // Calculate actual available stock for this variant based on conversion quantity
+        const conversionQty = variant.conversion_qty || 1;
+        // Try cached_stock first, fallback to stock if cached_stock is 0 or null
+        const productStock = (variant.product.cached_stock || 0) > 0 ? variant.product.cached_stock : (variant.product.stock || 0);
+        const availableVariantStock = conversionQty > 1 
+          ? Math.floor(productStock / conversionQty)
+          : productStock;
+        
+        if (availableVariantStock <= 0) {
+          console.log("[product_variant] Product out of stock:", { 
+            variant_name: variant.variant_name, 
+            product_stock: productStock,
+            conversion_qty: conversionQty,
+            available_variant_stock: availableVariantStock
+          });
           toast.error(`Product "${variant.product.name}" is out of stock`);
           return;
         }
@@ -750,11 +774,24 @@ export default function POSPage() {
                 </div>
               ) : (
                 <div className="pos-product-grid">
-                  {products.map((product) => (
+                  {products.map((product) => {
+                    // Calculate product stock using cached_stock first, fallback to stock
+                    const productStock = (product.cached_stock || 0) > 0 ? product.cached_stock : (product.stock || 0);
+                    const isOutOfStock = productStock <= 0;
+                    
+                    return (
                     <div
                       key={product.id}
-                      className="pos-product-card"
-                      onClick={() => handleProductSelection(product)}
+                      className={`pos-product-card ${
+                        isOutOfStock && product.variants && product.variants.length > 0 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : ''
+                      }`}
+                      onClick={() => {
+                        if (!isOutOfStock || !product.variants || product.variants.length === 0) {
+                          handleProductSelection(product);
+                        }
+                      }}
                     >
                       <div className="pos-product-image">
                         {product.image_url ? (
@@ -778,8 +815,12 @@ export default function POSPage() {
                               Rp {Math.max(...product.variants.map(v => v.price)).toLocaleString("id-ID")}
                             </p>
                             <div className="flex items-center justify-between mt-1">
-                              <p className="pos-product-stock">
-                                {product.variants.length} variants
+                              <p className={`pos-product-stock ${
+                                ((product.cached_stock || 0) > 0 ? product.cached_stock : (product.stock || 0)) <= 0 ? 'text-red-500 font-medium' : ''
+                              }`}>
+                                {((product.cached_stock || 0) > 0 ? product.cached_stock : (product.stock || 0)) <= 0 
+                                  ? 'Out of Stock' 
+                                  : `${product.variants.length} variants`}
                               </p>
                               {product.categories && (
                                 <Badge
@@ -797,8 +838,10 @@ export default function POSPage() {
                               Rp {product.price.toLocaleString("id-ID")}
                             </p>
                             <div className="flex items-center justify-between mt-1">
-                              <p className="pos-product-stock">
-                                Stock: {product.stock}
+                              <p className={`pos-product-stock ${
+                                productStock <= 0 ? 'text-red-500 font-medium' : ''
+                              }`}>
+                                Stock: {productStock}
                               </p>
                               {product.categories && (
                                 <Badge
@@ -813,7 +856,8 @@ export default function POSPage() {
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
