@@ -1,291 +1,156 @@
-'use client';
+"use client";
 
-import { useCallback, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Grid3x3, X, Package, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner'; // or your toast lib: react-hot-toast / shadcn Toaster
-import type { ProductWithVariants, ProductVariant } from '@/types';
-
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-
-function calcAvailableStock(productStock: number, conversionQty: number): number {
-  return conversionQty > 1 ? Math.floor(productStock / conversionQty) : productStock;
-}
-
-function formatRupiah(amount: number): string {
-  return `Rp ${amount.toLocaleString('id-ID')}`;
-}
-
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
-
-interface VariantCardProps {
-  variant: ProductVariant;
-  productStock: number;
-  currentQty: number;
-  onSelect: (v: ProductVariant) => void;
-}
+} from "@/components/ui/dialog";
+import { Grid3x3, X, Package } from "lucide-react";
+import { toast } from "sonner";
+import type { Product, ProductVariant } from "@/types";
 
 interface VariantSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product: ProductWithVariants | null;
-  variantQuantity: number;
-  onVariantQuantityChange: (qty: number) => void;
-  onVariantSelect: (
-    product: ProductWithVariants,
-    variant: ProductVariant,
-    quantity: number,
-  ) => void;
+  product: Product & { variants?: ProductVariant[] } | null;
+  onVariantSelect: (product: Product, variant: ProductVariant, quantity: number) => void;
 }
-
-// ─────────────────────────────────────────────
-// VariantCard
-// ─────────────────────────────────────────────
-
-function VariantCard({ variant, productStock, currentQty, onSelect }: VariantCardProps) {
-  const conversionQty  = variant.conversion_qty || 1;
-  const availableStock = calcAvailableStock(productStock, conversionQty);
-
-  // BUG FIX: isOutOfStock saja yang men-disable tombol.
-  // isBelowMinQty hanya menampilkan warning — tidak memblokir klik,
-  // karena user belum tentu tahu min_qty sebelum membuka modal,
-  // dan validasi final dilakukan di handleSelect (parent).
-  const isOutOfStock   = availableStock <= 0;
-  const isBelowMinQty  = currentQty < variant.min_qty;
-
-  return (
-    <button
-      type="button"
-      disabled={isOutOfStock}
-      onClick={() => onSelect(variant)}
-      aria-label={`Pilih varian ${variant.variant_name}`}
-      className={`
-        w-full text-left p-4 rounded-lg border transition-all duration-150
-        ${isOutOfStock
-          ? 'opacity-50 cursor-not-allowed bg-muted/30'
-          : 'hover:bg-muted/50 hover:shadow-sm hover:scale-[1.02] active:scale-[0.99]'
-        }
-      `}
-    >
-      <div className="flex items-center justify-between gap-3">
-
-        {/* Icon */}
-        <div className={`
-          shrink-0 w-10 h-10 rounded-md flex items-center justify-center border
-          ${isOutOfStock ? 'bg-red-50 border-red-200' : 'bg-muted'}
-        `}>
-          <Package className={`h-5 w-5 ${isOutOfStock ? 'text-red-500' : 'text-muted-foreground'}`} />
-        </div>
-
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h4 className={`font-medium truncate ${isOutOfStock ? 'text-muted-foreground' : ''}`}>
-              {variant.variant_name}
-            </h4>
-            {variant.is_default && (
-              <Badge variant="secondary" className="text-xs shrink-0">Default</Badge>
-            )}
-          </div>
-
-          <p className="text-sm text-muted-foreground">
-            {variant.barcode ? `Barcode: ${variant.barcode}` : 'Tidak ada barcode'}
-          </p>
-
-          {conversionQty > 1 && (
-            <p className="text-xs text-muted-foreground">
-              {conversionQty} pcs = 1 {variant.variant_name}
-            </p>
-          )}
-
-          {/* Warning min_qty — informatif, tidak disable tombol */}
-          {isBelowMinQty && !isOutOfStock && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
-              <p className="text-xs text-amber-600 font-medium">
-                Min. qty: {variant.min_qty} {variant.variant_name}
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Price & Stock */}
-        <div className="text-right shrink-0">
-          <p className={`font-semibold ${isOutOfStock ? 'text-muted-foreground line-through' : 'text-primary-brand'}`}>
-            {formatRupiah(variant.price)}
-          </p>
-          <p className={`text-xs mt-0.5 ${isOutOfStock ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
-            {isOutOfStock
-              ? 'Stok habis'
-              : conversionQty > 1
-                ? `Tersedia: ${availableStock} ${variant.variant_name}`
-                : `Stok: ${availableStock}`}
-          </p>
-        </div>
-
-      </div>
-    </button>
-  );
-}
-
-// ─────────────────────────────────────────────
-// QuantitySelector
-// ─────────────────────────────────────────────
-
-interface QuantitySelectorProps {
-  value: number;
-  onChange: (qty: number) => void;
-}
-
-function QuantitySelector({ value, onChange }: QuantitySelectorProps) {
-  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const parsed = parseInt(e.target.value);
-    onChange(isNaN(parsed) || parsed < 1 ? 1 : parsed);
-  }, [onChange]);
-
-  return (
-    <div className="mb-6 p-4 bg-muted/30 rounded-lg">
-      <label htmlFor="variant-qty" className="pos-form-label mb-2 block">
-        Jumlah
-      </label>
-      <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onChange(Math.max(1, value - 1))}
-          disabled={value <= 1}
-          className="h-8 w-8 p-0"
-          aria-label="Kurangi jumlah"
-        >
-          −
-        </Button>
-
-        <input
-          id="variant-qty"
-          type="number"
-          min={1}
-          value={value}
-          onChange={handleInput}
-          className="w-16 text-center font-medium text-lg border rounded-md py-1
-                     focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onChange(value + 1)}
-          className="h-8 w-8 p-0"
-          aria-label="Tambah jumlah"
-        >
-          +
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// VariantSelectionModal
-// ─────────────────────────────────────────────
 
 export function VariantSelectionModal({
   isOpen,
   onClose,
   product,
-  variantQuantity,
-  onVariantQuantityChange,
   onVariantSelect,
 }: VariantSelectionModalProps) {
+  // Menggunakan local state untuk quantity agar responsif dan tidak membebani parent
+  const [quantity, setQuantity] = useState(1);
 
-  const productStock = useMemo(
-    () => product?.cached_stock ?? product?.stock ?? 0,
-    [product],
-  );
+  // Reset quantity setiap kali modal dibuka atau produk berganti
+  useEffect(() => {
+    if (isOpen) setQuantity(1);
+  }, [isOpen, product]);
 
-  const handleClose = useCallback(() => {
-    onVariantQuantityChange(1);
-    onClose();
-  }, [onClose, onVariantQuantityChange]);
+  // LOGIKA INTI: Menghitung ketersediaan unit varian berdasarkan stok mentah (pcs)
+  const getVariantStatus = (variant: ProductVariant) => {
+    if (!product) return { available: 0, isDisabled: true };
 
-  // BUG FIX: validasi min_qty dilakukan di sini, bukan dengan men-disable VariantCard.
-  // User sudah melihat warning di card → klik → toast menjelaskan kenapa gagal.
-  const handleSelect = useCallback((variant: ProductVariant) => {
-    if (!product) return;
+    const conversionQty = variant.conversion_qty || 1;
+    // Mengambil stok mentah (pcs) dari kolom cached_stock atau stock
+    const rawStock = (product.cached_stock || 0) > 0 ? product.cached_stock : (product.stock || 0);
+    
+    // Menghitung berapa unit varian yang bisa dibentuk (pembulatan ke bawah)
+    // Contoh: Stok 10 pcs, Varian "Isi 3", maka tersedia 3 unit varian.
+    const availableInVariantUnit = Math.floor(rawStock / conversionQty);
+    
+    const isOutOfStock = availableInVariantUnit <= 0;
+    const isNotEnough = quantity > availableInVariantUnit;
+    const isBelowMinQty = quantity < (variant.min_qty || 1);
 
-    if (variantQuantity < variant.min_qty) {
-      toast.warning(
-        `Minimum pembelian ${variant.min_qty} ${variant.variant_name}. Tambahkan jumlahnya terlebih dahulu.`,
-      );
+    return {
+      available: availableInVariantUnit,
+      isDisabled: isOutOfStock || isNotEnough || isBelowMinQty,
+      isOutOfStock,
+      isNotEnough,
+      conversionQty
+    };
+  };
+
+  const handleSelect = (variant: ProductVariant) => {
+    const { available, isNotEnough } = getVariantStatus(variant);
+
+    if (isNotEnough) {
+      toast.error(`Stok tidak cukup. Hanya tersedia ${available} ${variant.variant_name}`);
       return;
     }
 
-    onVariantSelect(product, variant, variantQuantity);
-    handleClose();
-  }, [product, variantQuantity, onVariantSelect, handleClose]);
+    if (product) {
+      onVariantSelect(product, variant, quantity);
+      onClose();
+    }
+  };
 
-  // Guard: jangan render apapun kalau product null
   if (!product) return null;
 
-  const hasVariants = (product.variants?.length ?? 0) > 0;
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] pos-modal-content">
-
         <DialogHeader className="pos-modal-header">
-          <DialogTitle className="pos-modal-title">
+          <DialogTitle className="pos-modal-title flex items-center gap-2">
             <Grid3x3 className="h-5 w-5" />
-            Pilih Varian — {product.name}
+            Pilih Varian - {product.name}
           </DialogTitle>
         </DialogHeader>
+        
+        <div className="pos-modal-body py-4">
+          {/* Kontrol Kuantitas */}
+          <div className="mb-6 p-4 bg-muted/30 rounded-lg">
+            <p className="text-sm font-medium mb-3">Tentukan Jumlah Beli:</p>
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-10 w-10"
+                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                disabled={quantity <= 1}
+              > - </Button>
+              <span className="text-xl font-bold w-12 text-center">{quantity}</span>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-10 w-10"
+                onClick={() => setQuantity(q => q + 1)}
+              > + </Button>
+            </div>
+          </div>
 
-        <div className="pos-modal-body">
-          <QuantitySelector
-            value={variantQuantity}
-            onChange={onVariantQuantityChange}
-          />
-
-          {hasVariants ? (
-            <div className="space-y-3">
-              {product.variants!.map((variant) => (
-                <VariantCard
+          {/* List Varian */}
+          <div className="space-y-3">
+            {product.variants?.map((variant) => {
+              const { available, isDisabled, isOutOfStock, conversionQty } = getVariantStatus(variant);
+              
+              return (
+                <button
                   key={variant.id}
-                  variant={variant}
-                  productStock={productStock}
-                  currentQty={variantQuantity}
-                  onSelect={handleSelect}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Tidak ada varian tersedia</p>
-            </div>
-          )}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => handleSelect(variant)}
+                  className={`w-full flex items-center justify-between p-4 border rounded-xl transition-all ${
+                    isDisabled 
+                      ? 'opacity-50 bg-muted/20 cursor-not-allowed grayscale' 
+                      : 'hover:border-primary hover:bg-primary/5 hover:shadow-sm cursor-pointer'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${isOutOfStock ? 'bg-red-50' : 'bg-primary/10'}`}>
+                      <Package className={`h-5 w-5 ${isOutOfStock ? 'text-red-400' : 'text-primary'}`} />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-bold text-sm">{variant.variant_name}</p>
+                      <p className="text-xs text-muted-foreground">Isi: {conversionQty} pcs/unit</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-primary">Rp {variant.price.toLocaleString("id-ID")}</p>
+                    <p className={`text-[11px] font-bold mt-1 ${isOutOfStock ? "text-red-500 uppercase" : "text-green-600"}`}>
+                      {isOutOfStock ? "Stok Habis" : `Tersedia: ${available} unit`}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <DialogFooter className="pos-modal-footer">
-          <Button type="button" className="pos-button-secondary" onClick={handleClose}>
-            <X className="h-4 w-4 mr-2" />
-            Batal
+          <Button variant="ghost" onClick={onClose} className="w-full sm:w-auto">
+            <X className="h-4 w-4 mr-2" /> Tutup
           </Button>
         </DialogFooter>
-
       </DialogContent>
     </Dialog>
   );

@@ -4,16 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Package, X, Plus } from "lucide-react";
+import { Package, Plus } from "lucide-react";
 import { toast } from "sonner";
 import type { Product } from "@/types";
+import { BaseModal } from "./BaseModal";
 
 interface ManualProductEntryModalProps {
   isOpen: boolean;
@@ -52,6 +46,9 @@ export function ManualProductEntryModal({
         cost_price: 0,
         price: price,
         stock: 999999,
+        cached_stock: 999999,
+        track_stock: false,
+        low_stock_threshold: 0,
         min_stock: 0,
         max_stock: null,
         barcode: "",
@@ -87,73 +84,74 @@ export function ManualProductEntryModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px] pos-modal-content">
-        <DialogHeader className="pos-modal-header">
-          <DialogTitle className="pos-modal-title">
-            <Package className="h-5 w-5" />
-            Manual Product Entry
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 pos-modal-body">
-          <div className="space-y-2">
-            <Label htmlFor="product-name" className="pos-form-label">Product Name</Label>
-            <Input
-              id="product-name"
-              placeholder="Enter product name"
-              value={manualProduct.name}
-              onChange={(e) =>
-                setManualProduct({ ...manualProduct, name: e.target.value })
-              }
-              className="pos-form-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="product-price" className="pos-form-label">Price (IDR)</Label>
-            <Input
-              id="product-price"
-              type="number"
-              placeholder="Enter price"
-              value={manualProduct.price}
-              onChange={(e) =>
-                setManualProduct({ ...manualProduct, price: e.target.value })
-              }
-              className="pos-form-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="product-quantity" className="pos-form-label">Quantity</Label>
-            <Input
-              id="product-quantity"
-              type="number"
-              min="1"
-              placeholder="Enter quantity"
-              value={manualProduct.quantity}
-              onChange={(e) =>
-                setManualProduct({
-                  ...manualProduct,
-                  quantity: e.target.value,
-                })
-              }
-              className="pos-form-input"
-            />
-          </div>
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={
+        <>
+          <Package className="h-5 w-5" />
+          Manual Product Entry
+        </>
+      }
+      size="sm"
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="product-name" className="pos-form-label">Product Name</Label>
+          <Input
+            id="product-name"
+            placeholder="Enter product name"
+            value={manualProduct.name}
+            onChange={(e) =>
+              setManualProduct({ ...manualProduct, name: e.target.value })
+            }
+            className="pos-form-input"
+          />
         </div>
-        <DialogFooter className="pos-modal-footer">
-          <Button className="pos-button-secondary" onClick={handleClose}>
-            <X className="h-4 w-4 mr-2" />
-            Cancel
-          </Button>
-          <Button
-            className="pos-button-primary"
-            onClick={handleAddManualProduct}
-            disabled={!manualProduct.name || !manualProduct.price}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add to Cart
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-2">
+          <Label htmlFor="product-price" className="pos-form-label">Price (IDR)</Label>
+          <Input
+            id="product-price"
+            type="number"
+            placeholder="Enter price"
+            value={manualProduct.price}
+            onChange={(e) =>
+              setManualProduct({ ...manualProduct, price: e.target.value })
+            }
+            className="pos-form-input"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="product-quantity" className="pos-form-label">Quantity</Label>
+          <Input
+            id="product-quantity"
+            type="number"
+            min="1"
+            placeholder="Enter quantity"
+            value={manualProduct.quantity}
+            onChange={(e) =>
+              setManualProduct({
+                ...manualProduct,
+                quantity: e.target.value,
+              })
+            }
+            className="pos-form-input"
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button className="pos-button-secondary" onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button
+          className="pos-button-primary"
+          onClick={handleAddManualProduct}
+          disabled={!manualProduct.name || !manualProduct.price}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add to Cart
+        </Button>
+      </div>
+    </BaseModal>
   );
 }
