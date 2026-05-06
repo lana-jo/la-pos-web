@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       .from("products")
       .select("stock, cached_stock, track_stock, low_stock_threshold, name")
       .eq("id", validatedData.product_id)
-      .single();
+      .single() as { data: { name: string; stock: number; cached_stock: number; track_stock: boolean; low_stock_threshold: number } | null; error: any };
 
     if (productError || !product) {
       return NextResponse.json(
