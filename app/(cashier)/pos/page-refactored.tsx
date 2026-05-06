@@ -132,17 +132,6 @@ export default function POSPage() {
     cameraScanner.stopScanning();
   };
 
-  // Redirect to login if no user profile
-  if (!posOperations.userProfile) {
-    const checkResult = posOperations.checkUserRole();
-    if (!checkResult.success) {
-      if (checkResult.error === "No session") {
-        router.push("/login");
-      } else if (checkResult.error === "Access denied") {
-        router.push("/auth/unauthorized");
-      }
-    }
-  }
 
   return (
     <div className="min-h-screen pos-terminal">
