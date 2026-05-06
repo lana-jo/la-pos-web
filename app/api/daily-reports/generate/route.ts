@@ -42,8 +42,7 @@ export async function POST(request: Request) {
     const serviceClient = createClient(true)
     
     // Call the database function to generate the daily report
-    const { data, error } = await serviceClient
-      .rpc('generate_daily_report', { target_date: targetDate }) as { data: string | null; error: any }
+    const { data, error } = await (serviceClient as any).rpc('generate_daily_report', { target_date: targetDate })
 
     if (error) {
       console.error('Database error generating daily report:', error)
