@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build -- --turbopack",
   "outputDirectory": ".next",
-  "installCommand": "npx npm install",
+  "installCommand": "npm install",
   "framework": "nextjs"
 }
