@@ -82,7 +82,7 @@ export function usePOSTransactions({ cashierId }: UsePOSTransactionsProps = {}) 
 
       if (!session) {
         toast.error("Session expired");
-        return;
+        return null;
       }
 
       const targetCashierId = cashierId || session.user.id;

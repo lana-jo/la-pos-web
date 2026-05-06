@@ -246,7 +246,7 @@ export default function POSPage() {
       <ProductSelectionModal
         isOpen={showProductSelection}
         onClose={() => setShowProductSelection(false)}
-        products={products.filteredProducts}
+        products={products.products}
         loading={products.loading}
         searchTerm={products.searchTerm}
         onSearchChange={products.setSearchTerm}

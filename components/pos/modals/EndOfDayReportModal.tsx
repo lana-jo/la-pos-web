@@ -26,7 +26,7 @@ interface EndOfDayReportModalProps {
   reportData: ReportData;
   loading: boolean;
   onDateChange: (date: string) => void;
-  onGenerateReport: (date?: string) => Promise<void>;
+  onGenerateReport: (date?: string) => Promise<ReportData | null>;
   onPrintReport?: () => void;
 }
 

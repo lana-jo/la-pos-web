@@ -12,9 +12,22 @@ import {
 import { History, X, Receipt } from "lucide-react";
 import type { Transaction } from "@/types";
 
-interface TransactionWithItems extends Transaction {
+interface TransactionWithItems {
+  id: string;
+  cashier_id: string | null;
+  customer_id: string | null;
+  subtotal: number;
+  discount_amount: number;
+  tax_amount: number;
+  total: number;
+  amount_paid: number;
+  change_amount: number;
+  payment_method: string;
+  payment_status: string;
+  notes: string | null;
+  created_at: string;
   items: any[];
-  cashier?: { id: string; full_name: string };
+  cashier?: { id: string; full_name: string | null };
   customer?: { id: string; name: string };
 }
 
