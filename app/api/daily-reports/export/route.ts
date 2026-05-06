@@ -27,15 +27,15 @@ export async function GET(request: Request) {
     }
 
     // Fetch daily reports for the date range
-    const { data: reports, error } = await supabase
+    const { data: reports, error: reportsError } = await supabase
       .from('daily_reports')
       .select('*')
       .gte('report_date', startDate)
       .lte('report_date', endDate)
       .order('report_date', { ascending: true })
 
-    if (error) {
-      console.error('Error fetching reports for export:', error)
+    if (reportsError) {
+      console.error('Error fetching reports for export:', reportsError)
       return NextResponse.json(
         { error: 'Failed to fetch reports for export' },
         { status: 500 }
