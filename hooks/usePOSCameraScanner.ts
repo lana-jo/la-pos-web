@@ -16,7 +16,7 @@ export function usePOSCameraScanner({
 }: UsePOSCameraScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [recentlyScanned, setRecentlyScanned] = useState<Set<string>>(new Set());
-  const scanTimeoutRef = useRef<NodeJS.Timeout>();
+  const scanTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Clear recently scanned barcodes after 2 seconds
   const clearRecentScan = useCallback((barcode: string) => {
