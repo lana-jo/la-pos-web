@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { supabaseServer } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { format } from 'date-fns'
 
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const endDate = searchParams.get('end_date') || startDate
     const exportFormat = searchParams.get('format') || 'json'
 
-    const supabase = createClient()
+    const supabase = supabaseServer
     const { data: { session } } = await supabase.auth.getSession()
 
     if (!session) {
