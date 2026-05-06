@@ -110,82 +110,156 @@ export function CartPanel() {
   };
 
   const handleCashPayment = async () => {
+    const startTime = Date.now();
+    console.log("[POS Cart] =========================================");
     console.log("[POS Cart] Starting cash payment process");
+    console.log("[POS Cart] Timestamp:", new Date().toISOString());
+    console.log("[POS Cart] =========================================");
+
     if (cart.length === 0) {
-      console.log("[POS Cart] Cart is empty, cannot process payment");
+      console.log("[POS Cart] ❌ Cart is empty, cannot process payment");
       toast.error("Cart is empty");
       return;
     }
 
+    console.log("[POS Cart] ✓ Cart validation passed");
     console.log("[POS Cart] Cart items for payment:", { itemCount: cart.length, total: getTotal() });
+
+    // Log each cart item in detail
+    console.log("[POS Cart] --- Cart Item Details ---");
+    cart.forEach((item, index) => {
+      console.log(`[POS Cart] Item ${index + 1}/${cart.length}:`, {
+        product_id: item.product.id,
+        product_name: item.product.name,
+        barcode: item.product.barcode,
+        variant_id: item.variant?.id || null,
+        variant_name: item.variant?.variant_name || null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        subtotal: item.unit_price * item.quantity,
+        track_stock: item.product.track_stock,
+        stock: item.product.track_stock ? item.product.cached_stock : item.product.stock
+      });
+    });
+    console.log("[POS Cart] --- End Cart Item Details ---");
+
     setIsProcessing(true);
+    console.log("[POS Cart] ✓ Processing state set to true");
+
     try {
       const total = getTotal();
-      console.log("[POS Cart] Serializing cart for server action:", { itemCount: cart.length, total });
+      console.log("[POS Cart] Calculated total:", total);
+
+      console.log("[POS Cart] --- Starting Cart Serialization ---");
+      const serializationStart = Date.now();
       // Serialize cart to plain JSON for Server Action
-      const serializedCart = cart.map(item => ({
-        product: {
-          id: item.product.id,
-          category_id: item.product.category_id,
-          unit_id: item.product.unit_id,
-          supplier_id: item.product.supplier_id,
-          name: item.product.name,
-          barcode: item.product.barcode,
-          description: item.product.description,
-          cost_price: item.product.cost_price,
-          price: item.product.price,
-          stock: item.product.track_stock ? item.product.cached_stock : item.product.stock,
-          min_stock: item.product.min_stock,
-          max_stock: item.product.max_stock,
-          image_url: item.product.image_url,
-          is_active: item.product.is_active,
-          is_consignment: item.product.is_consignment,
-          created_at: item.product.created_at,
-          updated_at: item.product.updated_at,
-        },
-        variant: item.variant ? {
-          id: item.variant.id,
-          product_id: item.variant.product_id,
-          variant_name: item.variant.variant_name,
-          barcode: item.variant.barcode,
-          price: item.variant.price,
-          cost_price: item.variant.cost_price,
-          conversion_qty: item.variant.conversion_qty,
-          min_qty: item.variant.min_qty,
-          is_active: item.variant.is_active,
-          is_default: item.variant.is_default,
-          created_at: item.variant.created_at,
-          updated_at: item.variant.updated_at,
-        } : null,
-        quantity: item.quantity
-      }));
-      
-      console.log("[POS Cart] Calling createCashPayment server action");
+      const serializedCart = cart.map((item, index) => {
+        const serializedItem = {
+          product: {
+            id: item.product.id,
+            category_id: item.product.category_id,
+            unit_id: item.product.unit_id,
+            supplier_id: item.product.supplier_id,
+            name: item.product.name,
+            barcode: item.product.barcode,
+            description: item.product.description,
+            cost_price: item.product.cost_price,
+            price: item.product.price,
+            stock: item.product.track_stock ? item.product.cached_stock : item.product.stock,
+            cached_stock: item.product.cached_stock,
+            track_stock: item.product.track_stock,
+            low_stock_threshold: item.product.low_stock_threshold,
+            min_stock: item.product.min_stock,
+            max_stock: item.product.max_stock,
+            image_url: item.product.image_url,
+            is_active: item.product.is_active,
+            is_consignment: item.product.is_consignment,
+            created_at: item.product.created_at,
+            updated_at: item.product.updated_at,
+          },
+          variant: item.variant ? {
+            id: item.variant.id,
+            product_id: item.variant.product_id,
+            variant_name: item.variant.variant_name,
+            barcode: item.variant.barcode,
+            price: item.variant.price,
+            cost_price: item.variant.cost_price,
+            conversion_qty: item.variant.conversion_qty,
+            min_qty: item.variant.min_qty,
+            is_active: item.variant.is_active,
+            is_default: item.variant.is_default,
+            created_at: item.variant.created_at,
+            updated_at: item.variant.updated_at,
+          } : null,
+          quantity: item.quantity
+        };
+        console.log(`[POS Cart] Serialized item ${index + 1}:`, {
+          product_name: serializedItem.product.name,
+          has_variant: !!serializedItem.variant,
+          quantity: serializedItem.quantity
+        });
+        return serializedItem;
+      });
+      const serializationEnd = Date.now();
+      console.log("[POS Cart] ✓ Cart serialization completed in", serializationEnd - serializationStart, "ms");
+      console.log("[POS Cart] Serialized cart size:", JSON.stringify(serializedCart).length, "bytes");
+      console.log("[POS Cart] --- End Cart Serialization ---");
+
+      console.log("[POS Cart] --- Calling Server Action ---");
+      const serverActionStart = Date.now();
+      console.log("[POS Cart] Action: createCashPayment");
+      console.log("[POS Cart] Payload:", { itemCount: serializedCart.length, total });
       const result = await createCashPayment(serializedCart, total);
+      const serverActionEnd = Date.now();
+      console.log("[POS Cart] ✓ Server action completed in", serverActionEnd - serverActionStart, "ms");
+      console.log("[POS Cart] Server action result:", result);
+      console.log("[POS Cart] --- End Server Action ---");
 
       if (result.success) {
-        console.log("[POS Cart] Cash payment successful:", result);
+        console.log("[POS Cart] ✓✓✓ Cash payment successful!");
+        console.log("[POS Cart] Transaction ID:", result.transactionId);
+        console.log("[POS Cart] Total:", result.total);
+        console.log("[POS Cart] Payment Method:", result.paymentMethod);
         toast.success("Cash payment completed successfully!");
+
         // Print receipt
-        console.log("[POS Cart] Printing receipt for cash payment");
+        console.log("[POS Cart] --- Starting Receipt Printing ---");
+        const printStart = Date.now();
         await printReceipt(
           result.transactionId,
           result.total,
           result.paymentMethod,
           new Date().toISOString()
         );
+        const printEnd = Date.now();
+        console.log("[POS Cart] ✓ Receipt printing completed in", printEnd - printStart, "ms");
+        console.log("[POS Cart] --- End Receipt Printing ---");
+
+        console.log("[POS Cart] --- Clearing Cart ---");
         clearCart();
-        console.log("[POS Cart] Cart cleared after successful payment");
+        console.log("[POS Cart] ✓ Cart cleared successfully");
+        console.log("[POS Cart] --- End Cart Clearing ---");
       } else {
-        console.error("[POS Cart] Cash payment failed:", result.error);
+        console.error("[POS Cart] ❌ Cash payment failed");
+        console.error("[POS Cart] Error message:", result.error);
+        console.error("[POS Cart] Full error result:", result);
         toast.error(result.error || "Cash payment failed");
       }
     } catch (error) {
-      console.error("[POS Cart] Cash payment error:", error);
+      console.error("[POS Cart] ❌❌❌ Cash payment exception caught");
+      console.error("[POS Cart] Error type:", error?.constructor?.name);
+      console.error("[POS Cart] Error message:", error instanceof Error ? error.message : String(error));
+      console.error("[POS Cart] Error stack:", error instanceof Error ? error.stack : "No stack trace");
+      console.error("[POS Cart] Full error object:", error);
       toast.error("Cash payment failed. Please try again.");
     } finally {
       setIsProcessing(false);
+      const endTime = Date.now();
+      console.log("[POS Cart] ✓ Processing state set to false");
+      console.log("[POS Cart] =========================================");
       console.log("[POS Cart] Cash payment process completed");
+      console.log("[POS Cart] Total duration:", endTime - startTime, "ms");
+      console.log("[POS Cart] =========================================");
     }
   };
 
@@ -215,6 +289,9 @@ export function CartPanel() {
           cost_price: item.product.cost_price,
           price: item.product.price,
           stock: item.product.track_stock ? item.product.cached_stock : item.product.stock,
+          cached_stock: item.product.cached_stock,
+          track_stock: item.product.track_stock,
+          low_stock_threshold: item.product.low_stock_threshold,
           min_stock: item.product.min_stock,
           max_stock: item.product.max_stock,
           image_url: item.product.image_url,

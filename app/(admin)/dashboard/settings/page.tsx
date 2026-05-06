@@ -250,7 +250,9 @@ export default function SettingsPage() {
         a.download = `settings-backup-${new Date().toISOString().split('T')[0]}.json`
         document.body.appendChild(a)
         a.click()
-        document.body.removeChild(a)
+        if (a.parentNode === document.body) {
+          document.body.removeChild(a)
+        }
         URL.revokeObjectURL(url)
         toast.success('Pengaturan berhasil diekspor')
       } else {

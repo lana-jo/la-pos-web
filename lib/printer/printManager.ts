@@ -76,7 +76,9 @@ export class PrintManager {
                 // Wait a bit for rendering, then print
                 setTimeout(() => {
                     window.print();
-                    document.body.removeChild(tempDiv);
+                    if (tempDiv.parentNode === document.body) {
+                        document.body.removeChild(tempDiv);
+                    }
                 }, 100);
                 return;
             }

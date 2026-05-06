@@ -1,5 +1,7 @@
 "use server";
 
+console.log("[POS Payment] Server action module loaded");
+
 import { createQRISCharge, saveQRISToDatabase } from "./midtrans";
 import { QRISChargeResponse, Database } from "@/types";
 import { revalidatePath } from "next/cache";
@@ -163,31 +165,59 @@ export async function createCashPayment(
   cart: CartItem[],
   total: number,
 ): Promise<PaymentResult> {
+  const startTime = Date.now();
+  console.log("[POS Payment] =========================================");
+  console.log("[POS Payment] Starting cash payment server action");
+  console.log("[POS Payment] Timestamp:", new Date().toISOString());
+  console.log("[POS Payment] =========================================");
+  console.log("[POS Payment] Input params:", { itemCount: cart.length, total });
+
   try {
-    console.log("[POS Payment] Starting cash payment process:", { itemCount: cart.length, total });
-    
+    console.log("[POS Payment] --- Step 1: Authentication ---");
+    const authStart = Date.now();
     const { user } = await getServerSession();
-    console.log("[POS Payment] Cash payment - authenticated user:", user.id);
-    
+    const authEnd = Date.now();
+    console.log("[POS Payment] ✓ Authentication successful in", authEnd - authStart, "ms");
+    console.log("[POS Payment] User ID:", user.id);
+    console.log("[POS Payment] User email:", user.email);
+    console.log("[POS Payment] --- End Step 1 ---");
+
+    console.log("[POS Payment] --- Step 2: Generate Order ID ---");
     const orderId = `POS-CASH-${Date.now()}`;
-    console.log("[POS Payment] Generated order ID for cash payment:", orderId);
-    
+    console.log("[POS Payment] ✓ Order ID generated:", orderId);
+    console.log("[POS Payment] --- End Step 2 ---");
+
+    console.log("[POS Payment] --- Step 3: Insert Transaction ---");
+    const txStart = Date.now();
     const transaction = await insertTransaction(
       user.id,
       total,
       orderId,
       "cash",
     );
-    console.log("[POS Payment] Cash transaction created:", { transactionId: transaction.id });
+    const txEnd = Date.now();
+    console.log("[POS Payment] ✓ Transaction inserted in", txEnd - txStart, "ms");
+    console.log("[POS Payment] Transaction ID:", transaction.id);
+    console.log("[POS Payment] --- End Step 3 ---");
 
+    console.log("[POS Payment] --- Step 4: Insert Transaction Items ---");
+    const itemsStart = Date.now();
     await insertTransactionItems(transaction.id, cart);
-    console.log("[POS Payment] Cash transaction items inserted");
-    
+    const itemsEnd = Date.now();
+    console.log("[POS Payment] ✓ Transaction items inserted in", itemsEnd - itemsStart, "ms");
+    console.log("[POS Payment] --- End Step 4 ---");
+
+    console.log("[POS Payment] --- Step 5: Deduct Stock ---");
+    const stockStart = Date.now();
     await deductStock(cart);
-    console.log("[POS Payment] Stock deducted for cash payment");
-    
+    const stockEnd = Date.now();
+    console.log("[POS Payment] ✓ Stock deducted in", stockEnd - stockStart, "ms");
+    console.log("[POS Payment] --- End Step 5 ---");
+
+    console.log("[POS Payment] --- Step 6: Revalidate Path ---");
     revalidatePath("/cashier/pos");
-    console.log("[POS Payment] Path revalidated for cash payment");
+    console.log("[POS Payment] ✓ Path revalidated");
+    console.log("[POS Payment] --- End Step 6 ---");
 
     const result: PaymentResult = {
       success: true,
@@ -195,11 +225,23 @@ export async function createCashPayment(
       paymentMethod: "cash",
       total,
     };
-    
-    console.log("[POS Payment] Cash payment completed successfully:", result);
+
+    const endTime = Date.now();
+    console.log("[POS Payment] ✓✓✓ Cash payment completed successfully");
+    console.log("[POS Payment] Result:", result);
+    console.log("[POS Payment] Total duration:", endTime - startTime, "ms");
+    console.log("[POS Payment] =========================================");
     return result;
   } catch (error) {
-    console.error("[POS Payment] Cash payment error:", error);
+    const endTime = Date.now();
+    console.error("[POS Payment] ❌❌❌ Cash payment error caught");
+    console.error("[POS Payment] Error type:", error?.constructor?.name);
+    console.error("[POS Payment] Error message:", error instanceof Error ? error.message : String(error));
+    console.error("[POS Payment] Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error("[POS Payment] Full error object:", error);
+    console.error("[POS Payment] Duration before error:", endTime - startTime, "ms");
+    console.error("[POS Payment] =========================================");
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Cash payment failed",
@@ -211,9 +253,9 @@ export async function createQRISPayment(
   cart: CartItem[],
   total: number,
 ): Promise<PaymentResult> {
+  console.log("[POS Payment] Starting QRIS payment process:", { itemCount: cart.length, total });
+
   try {
-    console.log("[POS Payment] Starting QRIS payment process:", { itemCount: cart.length, total });
-    
     const session = await getSession();
     console.log("[POS Payment] QRIS payment - authenticated user:", session.user.id);
     
