@@ -20,7 +20,7 @@ export async function GET(request: Request) {
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .single()
+      .single() as { data: { role: string } | null; error: any }
 
     if (error || profile?.role !== 'admin') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       .select('*')
       .gte('report_date', startDate)
       .lte('report_date', endDate)
-      .order('report_date', { ascending: true })
+      .order('report_date', { ascending: true }) as { data: any[] | null; error: any }
 
     if (reportsError) {
       console.error('Error fetching reports for export:', reportsError)
