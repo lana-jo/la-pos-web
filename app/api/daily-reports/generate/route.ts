@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
-        .single()
+        .single() as { data: { role: string } | null; error: any }
 
       if (error || profile?.role !== 'admin') {
         return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     
     // Call the database function to generate the daily report
     const { data, error } = await serviceClient
-      .rpc('generate_daily_report', { target_date: targetDate })
+      .rpc('generate_daily_report', { target_date: targetDate }) as { data: string | null; error: any }
 
     if (error) {
       console.error('Database error generating daily report:', error)
@@ -54,11 +54,18 @@ export async function POST(request: Request) {
     }
 
     // Fetch the generated report for response
-    const { data: report, fetchError } = await serviceClient
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Failed to generate report' },
+        { status: 500 }
+      )
+    }
+
+    const { data: report, error: fetchError } = await serviceClient
       .from('daily_reports')
       .select('*')
       .eq('id', data)
-      .single()
+      .single() as { data: any | null; error: any }
 
     if (fetchError) {
       console.error('Error fetching generated report:', fetchError)
@@ -72,8 +79,8 @@ export async function POST(request: Request) {
       success: true,
       report: {
         ...report,
-        total_sales: report.total_sales / 100, // Convert from cents to IDR
-        average_transaction_value: report.average_transaction_value / 100
+        total_sales: report?.total_sales / 100, // Convert from cents to IDR
+        average_transaction_value: report?.average_transaction_value / 100
       },
       message: `Daily report generated for ${targetDate}`
     })
@@ -101,13 +108,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: profile, profileError } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
-      .single()
+      .single() as { data: { role: string } | null; error: any }
 
-    if (profileError || !['admin', 'cashier'].includes(profile?.role)) {
+    if (profileError || !profile?.role || !['admin', 'cashier'].includes(profile.role)) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
