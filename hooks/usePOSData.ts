@@ -222,7 +222,7 @@ export function useReports() {
   });
   const [loading, setLoading] = useState(false);
 
-  const generateReport = async (date?: string) => {
+  const generateReport = async (date?: string): Promise<ReportData | null> => {
     setLoading(true);
     try {
       const reportDate = date || reportData.date;
@@ -237,7 +237,7 @@ export function useReports() {
 
       if (!session) {
         toast.error("Session expired");
-        return;
+        return null;
       }
 
       type TransactionWithItems =
@@ -262,15 +262,19 @@ export function useReports() {
         0,
       );
 
-      setReportData({
+      const newReportData = {
         totalSales,
         totalTransactions: transactions.length,
         totalItems,
         date: reportDate,
-      });
+      };
+
+      setReportData(newReportData);
+      return newReportData;
     } catch (error) {
       console.error("Error generating report:", error);
       toast.error("Failed to generate report");
+      return null;
     } finally {
       setLoading(false);
     }
