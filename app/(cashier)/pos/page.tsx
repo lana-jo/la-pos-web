@@ -280,7 +280,7 @@ export default function POSPage() {
 
             {/* Right Column - Cart */}
             <div className="space-y-6">
-              <CartPanel />
+              <CartPanel onAddItem={handleSelectProduct} />
 
               {/* Recent Transactions */}
               <Card>

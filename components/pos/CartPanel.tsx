@@ -4,7 +4,7 @@ import { useCartStore } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Trash2, ShoppingCart, Loader2 } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingCart, Loader2, Plus as AddIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createQRISPayment, createCashPayment } from "@/lib/payment/actions";
@@ -13,7 +13,11 @@ import { Banknote } from "lucide-react";
 import { PrintManager } from "@/lib/printer/printManager";
 import { Transaction, TransactionItem, ProductVariant } from "@/types";
 
-export function CartPanel() {
+interface CartPanelProps {
+  onAddItem?: () => void;
+}
+
+export function CartPanel({ onAddItem }: CartPanelProps) {
   const cart = useCartStore((state) => state.cart);
   const updateItemQuantity = useCartStore((state) => state.updateItemQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
@@ -382,9 +386,23 @@ export function CartPanel() {
             Shopping Cart
             <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">{getTotalItems()} items</Badge>
           </div>
-          <Button variant="outline" size="sm" className="text-xs sm:text-sm pos-action-button hover:scale-[1.02]" onClick={clearCart}>
-            Clear
-          </Button>
+          <div className="flex items-center gap-2">
+            {onAddItem && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs sm:text-sm pos-action-button hover:scale-[1.02]"
+                onClick={onAddItem}
+              >
+                <AddIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                <span className="hidden sm:inline">Add Item</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            )}
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm pos-action-button hover:scale-[1.02]" onClick={clearCart}>
+              Clear
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -429,7 +447,7 @@ export function CartPanel() {
                     size="sm"
                     className="h-6 w-6 sm:h-8 sm:w-8 p-0 pos-action-button hover:scale-[1.05]"
                     onClick={() =>
-                      updateItemQuantity(item.product.id, item.quantity - 1)
+                      updateItemQuantity(item.product.id, item.quantity - 1, item.variant?.id || null)
                     }
                     disabled={item.quantity <= 1}
                   >
@@ -443,9 +461,20 @@ export function CartPanel() {
                     size="sm"
                     className="h-6 w-6 sm:h-8 sm:w-8 p-0 pos-action-button hover:scale-[1.05]"
                     onClick={() =>
-                      updateItemQuantity(item.product.id, item.quantity + 1)
+                      updateItemQuantity(item.product.id, item.quantity + 1, item.variant?.id || null)
                     }
-                    disabled={item.quantity >= (item.product.track_stock ? item.product.cached_stock : item.product.stock)}
+                    disabled={(() => {
+                      if (!item.product.track_stock) return false;
+                      const productStock = item.product.cached_stock || item.product.stock || 0;
+                      if (item.variant) {
+                        const conversionQty = item.variant.conversion_qty || 1;
+                        const availableStock = conversionQty > 1
+                          ? Math.floor(productStock / conversionQty)
+                          : productStock;
+                        return item.quantity >= availableStock;
+                      }
+                      return item.quantity >= productStock;
+                    })()}
                   >
                     <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
                   </Button>
@@ -454,7 +483,7 @@ export function CartPanel() {
                   variant="outline"
                   size="sm"
                   className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
-                  onClick={() => removeItem(item.product.id)}
+                  onClick={() => removeItem(item.product.id, item.variant?.id || null)}
                 >
                   <Trash2 className="h-2 w-2 sm:h-3 sm:w-3" />
                 </Button>
