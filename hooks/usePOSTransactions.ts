@@ -133,7 +133,7 @@ export function usePOSTransactions({ cashierId }: UsePOSTransactionsProps = {}) 
     try {
       const { data, error } = await supabase
         .from("transactions")
-        .insert(transactionData)
+        .insert(transactionData as any)
         .select()
         .single();
 
@@ -158,7 +158,7 @@ export function usePOSTransactions({ cashierId }: UsePOSTransactionsProps = {}) 
     try {
       const { data, error } = await supabase
         .from("transaction_items")
-        .insert(items)
+        .insert(items as any)
         .select();
 
       if (error) throw error;
@@ -191,7 +191,7 @@ export function usePOSTransactions({ cashierId }: UsePOSTransactionsProps = {}) 
       }
 
       // Verify PIN first
-      const { data: pinValid, error: pinError } = await supabase
+      const { data: pinValid, error: pinError } = await (supabase as any)
         .rpc('fn_verify_pin', { 
           p_user_id: session.user.id, 
           p_pin: pin 
@@ -203,7 +203,7 @@ export function usePOSTransactions({ cashierId }: UsePOSTransactionsProps = {}) 
       }
 
       // Update transaction status
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("transactions")
         .update({
           payment_status: 'cancelled',
