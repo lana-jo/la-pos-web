@@ -273,7 +273,7 @@ export function usePOSOperations({ cashierId }: UsePOSOperationsProps = {}) {
     try {
       const { data, error } = await supabase
         .from("transactions")
-        .insert(transactionData)
+        .insert(transactionData as any)
         .select()
         .single();
 
@@ -295,7 +295,7 @@ export function usePOSOperations({ cashierId }: UsePOSOperationsProps = {}) {
     try {
       const { data, error } = await supabase
         .from("transaction_items")
-        .insert(items)
+        .insert(items as any)
         .select();
 
       if (error) throw error;
