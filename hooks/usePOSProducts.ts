@@ -56,7 +56,7 @@ export function usePOSProducts({ autoFetch = true }: UsePOSProductsProps = {}) {
       const { data: variantsData, error: variantsError } = await supabase
         .from("product_variants")
         .select("*")
-        .eq("is_active", true);
+        .eq("is_active", true) as { data: ProductVariant[] | null; error: any };
 
       if (variantsError) {
         console.error("[Product Variants] Error fetching variants:", variantsError);
