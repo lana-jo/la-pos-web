@@ -284,14 +284,18 @@ export class PrintManager {
         console.log("[printBrowser] Document written and closed");
 
         if (!silent) {
-            // Wait for print dialog to close
-            return new Promise((resolve) => {
+            // Wait for print dialog to close (with 30s timeout so it never hangs)
+            return new Promise<void>((resolve) => {
                 const checkClosed = setInterval(() => {
                     if (printWindow.closed) {
                         clearInterval(checkClosed);
                         resolve();
                     }
-                }, 1000);
+                }, 500);
+                setTimeout(() => {
+                    clearInterval(checkClosed);
+                    resolve();
+                }, 30000);
             });
         }
     }
@@ -359,14 +363,16 @@ export class PrintManager {
         const itemsHTML = transaction.items
             .map(
                 (item) => {
-                    const productName = item.product?.name || "Unknown Product";
-                    const variantInfo = item.variant ? ` (${item.variant.variant_name})` : "";
-                    const barcodeInfo = (item.variant?.barcode || item.product?.barcode) ? ` • ${item.variant?.barcode || item.product?.barcode}` : "";
+                    const productName = item.product?.name || item.product_name || "Unknown Product";
+                    const variantName = item.variant?.variant_name || item.variant_name;
+                    const variantInfo = variantName ? ` (${variantName})` : "";
+                    const barcode = item.variant?.barcode || item.product?.barcode || item.barcode;
+                    const barcodeInfo = barcode ? ` • ${barcode}` : "";
                     
-                    const additionalVariantDetails = item.variant ? `
+                    const additionalVariantDetails = variantName ? `
           <div class="item-variant-details">
-            Variant: ${item.variant.variant_name}
-            ${item.variant.barcode ? `Code: ${item.variant.barcode}` : ''}
+            Variant: ${variantName}
+            ${barcode ? `Code: ${barcode}` : ''}
           </div>
         ` : '';
         
@@ -377,7 +383,7 @@ export class PrintManager {
           <span>${formatCurrency(item.subtotal)}</span>
         </div>
         <div class="item-details">
-          ${item.variant ? `${item.qty} × Base: ${formatCurrency(item.product?.price || 0)} → Variant: ${formatCurrency(item.unit_price)}${barcodeInfo}` : `${item.qty} × ${formatCurrency(item.unit_price)}${barcodeInfo}`}
+          ${item.qty} × ${formatCurrency(item.unit_price)}${barcodeInfo}
         </div>
         ${additionalVariantDetails}
       </div>
@@ -410,7 +416,7 @@ export class PrintManager {
         <div class="section-title">TRANSACTION DETAILS</div>
         <div class="detail-row"><span>Total Items:</span><span>${transaction.items.reduce((sum, item) => sum + item.qty, 0)}</span></div>
         <div class="detail-row"><span>Unique Products:</span><span>${transaction.items.length}</span></div>
-        ${transaction.items.some(item => item.variant) ? `<div class="detail-row"><span>With Variants:</span><span>${transaction.items.filter(item => item.variant).length}</span></div>` : ''}
+        ${transaction.items.some(item => item.variant || item.variant_name) ? `<div class="detail-row"><span>With Variants:</span><span>${transaction.items.filter(item => item.variant || item.variant_name).length}</span></div>` : ''}
       </div>
       
       <div class="totals">
@@ -481,8 +487,9 @@ export class PrintManager {
         commands.push(...this.textToBytes("--------------------------------\n"));
 
         transaction.items.forEach((item) => {
-            const productName = item.product?.name || "Unknown Product";
-            const variantInfo = item.variant ? ` (${item.variant.variant_name})` : "";
+            const productName = item.product?.name || item.product_name || "Unknown Product";
+            const variantName = item.variant?.variant_name || item.variant_name;
+            const variantInfo = variantName ? ` (${variantName})` : "";
             const displayName = (productName + variantInfo).padEnd(16);
             
             const amount = new Intl.NumberFormat("id-ID", {
@@ -493,31 +500,22 @@ export class PrintManager {
 
             commands.push(...this.textToBytes(`${displayName}${amount}\n`));
 
-            const details = item.variant 
-                ? `  ${item.qty} × Base: ${new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    minimumFractionDigits: 0,
-                }).format(item.product?.price || 0)} → Variant: ${new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    minimumFractionDigits: 0,
-                }).format(item.unit_price)}`
-                : `  ${item.qty} × ${new Intl.NumberFormat("id-ID", {
-                    style: "currency",
-                    currency: "IDR",
-                    minimumFractionDigits: 0,
-                }).format(item.unit_price)}`;
+            const details = `  ${item.qty} × ${new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                minimumFractionDigits: 0,
+            }).format(item.unit_price)}`;
             
-            const barcodeInfo = (item.variant?.barcode || item.product?.barcode) ? ` • ${item.variant?.barcode || item.product?.barcode}` : "";
+            const barcode = item.variant?.barcode || item.product?.barcode || item.barcode;
+            const barcodeInfo = barcode ? ` • ${barcode}` : "";
             commands.push(...this.textToBytes(`${details}${barcodeInfo}\n`));
             
             // Additional variant details for ESC/POS
-            if (item.variant) {
-                const variantDetails = `    Variant: ${item.variant.variant_name}`;
+            if (variantName) {
+                const variantDetails = `    Variant: ${variantName}`;
                 commands.push(...this.textToBytes(`${variantDetails}\n`));
-                if (item.variant.barcode) {
-                    const variantCode = `    Code: ${item.variant.barcode}`;
+                if (barcode) {
+                    const variantCode = `    Code: ${barcode}`;
                     commands.push(...this.textToBytes(`${variantCode}\n`));
                 }
             }
@@ -528,8 +526,8 @@ export class PrintManager {
         commands.push(...this.textToBytes("--------------------\n"));
         commands.push(...this.textToBytes(`Total Items:    ${transaction.items.reduce((sum, item) => sum + item.qty, 0)}\n`));
         commands.push(...this.textToBytes(`Unique Products: ${transaction.items.length}\n`));
-        if (transaction.items.some(item => item.variant)) {
-            commands.push(...this.textToBytes(`With Variants:  ${transaction.items.filter(item => item.variant).length}\n`));
+        if (transaction.items.some(item => item.variant || item.variant_name)) {
+            commands.push(...this.textToBytes(`With Variants:  ${transaction.items.filter(item => item.variant || item.variant_name).length}\n`));
         }
 
         // Totals

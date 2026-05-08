@@ -49,7 +49,9 @@ async function insertTransaction(
   method: "cash" | "qris",
 ) {
   console.log("[POS Payment] Inserting transaction:", { cashierId, total, orderId, method });
-  
+
+  // Always insert as "pending" first; items will be inserted next.
+  // The DB trigger blocks item inserts if parent is "paid".
   const { data, error } = await db("transactions")
     .insert({
       cashier_id: cashierId,
@@ -60,9 +62,8 @@ async function insertTransaction(
       amount_paid: method === "cash" ? total : 0,
       change_amount: 0,
       payment_method: method,
-      payment_status: method === "cash" ? "paid" : "pending",
+      payment_status: "pending",
       ...(method === "qris" && { midtrans_order_id: orderId }),
-      ...(method === "cash" && { paid_at: new Date().toISOString() }),
     })
     .select()
     .single();
@@ -71,19 +72,36 @@ async function insertTransaction(
     console.error("[POS Payment] Database error inserting transaction:", error);
     throw new Error(`Failed to create transaction: ${error.message}`);
   }
-  
+
   console.log("[POS Payment] Transaction inserted successfully:", { transactionId: data.id, method });
   return data;
 }
 
+async function markTransactionPaid(transactionId: string) {
+  console.log("[POS Payment] Marking transaction as paid:", transactionId);
+  const { error } = await db("transactions")
+    .update({
+      payment_status: "paid",
+      paid_at: new Date().toISOString(),
+    })
+    .eq("id", transactionId);
+
+  if (error) {
+    console.error("[POS Payment] Failed to mark transaction as paid:", error);
+    throw new Error(`Failed to finalize transaction: ${error.message}`);
+  }
+
+  console.log("[POS Payment] Transaction marked as paid:", transactionId);
+}
+
 async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
   console.log("[POS Payment] Inserting transaction items:", { transactionId, itemCount: cart.length });
-  
+
   const items: Database["public"]["Tables"]["transaction_items"]["Insert"][] =
     cart.map((item) => {
       const unitPrice = item.variant ? item.variant.price : item.product.price;
       const costPrice = item.variant ? item.variant.cost_price : item.product.cost_price || 0;
-      
+
       const transactionItem = {
         transaction_id: transactionId,
         // Set product_id to null for manual products (non-UUID format IDs)
@@ -100,7 +118,7 @@ async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
         discount_amount: 0,
         subtotal: unitPrice * item.quantity,
       };
-      
+
       console.log("[POS Payment] Creating transaction item:", {
         productName: item.product.name,
         variantName: item.variant?.variant_name,
@@ -108,17 +126,27 @@ async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
         unitPrice,
         subtotal: transactionItem.subtotal
       });
-      
+
       return transactionItem;
     });
 
-  const { error } = await db("transaction_items").insert(items);
+  console.log("[POS Payment] Attempting to insert transaction items:", JSON.stringify(items, null, 2));
+
+  // Try inserting with RLS bypass using service role
+  const { data, error } = await db("transaction_items").insert(items).select();
+
   if (error) {
     console.error("[POS Payment] Error inserting transaction items:", error);
-    throw new Error("Failed to create transaction items");
+    console.error("[POS Payment] Error details:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
+    throw new Error(`Failed to create transaction items: ${error.message}`);
   }
-  
-  console.log("[POS Payment] Transaction items inserted successfully:", { itemCount: items.length });
+
+  console.log("[POS Payment] Transaction items inserted successfully:", { itemCount: items.length, insertedData: data });
 }
 
 // Helper to check if a string is a valid UUID format
@@ -129,7 +157,7 @@ function isValidUUID(str: string): boolean {
 
 async function deductStock(cart: CartItem[]) {
   console.log("[POS Payment] Starting stock deduction for:", { itemCount: cart.length });
-  
+
   // Run sequentially — preserve transaction even if a stock update fails
   for (const item of cart) {
     // Skip stock deduction for manual products (non-UUID IDs)
@@ -139,11 +167,34 @@ async function deductStock(cart: CartItem[]) {
       continue;
     }
 
-    console.log(`[POS Payment] Deducting stock for product: ${item.product.name}, quantity: ${item.quantity}, current stock: ${item.product.stock}`);
-    
-    // Always deduct from main product stock (variants don't have separate stock)
+    // Skip stock deduction if product doesn't track stock
+    if (!item.product.track_stock) {
+      console.log(`[POS Payment] Skipping stock deduction for non-tracking product: ${item.product.name}`);
+      continue;
+    }
+
+    console.log(`[POS Payment] Deducting stock for product: ${item.product.name}, quantity: ${item.quantity}`);
+
+    // Read current stock from database to avoid stale client-side values
+    const { data: productData, error: readError } = await db("products")
+      .select("stock")
+      .eq("id", item.product.id)
+      .single();
+
+    if (readError) {
+      console.error(
+        `[POS Payment] Failed to read stock for product ${item.product.id}:`,
+        readError,
+      );
+      continue;
+    }
+
+    const currentStock = (productData as any).stock;
+    const newStock = currentStock - item.quantity;
+
+    // Update with the database-read value
     const { error } = await db("products")
-      .update({ stock: item.product.stock - item.quantity })
+      .update({ stock: newStock })
       .eq("id", item.product.id);
 
     if (error) {
@@ -152,10 +203,10 @@ async function deductStock(cart: CartItem[]) {
         error,
       );
     } else {
-      console.log(`[POS Payment] Stock deducted successfully for product: ${item.product.name}, new stock: ${item.product.stock - item.quantity}`);
+      console.log(`[POS Payment] Stock deducted successfully for product: ${item.product.name}, from ${currentStock} to ${newStock}`);
     }
   }
-  
+
   console.log("[POS Payment] Stock deduction process completed");
 }
 
@@ -172,10 +223,35 @@ export async function createCashPayment(
   console.log("[POS Payment] =========================================");
   console.log("[POS Payment] Input params:", { itemCount: cart.length, total });
 
+  // Defensive validation
+  if (!cart || cart.length === 0) {
+    console.error("[POS Payment] Invalid input: cart is empty");
+    return {
+      success: false,
+      error: "Cart is empty",
+    };
+  }
+
+  if (!total || total <= 0) {
+    console.error("[POS Payment] Invalid input: total is invalid", total);
+    return {
+      success: false,
+      error: "Invalid total amount",
+    };
+  }
+
   try {
     console.log("[POS Payment] --- Step 1: Authentication ---");
     const authStart = Date.now();
-    const { user } = await getServerSession();
+    const sessionResult = await getServerSession();
+    if (!sessionResult || !sessionResult.user) {
+      console.error("[POS Payment] Authentication failed: no session or user");
+      return {
+        success: false,
+        error: "Authentication failed",
+      };
+    }
+    const { user } = sessionResult;
     const authEnd = Date.now();
     console.log("[POS Payment] ✓ Authentication successful in", authEnd - authStart, "ms");
     console.log("[POS Payment] User ID:", user.id);
@@ -214,6 +290,13 @@ export async function createCashPayment(
     console.log("[POS Payment] ✓ Stock deducted in", stockEnd - stockStart, "ms");
     console.log("[POS Payment] --- End Step 5 ---");
 
+    console.log("[POS Payment] --- Step 5b: Finalize Transaction ---");
+    const finalizeStart = Date.now();
+    await markTransactionPaid(transaction.id);
+    const finalizeEnd = Date.now();
+    console.log("[POS Payment] ✓ Transaction finalized in", finalizeEnd - finalizeStart, "ms");
+    console.log("[POS Payment] --- End Step 5b ---");
+
     console.log("[POS Payment] --- Step 6: Revalidate Path ---");
     revalidatePath("/cashier/pos");
     console.log("[POS Payment] ✓ Path revalidated");
@@ -231,6 +314,7 @@ export async function createCashPayment(
     console.log("[POS Payment] Result:", result);
     console.log("[POS Payment] Total duration:", endTime - startTime, "ms");
     console.log("[POS Payment] =========================================");
+    console.log("[POS Payment] Returning success result:", JSON.stringify(result));
     return result;
   } catch (error) {
     const endTime = Date.now();
@@ -242,9 +326,12 @@ export async function createCashPayment(
     console.error("[POS Payment] Duration before error:", endTime - startTime, "ms");
     console.error("[POS Payment] =========================================");
 
+    const errorMessage = error instanceof Error ? error.message : String(error || "Unknown error");
+    console.error("[POS Payment] Returning error result:", { success: false, error: errorMessage });
+
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Cash payment failed",
+      error: errorMessage,
     };
   }
 }

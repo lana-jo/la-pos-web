@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -87,7 +87,7 @@ export function useProducts() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch categories first
@@ -137,7 +137,7 @@ export function useProducts() {
       }
 
       if (search) {
-        filteredProducts = filteredProducts.filter(p => 
+        filteredProducts = filteredProducts.filter(p =>
           p.name.toLowerCase().includes(search.toLowerCase()) ||
           (p.variants && p.variants.some((v: ProductVariant) => v.variant_name.toLowerCase().includes(search.toLowerCase())))
         );
@@ -162,7 +162,7 @@ export function useProducts() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, selectedCategory]);
 
   return {
     products,

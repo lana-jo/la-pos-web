@@ -128,6 +128,7 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
 
     console.log("[POS Cart] ✓ Cart validation passed");
     console.log("[POS Cart] Cart items for payment:", { itemCount: cart.length, total: getTotal() });
+    console.log("[POS Cart] Payment status check: BELUM BAYAR (pending)");
 
     // Log each cart item in detail
     console.log("[POS Cart] --- Cart Item Details ---");
@@ -217,6 +218,10 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
       const serverActionEnd = Date.now();
       console.log("[POS Cart] ✓ Server action completed in", serverActionEnd - serverActionStart, "ms");
       console.log("[POS Cart] Server action result:", result);
+      console.log("[POS Cart] Result type:", typeof result);
+      console.log("[POS Cart] Result keys:", Object.keys(result || {}));
+      console.log("[POS Cart] Result success value:", result?.success);
+      console.log("[POS Cart] Result error value:", (result as any)?.error);
       console.log("[POS Cart] --- End Server Action ---");
 
       if (result.success) {
@@ -224,7 +229,8 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
         console.log("[POS Cart] Transaction ID:", result.transactionId);
         console.log("[POS Cart] Total:", result.total);
         console.log("[POS Cart] Payment Method:", result.paymentMethod);
-        toast.success("Cash payment completed successfully!");
+        console.log("[POS Cart] Payment status: BELUM BAYAR → LUNAS (paid)");
+        toast.success("Transaksi berhasil terbayar");
 
         // Print receipt
         console.log("[POS Cart] --- Starting Receipt Printing ---");
@@ -242,6 +248,7 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
         console.log("[POS Cart] --- Clearing Cart ---");
         clearCart();
         console.log("[POS Cart] ✓ Cart cleared successfully");
+        console.log("[POS Cart] ✓ Payment status: TERBAYAR");
         console.log("[POS Cart] --- End Cart Clearing ---");
       } else {
         console.error("[POS Cart] ❌ Cash payment failed");
