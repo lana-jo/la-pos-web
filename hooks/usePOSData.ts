@@ -210,6 +210,10 @@ export function useTransactions() {
     }
   };
 
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
   return { transactions, loading, fetchTransactions };
 }
 

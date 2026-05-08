@@ -36,28 +36,28 @@ export function SidebarDropdown({
   
   // Theme class hooks for SSR-safe styling
   const triggerHoverThemeClass = useThemeClass(
-    'hover:bg-gradient-to-r hover:from-blue-900/30 hover:to-indigo-900/30 hover:text-white',
-    'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-slate-900'
+    'hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 hover:text-slate-800',
+    'hover:bg-gradient-to-r hover:from-blue-900/30 hover:to-indigo-900/30 hover:text-white'
   )
   const triggerFocusThemeClass = useThemeClass(
-    'focus-visible:ring-offset-slate-900',
-    'focus-visible:ring-offset-white'
+    'focus-visible:ring-offset-white',
+    'focus-visible:ring-offset-slate-900'
   )
-  const triggerTextThemeClass = useThemeClass('text-slate-300', 'text-slate-400')
+  const triggerTextThemeClass = useThemeClass('text-slate-700', 'text-slate-400')
   const iconThemeClass = useThemeClass(
-    'text-slate-400 group-hover:text-blue-400',
+    'text-slate-600 group-hover:text-blue-600',
     'text-slate-300 group-hover:text-blue-400'
   )
   const itemHoverThemeClass = useThemeClass(
-    'hover:bg-gradient-to-r hover:from-blue-900/20 hover:to-indigo-900/20 hover:text-slate-200',
-    'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-slate-800'
+    'hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-slate-800',
+    'hover:bg-gradient-to-r hover:from-blue-900/20 hover:to-indigo-900/20 hover:text-slate-200'
   )
   const itemFocusThemeClass = useThemeClass(
-    'focus-visible:ring-offset-slate-900',
-    'focus-visible:ring-offset-white'
+    'focus-visible:ring-offset-white',
+    'focus-visible:ring-offset-slate-900'
   )
-  const itemTextThemeClass = useThemeClass('text-slate-400', 'text-slate-300')
-  const descriptionThemeClass = useThemeClass('text-slate-400', 'text-slate-500')
+  const itemTextThemeClass = useThemeClass('text-slate-700', 'text-slate-300')
+  const descriptionThemeClass = useThemeClass('text-slate-500', 'text-slate-500')
 
   const toggleDropdown = () => {
     if (!isCollapsed) {

@@ -5,7 +5,54 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { LogOut, Moon, Sun, User } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/navigation/config";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { useThemeClass } from "@/hooks/useTheme";
+
+function ProfileButton({ isCollapsed }: { isCollapsed: boolean }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isActive = pathname === "/profile";
+
+  const iconThemeClass = useThemeClass(
+    'text-slate-600 group-hover:text-blue-700 group-hover:scale-110',
+    'text-slate-400 group-hover:text-blue-300 group-hover:scale-110',
+  );
+  const hoverThemeClass = useThemeClass(
+    'hover:bg-gradient-to-r hover:from-blue-100 hover:to-blue-200 hover:text-slate-800 hover:shadow-md',
+    'hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-900 hover:text-white hover:shadow-md',
+  );
+  const focusThemeClass = useThemeClass(
+    'focus-visible:ring-offset-white',
+    'focus-visible:ring-offset-slate-900',
+  );
+  const textThemeClass = useThemeClass(
+    'text-slate-700',
+    'text-slate-300',
+  );
+
+  return (
+    <button
+      onClick={() => router.push("/profile")}
+      className={cn(
+        'group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ease-out w-full',
+        hoverThemeClass,
+        'hover:scale-[1.02] hover:-translate-y-0.5',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+        focusThemeClass,
+        isActive
+          ? 'bg-gradient-to-r from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/30 scale-[1.02] -translate-y-0.5'
+          : textThemeClass,
+        isCollapsed && 'justify-center px-3'
+      )}
+    >
+      <User className={cn(
+        'h-5 w-5 flex-shrink-0 transition-all duration-300',
+        isActive ? 'text-white scale-110 drop-shadow-sm' : iconThemeClass
+      )} />
+      {!isCollapsed && <span className="truncate font-semibold">Profil</span>}
+    </button>
+  );
+}
 
 interface SidebarFooterProps {
   isCollapsed: boolean;
@@ -71,19 +118,7 @@ export function SidebarFooter({
         />
 
         {/* Profile button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push("/profile")}
-          className={cn(
-            "w-full justify-start transition-all duration-300 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02]",
-            "text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 dark:hover:from-slate-800 dark:hover:to-blue-900 hover:border hover:border-blue-300/30",
-            isCollapsed && "px-3"
-          )}
-        >
-          <User className="h-4 w-4" />
-          {!isCollapsed && <span className="ml-2">Profil</span>}
-        </Button>
+        <ProfileButton isCollapsed={isCollapsed} />
 
         {/* Theme toggle button */}
         {mounted && (

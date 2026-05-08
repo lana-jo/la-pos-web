@@ -37,6 +37,7 @@ interface TransactionHistoryModalProps {
   transactions: TransactionWithItems[];
   loading: boolean;
   onRefresh?: () => void;
+  onTransactionClick?: (transaction: TransactionWithItems) => void;
 }
 
 export function TransactionHistoryModal({
@@ -45,6 +46,7 @@ export function TransactionHistoryModal({
   transactions,
   loading,
   onRefresh,
+  onTransactionClick,
 }: TransactionHistoryModalProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -107,7 +109,11 @@ export function TransactionHistoryModal({
           ) : (
             <div className="space-y-3">
               {transactions.map((transaction) => (
-                <div key={transaction.id} className="pos-transaction-card">
+                <button
+                  key={transaction.id}
+                  onClick={() => onTransactionClick?.(transaction)}
+                  className="w-full pos-transaction-card bg-background border rounded-lg p-4 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] hover:bg-muted/60 text-left"
+                >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -165,7 +171,7 @@ export function TransactionHistoryModal({
                       )}
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}

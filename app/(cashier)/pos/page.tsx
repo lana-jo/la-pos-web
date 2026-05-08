@@ -16,6 +16,7 @@ import {
   ProductSelectionModal,
   VariantSelectionModal,
   TransactionHistoryModal,
+  TransactionDetailModal,
   EndOfDayReportModal,
 } from "@/components/pos/modals";
 import { usePOSCameraScanner } from "@/hooks/usePOSCameraScanner";
@@ -61,10 +62,12 @@ export default function POSPage() {
     modalState,
     manualProduct,
     selectedProductForVariants,
+    selectedTransaction,
     openModal,
     closeModal,
     setManualProduct,
     setSelectedProductForVariants,
+    setSelectedTransaction,
     resetManualProduct,
   } = useModalState();
 
@@ -284,10 +287,10 @@ export default function POSPage() {
 
               {/* Recent Transactions */}
               <Card>
-                <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Recent Transactions</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-0">
                   {transactions.length === 0 ? (
                     <EmptyState
                       icon={<Receipt className="h-12 w-12" />}
@@ -295,17 +298,40 @@ export default function POSPage() {
                       description="Your recent transactions will appear here"
                     />
                   ) : (
-                    <div className="space-y-2">
-                      {transactions.slice(0, 3).map((transaction) => (
-                        <div key={transaction.id} className="flex justify-between items-center py-2 border-b">
+                    <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                      {transactions.slice(0, 10).map((transaction) => (
+                        <button
+                          key={transaction.id}
+                          onClick={() => {
+                            setSelectedTransaction(transaction);
+                            openModal("showTransactionDetail");
+                          }}
+                          className="w-full flex justify-between items-center py-3 px-3 rounded-lg border bg-background shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02] hover:bg-muted/60 text-left"
+                        >
                           <div>
-                            <p className="font-medium">#{transaction.id.slice(-6)}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(transaction.created_at).toLocaleDateString()}
+                            <p className="font-medium text-sm">#{transaction.id.slice(-6)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(transaction.created_at).toLocaleString('id-ID', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
                             </p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className={`inline-block h-1.5 w-1.5 rounded-full ${
+                                transaction.payment_status === 'paid' ? 'bg-green-500' :
+                                transaction.payment_status === 'pending' ? 'bg-yellow-500' :
+                                transaction.payment_status === 'expired' ? 'bg-red-500' :
+                                'bg-gray-400'
+                              }`} />
+                              <span className="text-xs text-muted-foreground capitalize">
+                                {transaction.payment_status}
+                              </span>
+                            </div>
                           </div>
-                          <p className="font-bold">{formatPrice(transaction.total)}</p>
-                        </div>
+                          <p className="font-bold text-sm">{formatPrice(transaction.total)}</p>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -351,6 +377,16 @@ export default function POSPage() {
           transactions={transactions}
           loading={transactionsLoading}
           onRefresh={fetchTransactions}
+          onTransactionClick={(transaction) => {
+            setSelectedTransaction(transaction);
+            openModal("showTransactionDetail");
+          }}
+        />
+
+        <TransactionDetailModal
+          isOpen={modalState.showTransactionDetail}
+          onClose={() => closeModal("showTransactionDetail")}
+          transaction={selectedTransaction}
         />
 
         <EndOfDayReportModal

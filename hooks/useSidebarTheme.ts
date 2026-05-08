@@ -36,7 +36,7 @@ export function useSidebarTheme() {
     "bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-blue-900/40 border-blue-700/50 hover:from-blue-900/50 hover:via-indigo-900/50 hover:to-blue-900/50"
   );
 
-  const role = useThemeClass("text-blue-400/80", "text-blue-600/80");
+  const role = useThemeClass("text-blue-700/90", "text-blue-400/80");
 
   const separator = useThemeClass(
     "bg-gradient-to-r from-transparent via-slate-200/50 to-transparent",

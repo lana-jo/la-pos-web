@@ -34,19 +34,19 @@ export function SidebarItem({
   
   // Theme class hooks for SSR-safe styling
   const iconThemeClass = useThemeClass(
-    'text-slate-500 group-hover:text-blue-700 group-hover:scale-110',
+    'text-slate-600 group-hover:text-blue-700 group-hover:scale-110',
     'text-slate-400 group-hover:text-blue-300 group-hover:scale-110',
   )
   const descriptionThemeClass = useThemeClass(
-    'text-slate-400 group-hover:text-blue-600/70',
+    'text-slate-500 group-hover:text-blue-600/70',
     'text-slate-500 group-hover:text-blue-400/70',
   )
   const disabledThemeClass = useThemeClass(
-    'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-400',
+    'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-500',
     'bg-gradient-to-r from-slate-800 to-slate-700 text-slate-500',
   )
   const hoverThemeClass = useThemeClass(
-    'hover:bg-gradient-to-r hover:from-blue-100 hover:to-blue-200 hover:text-slate-900 hover:shadow-md',
+    'hover:bg-gradient-to-r hover:from-blue-100 hover:to-blue-200 hover:text-slate-800 hover:shadow-md',
     'hover:bg-gradient-to-r hover:from-blue-800 hover:to-blue-900 hover:text-white hover:shadow-md',
   )
   const focusThemeClass = useThemeClass(
@@ -54,9 +54,8 @@ export function SidebarItem({
     'focus-visible:ring-offset-slate-900',
   )
   const textThemeClass = useThemeClass(
-    'text-slate-400',
+    'text-slate-700',
     'text-slate-300',
-
   )
 
   const handleClick = (e: React.MouseEvent) => {
