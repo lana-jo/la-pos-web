@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/contexts/AuthContext'
 import { ThemePreference } from '@/types'
@@ -10,30 +10,47 @@ export function useProfileTheme() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const { profile, user } = useAuth()
   const [mounted, setMounted] = useState(false)
+  const manualThemeRef = useRef<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  // Apply theme from profile when user logs in
+  // Reset manual-change flag when user logs out
+  useEffect(() => {
+    if (!user) {
+      manualThemeRef.current = null
+    }
+  }, [user])
+
+  // Apply theme from profile when user logs in — only on initial profile load
   useEffect(() => {
     if (user && profile?.theme_preference) {
+      // Jangan timpa pilihan manual user
+      if (manualThemeRef.current !== null) {
+        return
+      }
       setTheme(profile.theme_preference)
     }
-  }, [user, profile?.theme_preference, setTheme])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, profile?.theme_preference])
 
   // Save theme to profile when user changes it manually
-  const setThemeWithProfile = async (newTheme: ThemePreference) => {
-    setTheme(newTheme)
-    
-    if (user) {
-      try {
-        await updateThemePreference(newTheme)
-      } catch (error) {
-        console.error('Failed to save theme preference:', error)
+  const setThemeWithProfile = useCallback(
+    async (newTheme: ThemePreference) => {
+      manualThemeRef.current = newTheme
+      setTheme(newTheme)
+
+      if (user) {
+        try {
+          await updateThemePreference(newTheme)
+        } catch (error) {
+          console.error('Failed to save theme preference:', error)
+        }
       }
-    }
-  }
+    },
+    [setTheme, user]
+  )
 
   return {
     theme: (theme as ThemePreference) || 'system',

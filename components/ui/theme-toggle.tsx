@@ -33,22 +33,22 @@ export function ThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="pos-modal-content">
-        <DropdownMenuItem 
-          onClick={() => setTheme('light')}
+        <DropdownMenuItem
+          onSelect={() => setTheme('light')}
           className={theme === 'light' ? 'bg-primary/10 text-primary' : ''}
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme('dark')}
+        <DropdownMenuItem
+          onSelect={() => setTheme('dark')}
           className={theme === 'dark' ? 'bg-primary/10 text-primary' : ''}
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
         </DropdownMenuItem>
-        <DropdownMenuItem 
-          onClick={() => setTheme('system')}
+        <DropdownMenuItem
+          onSelect={() => setTheme('system')}
           className={theme === 'system' ? 'bg-primary/10 text-primary' : ''}
         >
           <Monitor className="mr-2 h-4 w-4" />
