@@ -80,11 +80,11 @@ export const RevenueChart = ({ data, preset, formatCurrency }: RevenueChartProps
             <YAxis
               tickFormatter={(value) => {
                 if (value >= 1000000000) {
-                  return `Rp${(value / 1000000000).toFixed(1)}B`;
+                  return `Rp${(value / 1000000000).toFixed(1)}M`;
                 } else if (value >= 1000000) {
-                  return `Rp${(value / 1000000).toFixed(1)}M`;
+                  return `Rp${(value / 1000000).toFixed(1)}jt`;
                 } else if (value >= 1000) {
-                  return `Rp${(value / 1000).toFixed(1)}K`;
+                  return `Rp${(value / 1000).toFixed(0)}rb`;
                 } else {
                   return `Rp${value}`;
                 }

@@ -77,12 +77,12 @@ export function SidebarFooter({
           onClick={() => router.push("/profile")}
           className={cn(
             "w-full justify-start transition-all duration-300 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02]",
-            "text-slate-600 hover:text-blue-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 hover:border hover:border-blue-300/30",
+            "text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 dark:hover:from-slate-800 dark:hover:to-blue-900 hover:border hover:border-blue-300/30",
             isCollapsed && "px-3"
           )}
         >
           <User className="h-4 w-4" />
-          {!isCollapsed && <span className="ml-2">Profile</span>}
+          {!isCollapsed && <span className="ml-2">Profil</span>}
         </Button>
 
         {/* Theme toggle button */}

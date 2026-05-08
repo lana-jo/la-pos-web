@@ -8,6 +8,7 @@ import {
   Store,
   CreditCard,
   FileText,
+  User,
   type LucideIcon,
 } from "lucide-react";
 

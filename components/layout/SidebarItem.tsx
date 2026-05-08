@@ -55,7 +55,7 @@ export function SidebarItem({
   )
   const textThemeClass = useThemeClass(
     'text-slate-400',
-    'text-slate-600',
+    'text-slate-300',
 
   )
 

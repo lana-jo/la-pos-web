@@ -76,9 +76,11 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
               stroke={theme === "dark" ? "hsl(var(--border))" : "#e5e7eb"}
             />
             <YAxis
-              tickFormatter={(value) =>
-                `Rp${(value / 1000000).toFixed(1)}`
-              }
+              tickFormatter={(value) => {
+                if (value >= 1000000) return `Rp${(value / 1000000).toFixed(1)}jt`;
+                if (value >= 1000) return `Rp${(value / 1000).toFixed(0)}rb`;
+                return `Rp${value}`;
+              }}
               {...getAxisTheme()}
             />
             <Tooltip
