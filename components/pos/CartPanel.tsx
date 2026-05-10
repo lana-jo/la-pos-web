@@ -361,9 +361,9 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
 
   if (cart.length === 0) {
     return (
-      <Card className="w-full pos-scanner-ready">
+      <Card className="w-full pos-modal-content border-none shadow-xl">
         <CardHeader className="pb-4">
-          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl text-primary">
             <div className="w-2 h-6 bg-primary-brand rounded-full"></div>
             <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-primary-brand" />
             Shopping Cart
@@ -372,7 +372,7 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-6 sm:py-8">
-            <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 text-primary-brand opacity-50" />
+            <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 text-primary-brand opacity-30" />
             <p className="text-sm sm:text-base text-muted-foreground font-medium">Your cart is empty</p>
             <p className="text-xs sm:text-sm text-muted-foreground">
               Scan products to add them to your cart
@@ -384,10 +384,10 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
   }
 
     return (
-    <Card className="w-full pos-scanner-ready">
+    <Card className="w-full pos-modal-content border-none shadow-xl">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-primary">
             <div className="w-2 h-6 bg-primary-brand rounded-full"></div>
             <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-primary-brand" />
             Shopping Cart
@@ -398,75 +398,54 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs sm:text-sm pos-action-button hover:scale-[1.02]"
+                className="text-xs sm:text-sm border-primary-brand text-primary-brand hover:bg-primary-brand hover:text-white"
                 onClick={onAddItem}
               >
                 <AddIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                 <span className="hidden sm:inline">Add Item</span>
-                <span className="sm:hidden">Add</span>
               </Button>
             )}
-            <Button variant="outline" size="sm" className="text-xs sm:text-sm pos-action-button hover:scale-[1.02]" onClick={clearCart}>
+            <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={clearCart}>
               Clear
             </Button>
           </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
+        <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto pr-2">
           {cart.map((item) => (
             <div
-              key={item.product.id}
-              className="pos-cart-item flex items-center justify-between p-2 sm:p-3 rounded-lg"
+              key={item.product.id + (item.variant?.id || '')}
+              className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50"
             >
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm sm:text-base truncate">
+                <p className="font-semibold text-sm sm:text-base truncate text-foreground">
                   {item.variant ? `${item.product.name} - ${item.variant.variant_name}` : item.product.name}
                 </p>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {item.variant ? (
-                    <>
-                      Base: {formatCurrency(item.product.price)} → Variant: {formatCurrency(item.unit_price)} × {item.quantity}
-                    </>
-                  ) : (
-                    <>
-                      {formatCurrency(item.unit_price)} × {item.quantity}
-                    </>
-                  )}
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(item.unit_price)} × {item.quantity}
                 </p>
-                {item.variant && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {item.variant.variant_name}
-                    </Badge>
-                    {item.product.price !== item.unit_price && (
-                      <Badge variant="outline" className="text-xs">
-                        {item.unit_price > item.product.price ? '+' : ''}{formatCurrency(item.unit_price - item.product.price)}
-                      </Badge>
-                    )}
-                  </div>
-                )}
               </div>
-              <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="h-6 w-6 sm:h-8 sm:w-8 p-0 pos-action-button hover:scale-[1.05]"
+                    className="h-7 w-7 p-0 hover:bg-primary/10"
                     onClick={() =>
                       updateItemQuantity(item.product.id, item.quantity - 1, item.variant?.id || null)
                     }
                     disabled={item.quantity <= 1}
                   >
-                    <Minus className="h-2 w-2 sm:h-3 sm:w-3" />
+                    <Minus className="h-3 w-3" />
                   </Button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">
+                  <span className="w-6 text-center font-bold text-sm text-foreground">
                     {item.quantity}
                   </span>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="h-6 w-6 sm:h-8 sm:w-8 p-0 pos-action-button hover:scale-[1.05]"
+                    className="h-7 w-7 p-0 hover:bg-primary/10"
                     onClick={() =>
                       updateItemQuantity(item.product.id, item.quantity + 1, item.variant?.id || null)
                     }
@@ -483,58 +462,56 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
                       return item.quantity >= productStock;
                     })()}
                   >
-                    <Plus className="h-2 w-2 sm:h-3 sm:w-3" />
+                    <Plus className="h-3 w-3" />
                   </Button>
                 </div>
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
+                  className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
                   onClick={() => removeItem(item.product.id, item.variant?.id || null)}
                 >
-                  <Trash2 className="h-2 w-2 sm:h-3 sm:w-3" />
+                  <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="border-t pt-4">
+        <div className="border-t border-border pt-4">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-base sm:text-lg font-semibold text-muted-foreground">Total:</span>
-            <span className="text-xl sm:text-2xl font-bold text-primary-brand">{formatCurrency(getTotal())}</span>
+            <span className="text-base sm:text-lg font-bold text-muted-foreground">Total:</span>
+            <span className="text-xl sm:text-2xl font-black text-primary-brand">{formatCurrency(getTotal())}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <InteractiveButton
-              className="w-full pos-cash-button text-xs sm:text-sm"
+            <Button
+              className="w-full h-11 pos-button-primary text-sm shadow-lg font-bold"
               size="sm"
               onClick={handleCashPayment}
               disabled={isProcessing || cart.length === 0}
             >
               {isProcessing ? (
-                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <Banknote className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Pay Cash</span>
-                  <span className="sm:hidden">Cash</span>
+                  <Banknote className="h-4 w-4 mr-2" />
+                  Pay Cash
                 </>
               )}
-            </InteractiveButton>
+            </Button>
 
             <Button
-              className="w-full pos-qris-button text-xs sm:text-sm"
+              className="w-full h-11 pos-qris-button text-sm shadow-lg font-bold"
               size="sm"
               onClick={handlePayment}
               disabled={isProcessing || cart.length === 0}
             >
               {isProcessing ? (
-                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Pay QRIS</span>
-                  <span className="sm:hidden">QRIS</span>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Pay QRIS
                 </>
               )}
             </Button>

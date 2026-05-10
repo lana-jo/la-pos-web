@@ -349,63 +349,64 @@ export default function ReportsPage() {
 
         {/* Transaction Details Modal */}
         <Dialog open={!!selectedTransaction} onOpenChange={(open) => !open && setSelectedTransaction(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto pos-modal-content border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle>Transaction Details</DialogTitle>
+              <DialogTitle className="pos-modal-title">
+                <ShoppingCart className="h-5 w-5" />
+                TRANSACTION DETAILS
+              </DialogTitle>
             </DialogHeader>
 
             {selectedTransaction && (
               <div className="space-y-6">
                 {/* Transaction Summary */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl">
                   <div>
-                    <p className="text-sm text-muted-foreground">Transaction ID</p>
-                    <p className="font-medium">{selectedTransaction.id}</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">Transaction ID</p>
+                    <p className="font-mono text-sm text-foreground">{selectedTransaction.id}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Date</p>
-                    <p className="font-medium">{formatDate(selectedTransaction.created_at)}</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">Date</p>
+                    <p className="font-medium text-sm text-foreground">{formatDate(selectedTransaction.created_at)}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">Status</p>
                     <Badge variant={statusVariant(selectedTransaction.payment_status)}>
                       {capitalize(selectedTransaction.payment_status)}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total</p>
-                    <p className="font-medium">{formatCurrency(selectedTransaction.total)}</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">Total</p>
+                    <p className="font-black text-sm text-primary-brand">{formatCurrency(selectedTransaction.total)}</p>
                   </div>
                 </div>
 
                 {/* Items */}
                 <div>
-                  <h4 className="font-medium mb-3">Items Purchased</h4>
+                  <h4 className="font-bold text-sm uppercase text-muted-foreground mb-3">Items Purchased</h4>
                   {loadingDetails ? (
                     <div className="text-center py-4">
-                      <p className="text-muted-foreground">Loading items...</p>
+                      <div className="pos-loading-spinner mx-auto" />
                     </div>
                   ) : transactionItems.length === 0 ? (
-                    <div className="text-center py-4">
-                      <p className="text-muted-foreground">No items found</p>
-                    </div>
+                    <div className="text-center py-4 text-muted-foreground">No items found</div>
                   ) : (
-                    <div className="border rounded-lg">
+                    <div className="border border-border rounded-xl overflow-hidden">
                       <table className="w-full">
                         <thead className="bg-muted/50">
                           <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium">Product</th>
-                            <th className="px-4 py-2 text-center text-xs font-medium">Qty</th>
-                            <th className="px-4 py-2 text-right text-xs font-medium">Unit Price</th>
-                            <th className="px-4 py-2 text-right text-xs font-medium">Subtotal</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Product</th>
+                            <th className="px-4 py-3 text-center text-xs font-bold uppercase text-muted-foreground">Qty</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Unit Price</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Subtotal</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y">
+                        <tbody className="divide-y divide-border">
                           {transactionItems.map((item) => (
-                            <tr key={item.id}>
-                              <td className="px-4 py-2">
+                            <tr key={item.id} className="hover:bg-background/50">
+                              <td className="px-4 py-3">
                                 <div>
-                                  <p className="font-medium text-sm">
+                                  <p className="font-medium text-sm text-foreground">
                                     {item.product?.name || 'Unknown Product'}
                                     {item.variant && (
                                       <span className="text-xs text-muted-foreground ml-1">
@@ -413,20 +414,15 @@ export default function ReportsPage() {
                                       </span>
                                     )}
                                   </p>
-                                  {(item.variant?.barcode || item.product?.barcode) && (
-                                    <p className="text-xs text-muted-foreground">
-                                      Barcode: {item.variant?.barcode || item.product?.barcode}
-                                    </p>
-                                  )}
                                 </div>
                               </td>
-                              <td className="px-4 py-2 text-center text-sm">
+                              <td className="px-4 py-3 text-center text-sm text-foreground">
                                 {item.qty}
                               </td>
-                              <td className="px-4 py-2 text-right text-sm">
+                              <td className="px-4 py-3 text-right text-sm text-foreground">
                                 {formatCurrency(item.unit_price)}
                               </td>
-                              <td className="px-4 py-2 text-right text-sm font-medium">
+                              <td className="px-4 py-3 text-right text-sm font-black text-foreground">
                                 {formatCurrency(item.subtotal)}
                               </td>
                             </tr>
