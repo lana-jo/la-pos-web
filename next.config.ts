@@ -1,15 +1,18 @@
 import type { NextConfig } from "next";
-// import path from "path"; // Note: You can remove this if you aren't actively using `path` in this file
 
 const nextConfig: NextConfig = {
-  // 1. Allows requests from this specific IP to access the dev server
-  allowedDevOrigins: ['192.168.1.67'],
+  // 1. Add the new IP to the list (kept the old one just in case you switch back!)
+  allowedDevOrigins: [
+    '192.168.1.67', 
+    '10.91.81.117'
+  ],
 
-  // 2. Explicitly allow Server Actions from your local network IP
+  // 2. Add the new IP here as well to prevent Server Action CSRF errors
   experimental: {
     serverActions: {
       allowedOrigins: [
-        '192.168.1.67:3000', // Include the port you are running the dev server on
+        '192.168.1.67:3000',
+        '10.91.81.117:3000', 
       ],
     },
   },
