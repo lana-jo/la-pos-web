@@ -237,10 +237,10 @@ export default function ReportsPage() {
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-200" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-primary-brand" />
+                <DollarSign className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.totalRevenue)}</div>
@@ -248,10 +248,10 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-200" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Transactions</CardTitle>
-                <ShoppingCart className="h-4 w-4 text-primary-brand" />
+                <ShoppingCart className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-primary-brand">{stats.totalTransactions}</div>
@@ -261,10 +261,10 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-200" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Average Transaction</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary-brand" />
+                <TrendingUp className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.averageTransaction)}</div>
@@ -272,10 +272,10 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-200" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Success Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary-brand" />
+                <TrendingUp className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-green-600">{successRate}%</div>
@@ -312,7 +312,11 @@ export default function ReportsPage() {
                       </thead>
                       <tbody className="divide-y divide-border">
                       {transactions.map((t) => (
-                          <tr key={t.id} className="hover:bg-background/50 transition-colors">
+                          <tr 
+                            key={t.id} 
+                            className="hover:bg-background/50 transition-colors cursor-pointer"
+                            onClick={() => handleViewDetails(t)}
+                          >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                               {formatDate(t.created_at)}
                             </td>
@@ -331,7 +335,6 @@ export default function ReportsPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleViewDetails(t)}
                                 className="h-8 w-8 p-0 text-primary-brand hover:bg-primary-brand/10"
                               >
                                 <Eye className="h-4 w-4" />
