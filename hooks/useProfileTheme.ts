@@ -38,18 +38,37 @@ export function useProfileTheme() {
   // Save theme to profile when user changes it manually
   const setThemeWithProfile = useCallback(
     async (newTheme: ThemePreference) => {
+      console.log(`[THEME] User changing theme from "${theme}" to "${newTheme}"`, {
+        userId: user?.id,
+        userEmail: user?.email,
+        previousTheme: theme,
+        newTheme,
+        timestamp: new Date().toISOString()
+      })
+      
       manualThemeRef.current = newTheme
       setTheme(newTheme)
 
       if (user) {
         try {
-          await updateThemePreference(newTheme)
+          const result = await updateThemePreference(newTheme)
+          console.log(`[THEME] Theme preference saved to database:`, {
+            userId: user.id,
+            theme: newTheme,
+            success: result.success,
+            timestamp: new Date().toISOString()
+          })
         } catch (error) {
-          console.error('Failed to save theme preference:', error)
+          console.error('[THEME] Failed to save theme preference:', error)
         }
+      } else {
+        console.log(`[THEME] Theme changed locally (user not authenticated):`, {
+          newTheme,
+          timestamp: new Date().toISOString()
+        })
       }
     },
-    [setTheme, user]
+    [setTheme, user, theme]
   )
 
   return {

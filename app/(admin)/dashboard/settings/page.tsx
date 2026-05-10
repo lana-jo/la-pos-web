@@ -287,27 +287,23 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Pengaturan</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Kelola konfigurasi dan preferensi sistem POS
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportSettings} disabled={isLoading}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <div className="relative">
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImportSettings}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              disabled={isLoading}
-            />
+    <div className="min-h-screen pos-terminal p-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+          <Settings className="h-8 w-8 text-primary-brand" />
+          SYSTEM SETTINGS
+        </h1>
+        <p className="text-muted-foreground mt-2">Manage your POS system configuration and preferences.</p>
+      </div>
+
+      <Tabs defaultValue="general" className="space-y-6">
+        <TabsList className="bg-background/50 border border-border p-1 rounded-full w-full justify-start overflow-x-auto">
+          <TabsTrigger value="general" className="rounded-full data-[state=active]:pos-button-primary">General</TabsTrigger>
+          <TabsTrigger value="payment" className="rounded-full data-[state=active]:pos-button-primary">Payments</TabsTrigger>
+          <TabsTrigger value="printer" className="rounded-full data-[state=active]:pos-button-primary">Printer</TabsTrigger>
+          <TabsTrigger value="system" className="rounded-full data-[state=active]:pos-button-primary">System</TabsTrigger>
+          <TabsTrigger value="notifications" className="rounded-full data-[state=active]:pos-button-primary">Notifications</TabsTrigger>
+        </TabsList>
             <Button variant="outline" disabled={isLoading}>
               <Upload className="h-4 w-4 mr-2" />
               Import
@@ -350,7 +346,7 @@ export default function SettingsPage() {
 
         {/* General Settings */}
         <TabsContent value="general" className="space-y-6">
-          <Card>
+          <Card className="pos-modal-content border-none shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Store className="h-5 w-5" />
@@ -370,6 +366,7 @@ export default function SettingsPage() {
                     onChange={(e) => handleInputChange('general', 'store_name', e.target.value)}
                     placeholder="Masukkan nama toko"
                     disabled={isLoading}
+                    className="pos-form-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -380,6 +377,7 @@ export default function SettingsPage() {
                     onChange={(e) => handleInputChange('general', 'store_phone', e.target.value)}
                     placeholder="Masukkan nomor telepon"
                     disabled={isLoading}
+                    className="pos-form-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -391,6 +389,7 @@ export default function SettingsPage() {
                     placeholder="Masukkan email"
                     type="email"
                     disabled={isLoading}
+                    className="pos-form-input"
                   />
                 </div>
                 <div className="space-y-2">
@@ -401,6 +400,7 @@ export default function SettingsPage() {
                     onChange={(e) => handleInputChange('general', 'store_address', e.target.value)}
                     placeholder="Masukkan alamat"
                     disabled={isLoading}
+                    className="pos-form-input"
                   />
                 </div>
               </div>
@@ -408,6 +408,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={() => handleSave('general')}
                   disabled={isSaving || isLoading}
+                  className="pos-button-primary"
                 >
                   {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>
@@ -415,7 +416,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="pos-modal-content border-none shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Globe className="h-5 w-5" />
@@ -478,6 +479,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={() => handleSave('general')}
                   disabled={isSaving || isLoading}
+                  className="pos-button-primary"
                 >
                   {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>
@@ -488,7 +490,7 @@ export default function SettingsPage() {
 
         {/* Payment Settings */}
         <TabsContent value="payment" className="space-y-6">
-          <Card>
+          <Card className="pos-modal-content border-none shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
@@ -514,7 +516,7 @@ export default function SettingsPage() {
                     disabled={isLoading}
                   />
                 </div>
-                <Separator />
+                <Separator className="bg-border" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="cash-enabled">Pembayaran Tunai</Label>
@@ -529,7 +531,7 @@ export default function SettingsPage() {
                     disabled={isLoading}
                   />
                 </div>
-                <Separator />
+                <Separator className="bg-border" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="card-enabled">Pembayaran Kartu</Label>
@@ -558,6 +560,7 @@ export default function SettingsPage() {
                       placeholder="Masukkan Midtrans Merchant ID"
                       type="password"
                       disabled={isLoading}
+                      className="pos-form-input"
                     />
                   </div>
                   <div className="space-y-2">
@@ -569,6 +572,7 @@ export default function SettingsPage() {
                       placeholder="Masukkan Midtrans Server Key"
                       type="password"
                       disabled={isLoading}
+                      className="pos-form-input"
                     />
                   </div>
                 </div>
@@ -593,6 +597,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={() => handleSave('payment')}
                   disabled={isSaving || isLoading}
+                  className="pos-button-primary"
                 >
                   {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>
@@ -603,7 +608,7 @@ export default function SettingsPage() {
 
         {/* Printer Settings */}
         <TabsContent value="printer" className="space-y-6">
-          <Card>
+          <Card className="pos-modal-content border-none shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Printer className="h-5 w-5" />
@@ -629,7 +634,7 @@ export default function SettingsPage() {
                     disabled={isLoading}
                   />
                 </div>
-                <Separator />
+                <Separator className="bg-border" />
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label htmlFor="print-logo">Print Logo</Label>
@@ -673,6 +678,7 @@ export default function SettingsPage() {
                       onChange={(e) => handleInputChange('printer', 'printer_port', e.target.value)}
                       placeholder="USB001 atau IP Address"
                       disabled={isLoading}
+                      className="pos-form-input"
                     />
                   </div>
                 </div>
@@ -697,11 +703,11 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold">Test Printer</h4>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleTestPrint} disabled={isLoading}>
+                  <Button variant="outline" onClick={handleTestPrint} disabled={isLoading} className="border-primary-brand text-primary-brand">
                     <Printer className="h-4 w-4 mr-2" />
                     Test Print
                   </Button>
-                  <Button variant="outline" onClick={handleTestPrinterConnection} disabled={isLoading}>
+                  <Button variant="outline" onClick={handleTestPrinterConnection} disabled={isLoading} className="border-primary-brand text-primary-brand">
                     <Database className="h-4 w-4 mr-2" />
                     Test Connection
                   </Button>
@@ -712,6 +718,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={() => handleSave('printer')}
                   disabled={isSaving || isLoading}
+                  className="pos-button-primary"
                 >
                   {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>
@@ -722,7 +729,7 @@ export default function SettingsPage() {
 
         {/* System Settings */}
         <TabsContent value="system" className="space-y-6">
-          <Card>
+          <Card className="pos-modal-content border-none shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
@@ -760,6 +767,7 @@ export default function SettingsPage() {
                       min="5"
                       max="480"
                       disabled={isLoading}
+                      className="pos-form-input"
                     />
                   </div>
                   <div className="space-y-2">
@@ -772,12 +780,13 @@ export default function SettingsPage() {
                       min="3"
                       max="10"
                       disabled={isLoading}
+                      className="pos-form-input"
                     />
                   </div>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold">Backup Settings</h4>
@@ -817,6 +826,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={() => handleSave('system')}
                   disabled={isSaving || isLoading}
+                  className="pos-button-primary"
                 >
                   {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>
@@ -827,7 +837,7 @@ export default function SettingsPage() {
 
         {/* Notification Settings */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card>
+          <Card className="pos-modal-content border-none shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
@@ -870,7 +880,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-border" />
 
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold">System Notifications</h4>
@@ -908,6 +918,7 @@ export default function SettingsPage() {
                 <Button 
                   onClick={() => handleSave('notifications')}
                   disabled={isSaving || isLoading}
+                  className="pos-button-primary"
                 >
                   {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </Button>

@@ -9,7 +9,14 @@ import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Store, Loader2, UserPlus, Sun, Moon, Laptop } from 'lucide-react'
+import { useProfileTheme } from '@/hooks/useProfileTheme'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
@@ -18,6 +25,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { theme, setTheme } = useProfileTheme()
 
   const handleRegister = async (e: React.FormEvent) => {
   e.preventDefault()
@@ -89,21 +97,56 @@ export default function RegisterPage() {
   }
 }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center pos-terminal p-4">
       <div className="absolute top-4 right-4">
-        <ThemeToggle />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10">
+              {theme === 'light' ? <Sun className="h-5 w-5" /> : theme === 'dark' ? <Moon className="h-5 w-5" /> : <Laptop className="h-5 w-5" />}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => {
+              console.log(`[THEME] Register page theme button clicked:`, {
+                theme: 'light',
+                source: 'register_page',
+                timestamp: new Date().toISOString()
+              });
+              setTheme('light');
+            }}>Light</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              console.log(`[THEME] Register page theme button clicked:`, {
+                theme: 'dark',
+                source: 'register_page',
+                timestamp: new Date().toISOString()
+              });
+              setTheme('dark');
+            }}>Dark</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              console.log(`[THEME] Register page theme button clicked:`, {
+                theme: 'system',
+                source: 'register_page',
+                timestamp: new Date().toISOString()
+              });
+              setTheme('system');
+            }}>System</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Daftar Akun Baru</CardTitle>
-          <CardDescription>
+      <Card className="w-full max-w-md pos-modal-content border-none shadow-2xl">
+        <CardHeader className="space-y-1 flex flex-col items-center">
+          <div className="w-12 h-12 bg-primary-brand rounded-full flex items-center justify-center mb-4 shadow-lg">
+            <UserPlus className="h-6 w-6 text-white" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-primary">Daftar Akun Baru</CardTitle>
+          <CardDescription className="text-center">
             Buat akun customer untuk mengakses katalog produk
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Nama Lengkap</Label>
+              <Label htmlFor="fullName" className="pos-form-label">Nama Lengkap</Label>
               <Input
                 id="fullName"
                 type="text"
@@ -111,10 +154,11 @@ export default function RegisterPage() {
                 onChange={(e) => setFullName(e.target.value)}
                 required
                 placeholder="John Doe"
+                className="pos-form-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="pos-form-label">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -122,38 +166,46 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="customer@example.com"
+                className="pos-form-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" title="password" className="pos-form-label">Password</Label>
               <PasswordInput
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Minimal 6 karakter"
+                className="pos-form-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+              <Label htmlFor="confirmPassword" title="confirmPassword" className="pos-form-label">Konfirmasi Password</Label>
               <PasswordInput
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder="Ulangi password"
+                className="pos-form-input"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Mendaftar...' : 'Daftar'}
+            <Button type="submit" className="w-full pos-button-primary h-12" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Mendaftar...
+                </>
+              ) : 'Daftar'}
             </Button>
           </form>
-          <div className="mt-4 text-center">
+          <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Sudah punya akun?{' '}
               <button
                 onClick={() => router.push('/login')}
-                className="text-primary hover:underline"
+                className="text-primary font-semibold hover:underline"
               >
                 Login di sini
               </button>

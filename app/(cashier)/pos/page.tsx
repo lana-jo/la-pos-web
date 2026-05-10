@@ -257,7 +257,7 @@ export default function POSPage() {
 
   return (
     <ErrorBoundary fallback={POSErrorFallback}>
-      <div className="min-h-screen pos-terminal">
+      <div className="page-background">
         {/* Header */}
         <POSHeader 
           userName={userProfile?.full_name} 

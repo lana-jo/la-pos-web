@@ -423,13 +423,13 @@ export default function ProductsPage() {
 
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen pos-terminal">
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="flex flex-col gap-4 mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex items-center gap-4">
-                            <h2 className="text-2xl font-bold">Products ({products.length})</h2>
+                            <h2 className="text-3xl font-bold text-foreground">Products ({products.length})</h2>
                             <CategoryFilter
                                 categories={categories}
                                 selectedCategory={selectedCategory}
@@ -437,22 +437,24 @@ export default function ProductsPage() {
                             />
                         </div>
                         <div className="flex gap-2">
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 onClick={startScanning}
                                 disabled={isScanning}
+                                className="border-primary-brand text-primary-brand"
                             >
                                 <Scan className="h-4 w-4 mr-2" />
                                 {isScanning ? 'Scanning...' : 'Scan USB'}
                             </Button>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 onClick={startCameraScanning}
+                                className="border-primary-brand text-primary-brand"
                             >
                                 <Camera className="h-4 w-4 mr-2" />
                                 Scan Kamera
                             </Button>
-                            <Button onClick={() => setModal('add')}>
+                            <Button onClick={() => setModal('add')} className="pos-button-primary shadow-lg">
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Product
                             </Button>
@@ -465,11 +467,10 @@ export default function ProductsPage() {
                             placeholder="Cari produk berdasarkan nama atau barcode..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 rounded-md border border-input bg-background text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-background pos-form-input shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
                         />
                     </div>
                 </div>
-
                 {/* Content */}
                 {filteredProducts.length === 0 ? (
                     <EmptyState

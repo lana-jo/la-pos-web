@@ -44,10 +44,20 @@ export default function ProfilePage() {
   }, [profile, user]);
 
   const handleEdit = () => {
+    console.log(`[PROFILE] Edit button clicked:`, {
+      userId: profile?.id,
+      source: 'profile_page',
+      timestamp: new Date().toISOString()
+    });
     setIsEditing(true);
   };
 
   const handleCancel = () => {
+    console.log(`[PROFILE] Cancel button clicked:`, {
+      userId: profile?.id,
+      source: 'profile_page',
+      timestamp: new Date().toISOString()
+    });
     setIsEditing(false);
     setErrors({});
     if (profile && user) {
@@ -77,8 +87,24 @@ export default function ProfilePage() {
   const handleSave = async () => {
     if (!profile || !user) return;
     
+    console.log(`[PROFILE] Save button clicked:`, {
+      userId: profile.id,
+      formData: {
+        full_name: formData.full_name.trim(),
+        theme_preference: formData.theme_preference
+      },
+      source: 'profile_page',
+      timestamp: new Date().toISOString()
+    });
+    
     // Validasi form
     if (!validateForm()) {
+      console.log(`[PROFILE] Save validation failed:`, {
+        userId: profile.id,
+        errors,
+        source: 'profile_page',
+        timestamp: new Date().toISOString()
+      });
       return;
     }
     
@@ -93,16 +119,33 @@ export default function ProfilePage() {
       setTheme(formData.theme_preference);
       
       if (result.success) {
+        console.log(`[PROFILE] Save successful:`, {
+          userId: profile.id,
+          result,
+          source: 'profile_page',
+          timestamp: new Date().toISOString()
+        });
         setIsEditing(false);
         setErrors({});
         toast.success(result.message || "Profile berhasil diperbarui!");
         // Refresh profile data
         window.location.reload();
       } else {
+        console.error(`[PROFILE] Save failed:`, {
+          userId: profile.id,
+          error: result.error,
+          source: 'profile_page',
+          timestamp: new Date().toISOString()
+        });
         toast.error(result.error || "Gagal memperbarui profile");
       }
     } catch (error) {
-      console.error("Error saving profile:", error);
+      console.error("[PROFILE] Save error:", {
+        userId: profile.id,
+        error,
+        source: 'profile_page',
+        timestamp: new Date().toISOString()
+      });
       toast.error("Terjadi kesalahan saat memperbarui profile");
     } finally {
       setIsSaving(false);
@@ -116,7 +159,66 @@ export default function ProfilePage() {
     }));
   };
 
+  const handleThemeChange = async (themeValue: 'light' | 'dark' | 'system') => {
+    if (!profile) return;
+    
+    console.log(`[THEME] Profile page theme change initiated:`, {
+      userId: profile.id,
+      userEmail: user?.email,
+      fromTheme: formData.theme_preference,
+      toTheme: themeValue,
+      source: 'profile_page',
+      timestamp: new Date().toISOString()
+    });
+    
+    handleInputChange('theme_preference', themeValue);
+    setTheme(themeValue);
+    
+    try {
+      const result = await updateProfile(profile.id, {
+        full_name: formData.full_name.trim(),
+        theme_preference: themeValue,
+      });
+      
+      if (result.success) {
+        console.log(`[THEME] Profile page theme change successful:`, {
+          userId: profile.id,
+          theme: themeValue,
+          source: 'profile_page',
+          timestamp: new Date().toISOString()
+        });
+        toast.success('Tema berhasil diperbarui');
+      } else {
+        console.error(`[THEME] Profile page theme change failed:`, {
+          userId: profile.id,
+          theme: themeValue,
+          error: result.error,
+          source: 'profile_page',
+          timestamp: new Date().toISOString()
+        });
+        toast.error(result.error || 'Gagal menyimpan tema');
+      }
+    } catch (error) {
+      console.error('[THEME] Profile page theme change error:', {
+        userId: profile.id,
+        theme: themeValue,
+        error: error,
+        source: 'profile_page',
+        timestamp: new Date().toISOString()
+      });
+      toast.error('Terjadi kesalahan saat menyimpan tema');
+    }
+  };
+
   const handleBack = () => {
+    console.log(`[PROFILE] Back button clicked:`, {
+      userId: profile?.id,
+      userRole: profile?.role,
+      destination: profile?.role === "admin" ? "/dashboard" : profile?.role === "cashier" ? "/pos" : "/catalog",
+      source: 'profile_page',
+      timestamp: new Date().toISOString()
+    });
+    
     // Kembali ke halaman sebelumnya atau dashboard berdasarkan role
     if (profile?.role === "admin") {
       router.push("/dashboard");
@@ -130,18 +232,43 @@ export default function ProfilePage() {
   const handleCreateProfile = async () => {
     if (!user) return;
 
+    console.log(`[PROFILE] Create profile button clicked:`, {
+      userId: user.id,
+      userEmail: user.email,
+      fullName: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+      source: 'profile_page',
+      timestamp: new Date().toISOString()
+    });
+
     setIsCreatingProfile(true);
     try {
       const result = await createProfile(user.id, user.email || "", user.user_metadata?.full_name || user.email?.split("@")[0] || "User");
 
       if (result.success) {
+        console.log(`[PROFILE] Create profile successful:`, {
+          userId: user.id,
+          result,
+          source: 'profile_page',
+          timestamp: new Date().toISOString()
+        });
         toast.success("Profile berhasil dibuat! Silakan refresh halaman.");
         window.location.reload();
       } else {
+        console.error(`[PROFILE] Create profile failed:`, {
+          userId: user.id,
+          error: result.error,
+          source: 'profile_page',
+          timestamp: new Date().toISOString()
+        });
         toast.error(String(result.error) || "Gagal membuat profile");
       }
     } catch (error) {
-      console.error("Error creating profile:", error);
+      console.error("[PROFILE] Create profile error:", {
+        userId: user.id,
+        error,
+        source: 'profile_page',
+        timestamp: new Date().toISOString()
+      });
       toast.error("Terjadi kesalahan saat membuat profile");
     } finally {
       setIsCreatingProfile(false);
@@ -150,10 +277,10 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
+      <div className="page-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-slate-600 dark:text-slate-400">Memuat profile...</p>
+          <p className="mt-2 text-muted-foreground">Memuat profile...</p>
         </div>
       </div>
     );
@@ -161,8 +288,8 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <Card className="w-96">
+      <div className="page-background flex items-center justify-center">
+        <Card className="w-96 card-background">
           <CardHeader>
             <CardTitle className="text-center">Profile Tidak Ditemukan</CardTitle>
             <CardDescription className="text-center">
@@ -199,7 +326,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-6">
+    <div className="page-background p-6">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-6">
@@ -207,16 +334,16 @@ export default function ProfilePage() {
               variant="outline"
               size="sm"
               onClick={handleBack}
-              className="flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-2 border-primary-brand text-primary-brand hover:bg-primary-brand hover:text-white transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Kembali
             </Button>
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 Profile Saya
               </h1>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-muted-foreground">
                 Kelola informasi profile dan pengaturan akun Anda
               </p>
             </div>
@@ -225,11 +352,11 @@ export default function ProfilePage() {
 
         <div className="grid gap-6 md:grid-cols-3">
           {/* Profile Card */}
-          <Card className="md:col-span-1">
+          <Card className="md:col-span-1 card-background shadow-xl">
             <CardHeader className="text-center">
-              <Avatar className="w-20 h-20 mx-auto mb-4">
+              <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-background">
                 {/* <AvatarImage src={profile.avatar_url} /> */}
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">
                   {profile.full_name?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
@@ -243,20 +370,20 @@ export default function ProfilePage() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Role</span>
+                  <span className="text-sm text-muted-foreground">Role</span>
                   <Badge variant={profile.role === "admin" ? "default" : profile.role === "cashier" ? "secondary" : "outline"}>
                     {profile.role === "admin" ? "Administrator" : profile.role === "cashier" ? "Kasir" : "Pelanggan"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600 dark:text-slate-400">Status</span>
+                  <span className="text-sm text-muted-foreground">Status</span>
                   <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                     Aktif
                   </Badge>
                 </div>
-                <Separator />
+                <Separator className="bg-border" />
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="w-4 h-4" />
                     Bergabung: {profile.created_at
                       ? new Date(profile.created_at).toLocaleDateString("id-ID")
@@ -268,7 +395,7 @@ export default function ProfilePage() {
           </Card>
 
           {/* Edit Form */}
-          <Card className="md:col-span-2">
+          <Card className="md:col-span-2 card-background shadow-xl">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -278,13 +405,13 @@ export default function ProfilePage() {
                   </CardDescription>
                 </div>
                 {!isEditing ? (
-                  <Button onClick={handleEdit} variant="outline" size="sm">
+                  <Button onClick={handleEdit} variant="outline" size="sm" className="border-primary-brand text-primary-brand hover:bg-primary-brand hover:text-white">
                     <Edit2 className="w-4 h-4 mr-2" />
                     Edit
                   </Button>
                 ) : (
                   <div className="flex gap-2">
-                    <Button onClick={handleSave} disabled={isSaving} size="sm">
+                    <Button onClick={handleSave} disabled={isSaving} size="sm" className="pos-button-primary">
                       <Save className="w-4 h-4 mr-2" />
                       {isSaving ? "Menyimpan..." : "Simpan"}
                     </Button>
@@ -299,9 +426,9 @@ export default function ProfilePage() {
             <CardContent>
               <div className="space-y-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="full_name">Nama Lengkap</Label>
+                  <Label htmlFor="full_name" className="pos-form-label">Nama Lengkap</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <User className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="full_name"
                       type="text"
@@ -309,7 +436,7 @@ export default function ProfilePage() {
                       onChange={(e) => handleInputChange("full_name", e.target.value)}
                       disabled={!isEditing}
                       className={cn(
-                        "pl-10",
+                        "input-background pl-10",
                         errors.full_name && "border-red-500 focus:border-red-500"
                       )}
                       placeholder="Masukkan nama lengkap"
@@ -321,39 +448,39 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="pos-form-label">Email</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <Mail className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange("email", e.target.value)}
                       disabled={!isEditing}
-                      className="pl-10"
+                      className="input-background pl-10"
                       placeholder="Masukkan email"
                     />
                   </div>
                 </div>
 
-                <Separator />
+                <Separator className="bg-border" />
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Informasi Akun</h3>
+                  <h3 className="text-lg font-medium text-foreground">Informasi Akun</h3>
                   
                   <div className="grid gap-2">
-                    <Label>ID Pengguna</Label>
+                    <Label className="pos-form-label">ID Pengguna</Label>
                     <Input
                       value={profile.id}
                       disabled
-                      className="bg-slate-50 dark:bg-slate-800"
+                      className="input-background bg-muted/50"
                     />
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Role Akses</Label>
+                    <Label className="pos-form-label">Role Akses</Label>
                     <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-slate-400" />
+                      <Shield className="w-4 h-4 text-muted-foreground" />
                       <Badge variant={profile.role === "admin" ? "default" : profile.role === "cashier" ? "secondary" : "outline"}>
                         {profile.role === "admin" ? "Administrator" : profile.role === "cashier" ? "Kasir" : "Pelanggan"}
                       </Badge>
@@ -366,7 +493,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Additional Settings Card */}
-        <Card className="mt-6">
+        <Card className="mt-6 card-background shadow-xl">
           <CardHeader>
             <CardTitle>Pengaturan Tambahan</CardTitle>
             <CardDescription>
@@ -375,14 +502,14 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-background/50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                     <Lock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div>
-                    <h4 className="font-medium">Ubah Password</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <h4 className="font-medium text-foreground">Ubah Password</h4>
+                    <p className="text-sm text-muted-foreground">
                       Perbarui password untuk keamanan akun
                     </p>
                   </div>
@@ -390,17 +517,24 @@ export default function ProfilePage() {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => setIsPasswordModalOpen(true)}
-                  className="hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200"
+                  onClick={() => {
+                    console.log(`[PROFILE] Change password button clicked:`, {
+                      userId: profile?.id,
+                      source: 'profile_page',
+                      timestamp: new Date().toISOString()
+                    });
+                    setIsPasswordModalOpen(true);
+                  }}
+                  className="border-primary-brand text-primary-brand hover:bg-primary/5 transition-all duration-200"
                 >
                   Ubah Password
                 </Button>
               </div>
 
               {/* Theme Preference */}
-              <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-background/50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                     {formData.theme_preference === 'dark' ? (
                       <Moon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     ) : formData.theme_preference === 'light' ? (
@@ -410,8 +544,8 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <div>
-                    <h4 className="font-medium">Tema Tampilan</h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <h4 className="font-medium text-foreground">Tema Tampilan</h4>
+                    <p className="text-sm text-muted-foreground">
                       Pilih tema terang, gelap, atau sistem
                     </p>
                   </div>
@@ -420,31 +554,28 @@ export default function ProfilePage() {
                   <Button
                     variant={formData.theme_preference === 'light' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleInputChange('theme_preference', 'light')}
-                    disabled={!isEditing}
-                    className="gap-1"
+                    onClick={() => handleThemeChange('light')}
+                    className={formData.theme_preference === 'light' ? 'pos-button-primary' : ''}
                   >
-                    <Sun className="h-3 w-3" />
+                    <Sun className="h-3 w-3 mr-1" />
                     Terang
                   </Button>
                   <Button
                     variant={formData.theme_preference === 'dark' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleInputChange('theme_preference', 'dark')}
-                    disabled={!isEditing}
-                    className="gap-1"
+                    onClick={() => handleThemeChange('dark')}
+                    className={formData.theme_preference === 'dark' ? 'pos-button-primary' : ''}
                   >
-                    <Moon className="h-3 w-3" />
+                    <Moon className="h-3 w-3 mr-1" />
                     Gelap
                   </Button>
                   <Button
                     variant={formData.theme_preference === 'system' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => handleInputChange('theme_preference', 'system')}
-                    disabled={!isEditing}
-                    className="gap-1"
+                    onClick={() => handleThemeChange('system')}
+                    className={formData.theme_preference === 'system' ? 'pos-button-primary' : ''}
                   >
-                    <Monitor className="h-3 w-3" />
+                    <Monitor className="h-3 w-3 mr-1" />
                     Sistem
                   </Button>
                 </div>

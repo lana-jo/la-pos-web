@@ -14,8 +14,12 @@ export const useRecentActivities = () => {
   }, []);
 
   const fetchRecentActivities = async () => {
+    console.log(`[DASHBOARD] fetchRecentActivities started`);
+    const startTime = Date.now();
+    
     try {
       // Fetch recent transactions with user info
+      console.log(`[DASHBOARD] Fetching recent transactions`);
       const { data: transactions, error: transactionsError } = await supabase
         .from("transactions")
         .select(
@@ -33,16 +37,33 @@ export const useRecentActivities = () => {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      if (transactionsError) throw transactionsError;
+      if (transactionsError) {
+        console.error(`[DASHBOARD] Transactions fetch error:`, transactionsError);
+        throw transactionsError;
+      }
+      
+      console.log(`[DASHBOARD] Transactions fetched:`, {
+        count: transactions?.length || 0,
+        data: transactions
+      });
 
       // Fetch recent new users
+      console.log(`[DASHBOARD] Fetching recent users`);
       const { data: users, error: usersError } = await supabase
         .from("profiles")
         .select("id, full_name, role, created_at")
         .order("created_at", { ascending: false })
         .limit(3);
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error(`[DASHBOARD] Users fetch error:`, usersError);
+        throw usersError;
+      }
+      
+      console.log(`[DASHBOARD] Users fetched:`, {
+        count: users?.length || 0,
+        data: users
+      });
 
       // Combine and format activities
       const activities: RecentActivity[] = [];
@@ -78,9 +99,26 @@ export const useRecentActivities = () => {
         )
         .slice(0, 10);
 
+      console.log(`[DASHBOARD] Activities processed:`, {
+        totalActivities: activities.length,
+        finalCount: sortedActivities.length,
+        activities: sortedActivities.map(a => ({
+          id: a.id,
+          type: a.type,
+          description: a.description,
+          created_at: a.created_at
+        }))
+      });
+
       setActivities(sortedActivities);
+      
+      const duration = Date.now() - startTime;
+      console.log(`[DASHBOARD] fetchRecentActivities completed in ${duration}ms`);
     } catch (error) {
-      console.error("Error fetching recent activities:", error);
+      console.error("[DASHBOARD] Error fetching recent activities:", {
+        error,
+        timestamp: new Date().toISOString()
+      });
       toast.error("Failed to load recent activities");
     } finally {
       setLoading(false);

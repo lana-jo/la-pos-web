@@ -36,9 +36,19 @@ function ProfileButton({ isCollapsed }: { isCollapsed: boolean }) {
     'text-slate-300',
   );
 
+  const handleProfileClick = () => {
+    console.log(`[NAVIGATION] Profile button clicked:`, {
+      source: 'sidebar_footer',
+      isActive,
+      pathname,
+      timestamp: new Date().toISOString()
+    });
+    router.push("/profile");
+  };
+
   return (
     <button
-      onClick={() => router.push("/profile")}
+      onClick={handleProfileClick}
       className={cn(
         'group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ease-out w-full',
         hoverThemeClass,
@@ -143,9 +153,30 @@ export function SidebarFooter({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => onToggleTheme('light')}>Light</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleTheme('dark')}>Dark</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggleTheme('system')}>System</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                console.log(`[THEME] Sidebar footer theme button clicked:`, {
+                  theme: 'light',
+                  source: 'sidebar_footer',
+                  timestamp: new Date().toISOString()
+                });
+                onToggleTheme('light');
+              }}>Light</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                console.log(`[THEME] Sidebar footer theme button clicked:`, {
+                  theme: 'dark',
+                  source: 'sidebar_footer',
+                  timestamp: new Date().toISOString()
+                });
+                onToggleTheme('dark');
+              }}>Dark</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                console.log(`[THEME] Sidebar footer theme button clicked:`, {
+                  theme: 'system',
+                  source: 'sidebar_footer',
+                  timestamp: new Date().toISOString()
+                });
+                onToggleTheme('system');
+              }}>System</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

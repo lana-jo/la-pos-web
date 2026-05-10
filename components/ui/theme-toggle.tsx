@@ -34,21 +34,42 @@ export function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="pos-modal-content">
         <DropdownMenuItem
-          onSelect={() => setTheme('light')}
+          onSelect={() => {
+            console.log(`[THEME] Theme toggle component button clicked:`, {
+              theme: 'light',
+              source: 'theme_toggle_component',
+              timestamp: new Date().toISOString()
+            });
+            setTheme('light');
+          }}
           className={theme === 'light' ? 'bg-primary/10 text-primary' : ''}
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => setTheme('dark')}
+          onSelect={() => {
+            console.log(`[THEME] Theme toggle component button clicked:`, {
+              theme: 'dark',
+              source: 'theme_toggle_component',
+              timestamp: new Date().toISOString()
+            });
+            setTheme('dark');
+          }}
           className={theme === 'dark' ? 'bg-primary/10 text-primary' : ''}
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => setTheme('system')}
+          onSelect={() => {
+            console.log(`[THEME] Theme toggle component button clicked:`, {
+              theme: 'system',
+              source: 'theme_toggle_component',
+              timestamp: new Date().toISOString()
+            });
+            setTheme('system');
+          }}
           className={theme === 'system' ? 'bg-primary/10 text-primary' : ''}
         >
           <Monitor className="mr-2 h-4 w-4" />

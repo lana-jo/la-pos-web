@@ -136,7 +136,7 @@ ALTER TABLE public.daily_reports ENABLE ROW LEVEL SECURITY;
 -- Drop policies before creating to ensure smooth reruns
 DROP POLICY IF EXISTS "Admins have full access to daily_reports" ON public.daily_reports;
 CREATE POLICY "Admins have full access to daily_reports" ON public.daily_reports
-  FOR ALL USING (public.fn_is_admin(auth.uid()));
+  FOR ALL USING (public.fn_is_admin());
 
 DROP POLICY IF EXISTS "Service role can manage daily_reports" ON public.daily_reports;
 CREATE POLICY "Service role can manage daily_reports" ON public.daily_reports
@@ -144,7 +144,7 @@ CREATE POLICY "Service role can manage daily_reports" ON public.daily_reports
 
 DROP POLICY IF EXISTS "Cashiers can read daily_reports" ON public.daily_reports;
 CREATE POLICY "Cashiers can read daily_reports" ON public.daily_reports
-  FOR SELECT USING (public.fn_is_cashier_or_admin(auth.uid()));
+  FOR SELECT USING (public.fn_is_cashier_or_admin());
 
 -- Grant permissions (FIXED: Removed invalid USAGE on table)
 GRANT SELECT, INSERT, UPDATE ON public.daily_reports TO authenticated;

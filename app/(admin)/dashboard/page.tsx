@@ -206,10 +206,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="page-background flex items-center justify-center">
         <div className="text-center">
-          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-          <p className="text-lg">Loading dashboard...</p>
+          <div className="pos-loading-spinner mx-auto mb-4" />
+          <p className="text-lg font-medium text-primary">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -220,13 +220,13 @@ export default function DashboardPage() {
   if (!mounted) return null;
 
   return (
-  
+    <div className="page-background p-8">
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-foreground">
             DASHBOARD
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
+          <p className="text-muted-foreground mt-2">
             Welcome to Dashboard, {userName || 'User'}
           </p>
         </div>
@@ -282,6 +282,6 @@ export default function DashboardPage() {
           formatCurrency={formatCurrency}
         />
       </div>
-    
+    </div>
   );
 }
