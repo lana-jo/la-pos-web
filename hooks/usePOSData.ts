@@ -195,6 +195,7 @@ export function useTransactions() {
 
       setTransactions(data || []);
     } catch (error: any) {
+      console.error("Error fetching transactions stringified:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
       console.error("Error fetching transactions details:", {
         message: error?.message,
         details: error?.details,
