@@ -90,7 +90,7 @@ export function useProducts() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch categories first
+      // Fetch categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from("categories")
         .select("id, name")
@@ -100,7 +100,8 @@ export function useProducts() {
       if (categoriesError) throw categoriesError;
       setCategories(categoriesData || []);
 
-      const { data: productsData, error: productsError } = await supabase
+      // Optimized query: Fetch products with joined variants in one go
+      let query = supabase
         .from("products")
         .select(`
           *,
@@ -114,37 +115,23 @@ export function useProducts() {
         .eq("is_active", true)
         .order("name");
 
-      if (productsError) throw productsError;
-
-      const { data: variantsData, error: variantsError } = await supabase
-        .from("product_variants")
-        .select("*")
-        .eq("is_active", true);
-
-      if (variantsError) throw variantsError;
-
-      const productsWithVariants = (productsData || []).map((product: Product) => {
-        const productVariants = (variantsData || []).filter((v: ProductVariant) => v.product_id === product.id);
-        return {
-          ...product,
-          variants: productVariants
-        };
-      });
-
-      let filteredProducts = productsWithVariants;
+      // Server-side filtering
       if (selectedCategory !== "all") {
-        filteredProducts = filteredProducts.filter(p => p.category_id === selectedCategory);
+        query = query.eq("category_id", selectedCategory);
       }
 
       if (search) {
-        filteredProducts = filteredProducts.filter(p =>
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          (p.variants && p.variants.some((v: ProductVariant) => v.variant_name.toLowerCase().includes(search.toLowerCase())))
-        );
+        // Simple case-insensitive search on product name
+        query = query.ilike("name", `%${search}%`);
       }
 
-      const normalizedProducts = filteredProducts.map((p: any) => ({
+      const { data: productsData, error: productsError } = await query;
+
+      if (productsError) throw productsError;
+
+      const normalizedProducts = (productsData || []).map((p: any) => ({
         ...p,
+        variants: p.product_variants || [],
         category_id: p.category_id || null,
         unit_id: p.unit_id || null,
         supplier_id: p.supplier_id || null,

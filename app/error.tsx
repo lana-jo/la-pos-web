@@ -56,7 +56,11 @@ export default function Error({
             </Button>
             
             <Button 
-              onClick={() => window.location.href = '/'}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/';
+                }
+              }}
               variant="outline"
               className="w-full"
             >

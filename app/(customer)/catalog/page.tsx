@@ -36,30 +36,11 @@ export default function CatalogPage() {
   const [session, setSession] = useState<any>(null)
   const [selectedProduct, setSelectedProduct] = useState<ProductWithCategory | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-
-  useEffect(() => {
-    fetchData()
-    checkSession()
-  }, [])
+  const [isMounted, setIsMounted] = useState(false)
 
   const checkSession = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     setSession(session)
-  }
-
-  const handleLogout = async () => {
-    try {
-      const result = await logout()
-      if (!result.success) {
-        toast.error(result.error || 'Gagal logout')
-        return
-      }
-      toast.success('Logout berhasil')
-      setSession(null)
-    } catch (error) {
-      console.error('Logout error:', error)
-      toast.error('Terjadi kesalahan saat logout')
-    }
   }
 
   const fetchData = async () => {
@@ -93,6 +74,14 @@ export default function CatalogPage() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    setIsMounted(true)
+    fetchData()
+    checkSession()
+  }, [])
+
+  if (!isMounted) return null;
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

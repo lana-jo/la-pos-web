@@ -64,6 +64,7 @@ export default function ProductsPage() {
     const [selectedProduct, setSelectedProduct] = useState<ProductWithCategory | null>(null)
     const [formData, setFormData] = useState<FormData>(EMPTY_FORM)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
+    const [searchTerm, setSearchTerm] = useState('')
     const [isScanning, setIsScanning] = useState(false)
     const [showCameraScanner, setShowCameraScanner] = useState(false)
 
@@ -413,56 +414,71 @@ export default function ProductsPage() {
         setModal('delete')
     }
 
-    const filteredProducts = selectedCategory === 'all'
-        ? products
-        : products.filter(p => p.category_id === selectedCategory)
+    const filteredProducts = products.filter(p => {
+        const matchesCategory = selectedCategory === 'all' || p.category_id === selectedCategory
+        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                             (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
+        return matchesCategory && matchesSearch
+    })
 
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
         <div className="min-h-screen bg-background">
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-2xl font-bold">Products ({products.length})</h2>
-                        <CategoryFilter
-                            categories={categories}
-                            selectedCategory={selectedCategory}
-                            onSelectCategory={setSelectedCategory}
-                        />
+                <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-2xl font-bold">Products ({products.length})</h2>
+                            <CategoryFilter
+                                categories={categories}
+                                selectedCategory={selectedCategory}
+                                onSelectCategory={setSelectedCategory}
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={startScanning}
+                                disabled={isScanning}
+                            >
+                                <Scan className="h-4 w-4 mr-2" />
+                                {isScanning ? 'Scanning...' : 'Scan USB'}
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                onClick={startCameraScanning}
+                            >
+                                <Camera className="h-4 w-4 mr-2" />
+                                Scan Kamera
+                            </Button>
+                            <Button onClick={() => setModal('add')}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Product
+                            </Button>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <Button 
-                            variant="outline" 
-                            onClick={startScanning}
-                            disabled={isScanning}
-                        >
-                            <Scan className="h-4 w-4 mr-2" />
-                            {isScanning ? 'Scanning...' : 'Scan USB'}
-                        </Button>
-                        <Button 
-                            variant="outline" 
-                            onClick={startCameraScanning}
-                        >
-                            <Camera className="h-4 w-4 mr-2" />
-                            Scan Kamera
-                        </Button>
-                        <Button onClick={() => setModal('add')}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Product
-                        </Button>
+                    {/* Search Input */}
+                    <div className="max-w-md">
+                        <input
+                            type="text"
+                            placeholder="Cari produk berdasarkan nama atau barcode..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-4 py-2 rounded-md border border-input bg-background text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                        />
                     </div>
                 </div>
 
                 {/* Content */}
                 {filteredProducts.length === 0 ? (
                     <EmptyState
-                        isCategoryFiltered={selectedCategory !== 'all'}
+                        isCategoryFiltered={selectedCategory !== 'all' || searchTerm !== ''}
                         onAddProduct={() => setModal('add')}
                     />
                 ) : (
                     <ProductTable
-                        products={products}
+                        products={filteredProducts}
                         categories={categories}
                         selectedCategory={selectedCategory}
                         onEdit={openEdit}

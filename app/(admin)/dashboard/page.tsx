@@ -217,67 +217,71 @@ export default function DashboardPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  if (!mounted) return null;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-          DASHBOARD
-        </h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Welcome to Dashboard, {userName || 'User'}
-        </p>
-      </div>
+  
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+            DASHBOARD
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            Welcome to Dashboard, {userName || 'User'}
+          </p>
+        </div>
 
-      {/* ── Stats ── */}
-      <DashboardStatsCards stats={stats} formatCurrency={formatCurrency} />
+        {/* ── Stats ── */}
+        <DashboardStatsCards stats={stats} formatCurrency={formatCurrency} />
 
-      {/* ── Charts Section ── */}
-      <AnalyticsOverview>
-        <DateRangeFilter
-          dateRange={dateRange}
-          selectedPreset={selectedPreset}
-          onPresetChange={handlePresetChange}
-          onDateRangeChange={handleDateRangeChange}
-        />
-      </AnalyticsOverview>
+        {/* ── Charts Section ── */}
+        <AnalyticsOverview>
+          <DateRangeFilter
+            dateRange={dateRange}
+            selectedPreset={selectedPreset}
+            onPresetChange={handlePresetChange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        </AnalyticsOverview>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RevenueChart
-          data={chartData.dailyRevenue}
-          preset={selectedPreset}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RevenueChart
+            data={chartData.dailyRevenue}
+            preset={selectedPreset}
+            formatCurrency={formatCurrency}
+          />
+          <TransactionChart
+            data={chartData.dailyRevenue}
+            preset={selectedPreset}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TopProductsChart
+            data={chartData.topProducts}
+            preset={selectedPreset}
+            formatCurrency={formatCurrency}
+          />
+          <PaymentMethodsChart
+            data={chartData.paymentMethods}
+            preset={selectedPreset}
+          />
+        </div>
+
+        {/* ── Menu Summary ── */}
+        <MenuNavigation />
+
+        {/* ── Recent Activity ── */}
+        <RecentActivityCard activities={activities} formatCurrency={formatCurrency} onActivityClick={handleActivityClick} />
+        
+        {/* Activity Detail Modal */}
+        <ActivityDetailModal
+          activity={selectedActivity}
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
           formatCurrency={formatCurrency}
         />
-        <TransactionChart
-          data={chartData.dailyRevenue}
-          preset={selectedPreset}
-        />
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TopProductsChart
-          data={chartData.topProducts}
-          preset={selectedPreset}
-          formatCurrency={formatCurrency}
-        />
-        <PaymentMethodsChart
-          data={chartData.paymentMethods}
-          preset={selectedPreset}
-        />
-      </div>
-
-      {/* ── Menu Summary ── */}
-      <MenuNavigation />
-
-      {/* ── Recent Activity ── */}
-      <RecentActivityCard activities={activities} formatCurrency={formatCurrency} onActivityClick={handleActivityClick} />
-      
-      {/* Activity Detail Modal */}
-      <ActivityDetailModal
-        activity={selectedActivity}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        formatCurrency={formatCurrency}
-      />
-    </div>
+    
   );
 }
