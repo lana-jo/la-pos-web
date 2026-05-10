@@ -373,8 +373,8 @@ export default function ReportsPage() {
               {transactions.map((t) => (
                   <Card 
                     key={t.id} 
-                    className="pos-modal-content border-none shadow-xl cursor-pointer p-6 transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] hover:bg-primary-brand/5"
                     onClick={() => handleViewDetails(t)}
+                    className="pos-modal-content border-none shadow-xl cursor-pointer group hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-200 ease-in-out p-6"
                   >
                     <div className="flex justify-between items-start mb-4">
                         <Badge variant={statusVariant(t.payment_status)}>
@@ -383,7 +383,7 @@ export default function ReportsPage() {
                         <span className="text-xs text-muted-foreground font-mono">{t.id.slice(0, 8)}...</span>
                     </div>
                     <div className="space-y-2">
-                        <div className="text-2xl font-black text-primary-brand">{formatCurrency(t.total)}</div>
+                        <div className="text-2xl font-black text-primary-brand group-hover:scale-105 transition-transform duration-200 origin-left">{formatCurrency(t.total)}</div>
                         <div className="text-sm text-foreground">{formatDate(t.created_at)}</div>
                         <div className="text-sm text-muted-foreground">{t.payment_method}</div>
                     </div>
