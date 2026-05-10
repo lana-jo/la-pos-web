@@ -373,7 +373,7 @@ export default function ReportsPage() {
               {transactions.map((t) => (
                   <Card 
                     key={t.id} 
-                    className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer p-6"
+                    className="pos-modal-content border-none shadow-xl cursor-pointer p-6 transition-all duration-300 hover:shadow-2xl hover:scale-[1.03] hover:bg-primary-brand/5"
                     onClick={() => handleViewDetails(t)}
                   >
                     <div className="flex justify-between items-start mb-4">
