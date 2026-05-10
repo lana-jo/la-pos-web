@@ -57,6 +57,7 @@ export default function ReportsPage() {
   const [transactionItems, setTransactionItems] = useState<TransactionItem[]>([])
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [date, setDate] = useState<DateRange | undefined>()
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
 
   // ── Auth guard ─────────────────────────────────────────────────────────────
 
@@ -232,7 +233,27 @@ export default function ReportsPage() {
               <TrendingUp className="h-8 w-8 text-primary-brand" />
               REPORTS & ANALYTICS
             </h1>
-            <DatePickerWithRange date={date} setDate={setDate} />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center bg-background p-1 rounded-full border border-border">
+                <Button 
+                    variant={viewMode === 'table' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    className="rounded-full"
+                    onClick={() => setViewMode('table')}
+                >
+                    Table
+                </Button>
+                <Button 
+                    variant={viewMode === 'grid' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    className="rounded-full"
+                    onClick={() => setViewMode('grid')}
+                >
+                    Grid
+                </Button>
+              </div>
+              <DatePickerWithRange date={date} setDate={setDate} />
+            </div>
           </div>
 
           {/* ── Stats ── */}
@@ -284,7 +305,7 @@ export default function ReportsPage() {
             </Card>
           </div>
 
-          {/* ── Transactions Table ── */}
+          {/* ── Transactions Display ── */}
           {transactions.length === 0 ? (
               <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
                 <CardContent className="text-center py-12">
@@ -293,10 +314,10 @@ export default function ReportsPage() {
                   <p className="text-muted-foreground">No transactions have been recorded yet</p>
                 </CardContent>
               </Card>
-          ) : (
+          ) : viewMode === 'table' ? (
               <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
                 <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardTitle>Recent Transactions (Table View)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
@@ -347,6 +368,28 @@ export default function ReportsPage() {
                   </div>
                 </CardContent>
               </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {transactions.map((t) => (
+                  <Card 
+                    key={t.id} 
+                    className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 cursor-pointer p-6"
+                    onClick={() => handleViewDetails(t)}
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                        <Badge variant={statusVariant(t.payment_status)}>
+                            {capitalize(t.payment_status)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground font-mono">{t.id.slice(0, 8)}...</span>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="text-2xl font-black text-primary-brand">{formatCurrency(t.total)}</div>
+                        <div className="text-sm text-foreground">{formatDate(t.created_at)}</div>
+                        <div className="text-sm text-muted-foreground">{t.payment_method}</div>
+                    </div>
+                  </Card>
+              ))}
+            </div>
           )}
         </main>
 
