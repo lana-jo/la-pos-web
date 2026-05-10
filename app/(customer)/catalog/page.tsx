@@ -15,7 +15,14 @@ import { Product, Category } from '@/types'
 interface ProductWithCategory extends Product {
   category: Category | null
 }
-import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useProfileTheme } from '@/hooks/useProfileTheme'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Sun, Moon, Laptop } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -27,6 +34,7 @@ import {
 
 export default function CatalogPage() {
   const router = useRouter()
+  const { theme, setTheme } = useProfileTheme()
   const [products, setProducts] = useState<ProductWithCategory[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -151,7 +159,18 @@ export default function CatalogPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <ThemeToggle />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    {theme === 'light' ? <Sun className="h-5 w-5" /> : theme === 'dark' ? <Moon className="h-5 w-5" /> : <Laptop className="h-5 w-5" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setTheme('light')}>Light</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('dark')}>Dark</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme('system')}>System</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               {session ? (
                 <Button variant="outline" onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" />

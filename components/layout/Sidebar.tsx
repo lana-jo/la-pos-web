@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarProvider";
 import { logout } from "@/lib/auth/actions";
-import { useTheme } from "@/hooks/useTheme";
+import { useProfileTheme } from "@/hooks/useProfileTheme";
 import { useSidebarTheme } from "@/hooks/useSidebarTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { getNavigationByRole } from "@/lib/navigation/config";
@@ -24,7 +24,7 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { theme, setTheme, mounted } = useTheme();
+  const { theme, setTheme, mounted } = useProfileTheme();
   const { profile, loading } = useAuth();
   const themeClasses = useSidebarTheme();
 
@@ -34,9 +34,9 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
     setIsMobileOpen((prev) => !prev);
   }, []);
 
-  const handleToggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  }, [theme, setTheme]);
+  const handleThemeChange = useCallback((newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme);
+  }, [setTheme]);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
@@ -110,7 +110,7 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
               themeButton: themeClasses.themeButton,
               logoutButton: themeClasses.logoutButton,
             }}
-            onToggleTheme={handleToggleTheme}
+            onToggleTheme={handleThemeChange}
             onLogout={handleLogout}
           />
         </div>

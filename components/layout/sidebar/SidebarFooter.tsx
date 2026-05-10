@@ -3,10 +3,16 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { LogOut, Moon, Sun, User } from "lucide-react";
+import { LogOut, Moon, Sun, User, Laptop } from "lucide-react";
 import { ROLE_LABELS } from "@/lib/navigation/config";
 import { useRouter, usePathname } from "next/navigation";
 import { useThemeClass } from "@/hooks/useTheme";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function ProfileButton({ isCollapsed }: { isCollapsed: boolean }) {
   const router = useRouter();
@@ -70,7 +76,7 @@ interface SidebarFooterProps {
     themeButton: string;
     logoutButton: string;
   };
-  onToggleTheme: () => void;
+  onToggleTheme: (newTheme: 'light' | 'dark' | 'system') => void;
   onLogout: () => void;
 }
 
@@ -86,9 +92,6 @@ export function SidebarFooter({
   onToggleTheme,
   onLogout,
 }: SidebarFooterProps) {
-  const router = useRouter();
-  const isDark = theme === "dark";
-
   return (
     <div className={cn("p-4 border-t backdrop-blur-xl", themeClasses.footer)}>
       <div className="space-y-3">
@@ -120,23 +123,31 @@ export function SidebarFooter({
         {/* Profile button */}
         <ProfileButton isCollapsed={isCollapsed} />
 
-        {/* Theme toggle button */}
+        {/* Theme toggle dropdown */}
         {mounted && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleTheme}
-            className={cn(
-              "w-full justify-start transition-all duration-300 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02]",
-              themeClasses.themeButton,
-              isCollapsed && "px-3"
-            )}
-          >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {!isCollapsed && (
-              <span className="ml-2">{isDark ? "Mode Terang" : "Mode Gelap"}</span>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "w-full justify-start transition-all duration-300 rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02]",
+                  themeClasses.themeButton,
+                  isCollapsed && "px-3"
+                )}
+              >
+                {theme === 'dark' ? <Moon className="h-4 w-4" /> : theme === 'light' ? <Sun className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
+                {!isCollapsed && (
+                  <span className="ml-2 capitalize">{theme}</span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={() => onToggleTheme('light')}>Light</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onToggleTheme('dark')}>Dark</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onToggleTheme('system')}>System</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         {/* Logout button */}

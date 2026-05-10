@@ -21,6 +21,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (currentUser: User) => {
     try {
+      console.log(`[Auth] Starting profile fetch for: ${currentUser.id} at ${new Date().toISOString()}`);
+      
       // Add timeout for profile fetch
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Profile fetch timeout')), 8000);
@@ -32,9 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', currentUser.id)
         .single();
 
-      const { data: profileData } = await Promise.race([profilePromise, timeoutPromise]) as any;
+      const startTime = performance.now();
+      const { data: profileData, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+      const endTime = performance.now();
+      
+      console.log(`[Auth] Profile fetch completed in ${(endTime - startTime).toFixed(2)}ms`);
+
+      if (error) {
+        console.error(`[Auth] Supabase error fetching profile:`, error);
+        throw error;
+      }
       
       if (profileData) {
+        console.log(`[Auth] Profile successfully set for user: ${currentUser.id}`);
         setProfile(profileData as Profile);
       } else {
         console.warn('No profile found for user:', currentUser.id);
@@ -91,11 +103,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         if (mounted) {
           setUser(session?.user ?? null);
           if (session?.user) {
+            console.log('Fetching profile for user:', session.user.id);
             await fetchProfile(session.user);
           } else {
+            console.log('Clearing profile');
             setProfile(null);
           }
           setLoading(false);
