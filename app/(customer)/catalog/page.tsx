@@ -43,6 +43,21 @@ export default function CatalogPage() {
     setSession(session)
   }
 
+  const handleLogout = async () => {
+    try {
+      const result = await logout()
+      if (!result.success) {
+        toast.error(result.error || 'Gagal logout')
+        return
+      }
+      toast.success('Logout berhasil')
+      setSession(null)
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Terjadi kesalahan saat logout')
+    }
+  }
+
   const fetchData = async () => {
     try {
       const [productsRes, categoriesRes] = await Promise.all([
