@@ -222,34 +222,37 @@ export default function ProductVariantsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen pos-terminal p-8">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Varian Produk</h1>
-          <p className="text-muted-foreground">Kelola varian harga dan satuan produk</p>
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+            <Package className="h-8 w-8 text-primary-brand" />
+            VARIAN PRODUK
+          </h1>
+          <p className="text-muted-foreground mt-2">Kelola varian harga dan satuan produk</p>
         </div>
-        <Button onClick={() => { resetForm(); setIsModalOpen(true) }}>
+        <Button onClick={() => { resetForm(); setIsModalOpen(true) }} className="pos-button-primary shadow-lg">
           <Plus className="h-4 w-4 mr-2" />
           Tambah Varian
         </Button>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="pos-modal-content border-none shadow-xl p-6">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Produk</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Varian</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Barcode</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Harga Jual</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Konversi</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Satuan</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Aksi</th>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left">
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Produk</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Varian</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Barcode</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Harga Jual</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Konversi</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Satuan</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase">Status</th>
+                <th className="px-4 py-3 font-bold text-muted-foreground uppercase text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-border/50">
               {variants.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
@@ -258,68 +261,35 @@ export default function ProductVariantsPage() {
                 </tr>
               ) : (
                 variants.map((variant) => (
-                  <tr key={variant.id} className="border-t">
-                    <td className="px-4 py-3">
-                      <div className="font-medium">{variant.product_name}</div>
-                    </td>
+                  <tr key={variant.id} className="hover:bg-background/50 transition-colors">
+                    <td className="px-4 py-3 font-medium text-foreground">{variant.product_name}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{variant.variant_name}</span>
+                        <span className="font-medium text-foreground">{variant.variant_name}</span>
                         {variant.is_default && (
-                          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                            Default
-                          </span>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">Default</Badge>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      {variant.barcode && (
-                        <div className="flex items-center gap-1">
-                          <Barcode className="h-3 w-3" />
-                          <span className="font-mono text-sm">{variant.barcode}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 font-mono text-muted-foreground">{variant.barcode || '-'}</td>
+                    <td className="px-4 py-3 text-primary-brand font-black">
                       Rp {variant.price.toLocaleString('id-ID')}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="text-sm">
-                        1 {variant.variant_name} = {variant.conversion_qty} unit
-                        {variant.min_qty > 1 ? (
-                          <div className="text-muted-foreground">
-                            Min. {variant.min_qty} {variant.variant_name}
-                          </div>
-                        ) : null}
-                      </div>
+                    <td className="px-4 py-3 text-foreground">
+                      1 {variant.variant_name} = {variant.conversion_qty} unit
                     </td>
+                    <td className="px-4 py-3 font-medium text-foreground">{variant.unit_name || '-'}</td>
                     <td className="px-4 py-3">
-                      <span className="text-sm font-medium">{variant.unit_name || '-'}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        variant.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <Badge variant={variant.is_active ? "default" : "secondary"} className={variant.is_active ? "bg-green-100 text-green-800" : ""}>
                         {variant.is_active ? 'Aktif' : 'Nonaktif'}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(variant)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(variant)} className="text-primary-brand hover:bg-primary-brand/10">
                           <Edit2 className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(variant)}
-                          className="text-red-600 hover:text-red-700"
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(variant)} className="text-destructive hover:bg-destructive/10">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -334,21 +304,21 @@ export default function ProductVariantsPage() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg border p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="pos-modal-content w-full max-w-md max-h-[90vh] overflow-y-auto p-6 rounded-2xl border-none shadow-2xl">
+            <h3 className="text-xl font-bold text-foreground mb-6">
               {editingVariant ? 'Edit Varian Produk' : 'Tambah Varian Baru'}
             </h3>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="product_id">Produk *</Label>
+                <Label htmlFor="product_id" className="pos-form-label">Produk *</Label>
                 <select
                   id="product_id"
                   value={formData.product_id}
                   onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
                   disabled={isSubmitting || !!editingVariant}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-2 border border-border bg-background rounded-lg pos-form-input"
                   required
                 >
                   <option value="">-- Pilih Produk --</option>
@@ -361,7 +331,7 @@ export default function ProductVariantsPage() {
               </div>
 
               <div>
-                <Label htmlFor="variant_name">Nama Varian *</Label>
+                <Label htmlFor="variant_name" className="pos-form-label">Nama Varian *</Label>
                 <Input
                   id="variant_name"
                   value={formData.variant_name}
@@ -369,23 +339,25 @@ export default function ProductVariantsPage() {
                   placeholder="Eceran, Grosir, Box, Dus..."
                   disabled={isSubmitting}
                   required
+                  className="pos-form-input"
                 />
               </div>
 
               <div>
-                <Label htmlFor="barcode">Barcode</Label>
+                <Label htmlFor="barcode" className="pos-form-label">Barcode</Label>
                 <Input
                   id="barcode"
                   value={formData.barcode}
                   onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
                   placeholder="Barcode khusus untuk varian ini"
                   disabled={isSubmitting}
+                  className="pos-form-input"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price">Harga Jual (IDR) *</Label>
+                  <Label htmlFor="price" className="pos-form-label">Harga Jual (IDR) *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -395,10 +367,11 @@ export default function ProductVariantsPage() {
                     placeholder="0"
                     disabled={isSubmitting}
                     required
+                    className="pos-form-input"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="cost_price">Harga Beli (IDR)</Label>
+                  <Label htmlFor="cost_price" className="pos-form-label">Harga Beli (IDR)</Label>
                   <Input
                     id="cost_price"
                     type="number"
@@ -407,13 +380,14 @@ export default function ProductVariantsPage() {
                     onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
                     placeholder="0"
                     disabled={isSubmitting}
+                    className="pos-form-input"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="conversion_qty">Faktor Konversi *</Label>
+                  <Label htmlFor="conversion_qty" className="pos-form-label">Faktor Konversi *</Label>
                   <Input
                     id="conversion_qty"
                     type="number"
@@ -423,13 +397,11 @@ export default function ProductVariantsPage() {
                     placeholder="1"
                     disabled={isSubmitting}
                     required
+                    className="pos-form-input"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    1 varian = berapa unit dasar
-                  </p>
                 </div>
                 <div>
-                  <Label htmlFor="min_qty">Minimum Qty</Label>
+                  <Label htmlFor="min_qty" className="pos-form-label">Minimum Qty</Label>
                   <Input
                     id="min_qty"
                     type="number"
@@ -438,14 +410,12 @@ export default function ProductVariantsPage() {
                     onChange={(e) => setFormData({ ...formData, min_qty: e.target.value })}
                     placeholder="1"
                     disabled={isSubmitting}
+                    className="pos-form-input"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Minimal pembelian varian ini
-                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 py-2">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -477,7 +447,7 @@ export default function ProductVariantsPage() {
                 >
                   Batal
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting} className="pos-button-primary">
                   {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                 </Button>
               </div>
