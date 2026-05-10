@@ -314,7 +314,7 @@ export default function ReportsPage() {
                       {transactions.map((t) => (
                           <tr 
                             key={t.id} 
-                            className="hover:bg-background/50 transition-colors cursor-pointer"
+                            className="hover:bg-primary-brand/5 transition-all duration-200 cursor-pointer hover:shadow-[inset_0_0_0_1px_rgba(59,130,246,0.2)]"
                             onClick={() => handleViewDetails(t)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
