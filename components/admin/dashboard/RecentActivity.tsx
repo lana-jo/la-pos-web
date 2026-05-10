@@ -140,81 +140,78 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
           <div className="hidden sm:block">
             {/* Desktop View - Original Layout */}
             <div className="space-y-2 sm:space-y-3">
-              {activities.map((activity) => {
-                return (
-                  <div
-                    key={activity.id}
-                    onClick={() => {
-                      console.log(`[DASHBOARD] Desktop activity item clicked:`, {
-                        activityId: activity.id,
-                        activityType: activity.type,
-                        description: activity.description,
-                        timestamp: new Date().toISOString()
-                      });
-                      onActivityClick?.(activity);
-                    } }
-                    className={`pos-transaction-card transition-theme ${onActivityClick
-                      ? "cursor-pointer group"
-                      : ""}`}
-                  >
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <div className="flex-shrink-0 p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-left">
-                          {activity.description}
-                        </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-1">
-                          {activity.user_name && (
-                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              <span className="truncate max-w-20 sm:max-w-none">{activity.user_name}</span>
-                            </p>
-                          )}
-                          {activity.amount && (
-                            <p className="text-xs font-semibold text-success flex items-center gap-1">
-                              <DollarSign className="h-3 w-3" />
-                              {formatCurrency(activity.amount)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-                        <div className="text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span className="hidden sm:inline">{formatDateTime(activity.created_at)}</span>
-                            <span className="sm:hidden">{new Date(activity.created_at).toLocaleDateString("id-ID")}</span>
-                          </div>
-                        </div>
-                        {onActivityClick && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              console.log(`[DASHBOARD] Desktop activity detail button clicked:`, {
-                                activityId: activity.id,
-                                activityType: activity.type,
-                                source: 'recent_activity_card_desktop',
-                                timestamp: new Date().toISOString()
-                              });
-                              onActivityClick(activity);
-                            } }
-                            className="h-6 w-6 sm:h-8 sm:w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
-                          >
-                            <Eye className="h-3 w-3" />
-                          </Button>
+              {activities.map((activity) => (
+                <div
+                  key={activity.id}
+                  onClick={() => {
+                    console.log(`[DASHBOARD] Desktop activity item clicked:`, {
+                      activityId: activity.id,
+                      activityType: activity.type,
+                      description: activity.description,
+                      timestamp: new Date().toISOString()
+                    });
+                    onActivityClick?.(activity);
+                  }}
+                  className={`pos-transaction-card transition-theme ${onActivityClick
+                    ? "cursor-pointer group hover:shadow-md hover:shadow-primary/10 hover:-translate-y-0.5"
+                    : "hover:bg-muted/30"} w-full duration-200 ease-in-out`}
+                >
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <div className="flex-shrink-0 p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-left group-hover:scale-105 duration-200">
+                        {activity.description}
+                      </p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-1">
+                        {activity.user_name && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            <span className="truncate max-w-20 sm:max-w-none">{activity.user_name}</span>
+                          </p>
+                        )}
+                        {activity.amount && (
+                          <p className="text-xs font-semibold text-success flex items-center gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            {formatCurrency(activity.amount)}
+                          </p>
                         )}
                       </div>
                     </div>
+                    <div className="flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+                      <div className="text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span className="hidden sm:inline">{formatDateTime(activity.created_at)}</span>
+                          <span className="sm:hidden">{new Date(activity.created_at).toLocaleDateString("id-ID")}</span>
+                        </div>
+                      </div>
+                      {onActivityClick && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log(`[DASHBOARD] Desktop activity detail button clicked:`, {
+                              activityId: activity.id,
+                              activityType: activity.type,
+                              source: 'recent_activity_card_desktop',
+                              timestamp: new Date().toISOString()
+                            });
+                            onActivityClick(activity);
+                          }}
+                          className="h-6 w-6 sm:h-8 sm:w-8 p-0 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary/10 hover:text-primary hover:scale-110"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-              );
-            })}
+                </div>
+              ))}
             </div>
-          </div>
-          </div>
+          </div>          </div>
         )}
       </CardContent>
     </Card>
