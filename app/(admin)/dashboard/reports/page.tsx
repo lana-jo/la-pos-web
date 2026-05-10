@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { TrendingUp, DollarSign, ShoppingCart, ArrowLeft, Eye } from 'lucide-react'
-import DashboardHeader from '@/components/layout/DashboardHeader'
+import { DatePickerWithRange } from '@/components/ui/date-range-picker'
+import { DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 import { PaymentStatus, Transaction, TransactionItem } from '@/types'
 
@@ -55,6 +56,7 @@ export default function ReportsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [transactionItems, setTransactionItems] = useState<TransactionItem[]>([])
   const [loadingDetails, setLoadingDetails] = useState(false)
+  const [date, setDate] = useState<DateRange | undefined>()
 
   // ── Auth guard ─────────────────────────────────────────────────────────────
 
@@ -90,9 +92,6 @@ export default function ReportsPage() {
         .eq('transaction_id', transactionId)
         .order('id')
 
-      console.log('Items data:', itemsData)
-      console.log('Items error:', itemsError)
-
       if (itemsError) throw itemsError
 
       // Then fetch product and variant details for each item
@@ -100,33 +99,27 @@ export default function ReportsPage() {
         (itemsData || []).map(async (item: any) => {
           let productData = null;
           let variantData = null;
-          
+
           // Fetch product details if product_id exists
           if (item.product_id) {
-            const { data: pData, error: productError } = await db('products')
+            const { data: pData } = await db('products')
               .select('name, barcode')
               .eq('id', item.product_id)
               .single()
-            
-            console.log(`Product data for ${item.product_id}:`, pData)
-            console.log(`Product error for ${item.product_id}:`, productError)
-            
+
             productData = pData || null;
           }
-          
+
           // Fetch variant details if product_variant_id exists
           if (item.product_variant_id) {
-            const { data: vData, error: variantError } = await db('product_variants')
+            const { data: vData } = await db('product_variants')
               .select('variant_name, barcode')
               .eq('id', item.product_variant_id)
               .single()
-            
-            console.log(`Variant data for ${item.product_variant_id}:`, vData)
-            console.log(`Variant error for ${item.product_variant_id}:`, variantError)
-            
+
             variantData = vData || null;
           }
-          
+
           return {
             ...item,
             product: productData,
@@ -134,7 +127,7 @@ export default function ReportsPage() {
           }
         })
       )
-      
+
       setTransactionItems(itemsWithProducts)
     } catch (error) {
       console.error('Error fetching transaction details:', error)
@@ -151,10 +144,21 @@ export default function ReportsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data, error } = await db('transactions')
+      setLoading(true)
+      let query = db('transactions')
           .select('id, total, payment_status, payment_method, created_at, cashier_id')
           .order('created_at', { ascending: false })
-          .limit(100)
+
+      if (date?.from) {
+        query = query.gte('created_at', date.from.toISOString())
+      }
+      if (date?.to) {
+        const toDate = new Date(date.to)
+        toDate.setHours(23, 59, 59, 999)
+        query = query.lte('created_at', toDate.toISOString())
+      }
+
+      const { data, error } = await query.limit(100)
 
       if (error) throw error
 
@@ -178,12 +182,15 @@ export default function ReportsPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [date])
 
   useEffect(() => {
     checkUserRole()
+  }, [checkUserRole])
+
+  useEffect(() => {
     fetchData()
-  }, [checkUserRole, fetchData])
+  }, [fetchData])
 
   // ── Formatters ─────────────────────────────────────────────────────────────
 
@@ -202,7 +209,7 @@ export default function ReportsPage() {
 
   // ── Loading ────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (loading && transactions.length === 0) {
     return (
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center">
@@ -217,14 +224,13 @@ export default function ReportsPage() {
 
   return (
       <div className="min-h-screen bg-background">
-        {/* <DashboardHeader title="Reports" subtitle="View analytics and reports" badgeText="Administrator">
-          <Button variant="outline" onClick={() => router.push('/dashboard')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </DashboardHeader> */}
-
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+          {/* Header & Filter */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <h1 className="text-2xl font-bold">Reports</h1>
+            <DatePickerWithRange date={date} setDate={setDate} />
+          </div>
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -344,7 +350,7 @@ export default function ReportsPage() {
             <DialogHeader>
               <DialogTitle>Transaction Details</DialogTitle>
             </DialogHeader>
-            
+
             {selectedTransaction && (
               <div className="space-y-6">
                 {/* Transaction Summary */}
