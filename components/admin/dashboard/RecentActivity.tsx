@@ -41,10 +41,10 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
   };
 
   return (
-    <Card className="pos-report-card transition-theme">
+    <Card className="pos-report-card transition-theme hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 duration-300 ease-in-out">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" />
+        <CardTitle className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
+          <Clock className="h-5 w-5 text-primary animate-pulse" />
           Recent Activity
         </CardTitle>
       </CardHeader>
@@ -58,10 +58,11 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
             <p className="text-xs text-muted-foreground/70">Activity will appear here as it happens</p>
           </div>
         ) : (
-          <div className="sm:hidden">
-            {/* Mobile View - Horizontal Scroll */}
-            <div className="overflow-x-auto -mx-4 sm:mx-0">
-              <div className="flex gap-3 pb-2 min-w-max px-4">
+          <div>
+            <div className="sm:hidden">
+            {/* Mobile View - Vertical Scroll */}
+            <div className="overflow-y-auto max-h-96 -mx-4 sm:mx-0">
+              <div className="space-y-3 px-4">
                 {activities.map((activity) => {
                   return (
                     <div
@@ -76,15 +77,15 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
                         onActivityClick?.(activity);
                       } }
                       className={`pos-transaction-card transition-theme ${onActivityClick
-                        ? "cursor-pointer group"
-                        : ""} flex-shrink-0 w-72 sm:w-auto`}
+                        ? "cursor-pointer group hover:shadow-md hover:shadow-primary/10 hover:-translate-y-0.5"
+                        : "hover:bg-muted/30"} w-full duration-200 ease-in-out`}
                     >
                       <div className="flex items-start gap-2">
-                        <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
                           {getActivityIcon(activity.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-left">
+                          <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-left group-hover:scale-105 duration-200">
                             {activity.description}
                           </p>
                           <div className="flex flex-col gap-1 mt-1">
@@ -122,7 +123,7 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
                                   });
                                   onActivityClick(activity);
                                 } }
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-primary/10 hover:text-primary hover:scale-110"
                               >
                                 <Eye className="h-3 w-3" />
                               </Button>
@@ -135,6 +136,7 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
                 })}
               </div>
             </div>
+          </div>
           <div className="hidden sm:block">
             {/* Desktop View - Original Layout */}
             <div className="space-y-2 sm:space-y-3">
@@ -208,10 +210,11 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
                       </div>
                     </div>
                   </div>
-                </div>
               );
             })}
             </div>
+          </div>
+          </div>
         )}
       </CardContent>
     </Card>
