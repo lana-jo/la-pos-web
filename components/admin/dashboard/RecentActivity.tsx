@@ -68,18 +68,11 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
                     <div
                       key={activity.id}
                       onClick={() => {
-                        console.log(`[DASHBOARD] Mobile activity item clicked:`, {
-                          activityId: activity.id,
-                          activityType: activity.type,
-                          description: activity.description,
-                          timestamp: new Date().toISOString()
-                        });
                         onActivityClick?.(activity);
-                      } }
+                      }}
                       className={`pos-transaction-card transition-theme ${onActivityClick
                         ? "cursor-pointer group hover:shadow-md hover:shadow-primary/10 hover:-translate-y-0.5"
-                        : "hover:bg-muted/30"} w-full duration-200 ease-in-out`}
-                    >
+                        : "hover:bg-muted/30"} w-full duration-200 ease-in-out`}                    >
                       <div className="flex items-start gap-2">
                         <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-200">
                           {getActivityIcon(activity.type)}
@@ -144,12 +137,6 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
                 <div
                   key={activity.id}
                   onClick={() => {
-                    console.log(`[DASHBOARD] Desktop activity item clicked:`, {
-                      activityId: activity.id,
-                      activityType: activity.type,
-                      description: activity.description,
-                      timestamp: new Date().toISOString()
-                    });
                     onActivityClick?.(activity);
                   }}
                   className={`pos-transaction-card transition-theme ${onActivityClick
