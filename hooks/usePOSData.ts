@@ -184,7 +184,7 @@ export function useTransactions() {
         .select(`
           *,
           items:transaction_items(*),
-          cashier:profiles(id, full_name),
+          cashier:profiles!transactions_cashier_id_fkey(id, full_name),
           customer:customers(id, name)
         `)
         .eq("cashier_id", session.user.id)
