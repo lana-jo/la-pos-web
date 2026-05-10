@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 interface RecentActivityListProps {
@@ -7,52 +8,42 @@ interface RecentActivityListProps {
 export function RecentActivityList({ movements }: RecentActivityListProps) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full text-sm">
         <thead>
-          <tr className="border-b">
-            <th className="text-left p-2">Date</th>
-            <th className="text-left p-2">Product</th>
-            <th className="text-left p-2">Type</th>
-            <th className="text-center p-2">Change</th>
-            <th className="text-center p-2">Before</th>
-            <th className="text-center p-2">After</th>
-            <th className="text-left p-2">Notes</th>
+          <tr className="border-b border-border text-left">
+            <th className="p-4 font-bold text-muted-foreground uppercase">Date</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Product</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Type</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Change</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Stock</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Notes</th>
           </tr>
         </thead>
-        <tbody>
-          {movements.slice(0, 10).map((movement) => (
-            <tr key={movement.id} className="border-b hover:bg-muted/50">
-              <td className="p-2">
-                {new Date(movement.created_at).toLocaleString('id-ID')}
+        <tbody className="divide-y divide-border/50">
+          {movements.slice(0, 10).map((m) => (
+            <tr key={m.id} className="hover:bg-background/50 transition-colors">
+              <td className="p-4 text-muted-foreground whitespace-nowrap">
+                {new Date(m.created_at).toLocaleDateString('id-ID')}
               </td>
-              <td className="p-2">
-                <div>
-                  <div className="font-medium">{movement.products?.name}</div>
-                  <div className="text-sm text-muted-foreground font-mono">
-                    {movement.products?.barcode}
-                  </div>
-                </div>
+              <td className="p-4">
+                <div className="font-semibold text-foreground">{m.products?.name || 'Unknown'}</div>
+                <div className="text-xs text-muted-foreground font-mono">{m.products?.barcode}</div>
               </td>
-              <td className="p-2">
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  movement.movement_type === 'purchase' || movement.movement_type === 'return_in'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {movement.movement_type.replace('_', ' ').toUpperCase()}
+              <td className="p-4">
+                <Badge variant={m.qty_change > 0 ? "default" : "destructive"} className="uppercase text-[10px]">
+                  {m.movement_type.replace('_', ' ')}
+                </Badge>
+              </td>
+              <td className="p-4 text-center font-black">
+                <span className={m.qty_change > 0 ? 'text-primary-brand' : 'text-destructive'}>
+                  {m.qty_change > 0 ? '+' : ''}{m.qty_change}
                 </span>
               </td>
-              <td className="p-2 text-center">
-                <span className={`font-bold ${
-                  movement.qty_change > 0 ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {movement.qty_change > 0 ? '+' : ''}{movement.qty_change}
-                </span>
+              <td className="p-4 text-center text-foreground font-medium">
+                {m.qty_before} → {m.qty_after}
               </td>
-              <td className="p-2 text-center">{movement.qty_before}</td>
-              <td className="p-2 text-center font-medium">{movement.qty_after}</td>
-              <td className="p-2 text-sm text-muted-foreground">
-                {movement.notes || '-'}
+              <td className="p-4 text-muted-foreground italic text-xs">
+                {m.notes || '-'}
               </td>
             </tr>
           ))}
@@ -62,14 +53,6 @@ export function RecentActivityList({ movements }: RecentActivityListProps) {
       {movements.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No stock movements recorded yet
-        </div>
-      )}
-      
-      {movements.length > 10 && (
-        <div className="text-center py-4">
-          <Button variant="outline" size="sm">
-            View All Movements
-          </Button>
         </div>
       )}
     </div>
