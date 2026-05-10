@@ -211,10 +211,10 @@ export default function ReportsPage() {
 
   if (loading && transactions.length === 0) {
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-screen pos-terminal flex items-center justify-center">
           <div className="text-center">
-            <TrendingUp className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-            <p className="text-lg">Loading reports...</p>
+            <div className="pos-loading-spinner mx-auto mb-4" />
+            <p className="text-lg font-medium text-primary">Loading reports...</p>
           </div>
         </div>
     )
@@ -223,75 +223,78 @@ export default function ReportsPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen pos-terminal">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* Header & Filter */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <h1 className="text-2xl font-bold">Reports</h1>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <TrendingUp className="h-8 w-8 text-primary-brand" />
+              REPORTS & ANALYTICS
+            </h1>
             <DatePickerWithRange date={date} setDate={setDate} />
           </div>
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card>
+            <Card className="pos-modal-content border-none shadow-xl p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Revenue</CardTitle>
+                <DollarSign className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-                <p className="text-xs text-muted-foreground">From {stats.paidTransactions} paid transactions</p>
+                <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.totalRevenue)}</div>
+                <p className="text-xs text-muted-foreground mt-1">From {stats.paidTransactions} paid transactions</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="pos-modal-content border-none shadow-xl p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Transactions</CardTitle>
+                <ShoppingCart className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalTransactions}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-black text-primary-brand">{stats.totalTransactions}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {stats.paidTransactions} paid, {stats.pendingTransactions} pending
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="pos-modal-content border-none shadow-xl p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Average Transaction</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Average Transaction</CardTitle>
+                <TrendingUp className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(stats.averageTransaction)}</div>
-                <p className="text-xs text-muted-foreground">Per paid transaction</p>
+                <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.averageTransaction)}</div>
+                <p className="text-xs text-muted-foreground mt-1">Per paid transaction</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="pos-modal-content border-none shadow-xl p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Success Rate</CardTitle>
+                <TrendingUp className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{successRate}%</div>
-                <p className="text-xs text-muted-foreground">Payment success rate</p>
+                <div className="text-2xl font-black text-green-600">{successRate}%</div>
+                <p className="text-xs text-muted-foreground mt-1">Payment success rate</p>
               </CardContent>
             </Card>
           </div>
 
           {/* ── Transactions Table ── */}
           {transactions.length === 0 ? (
-              <Card>
+              <Card className="pos-modal-content border-none shadow-xl">
                 <CardContent className="text-center py-12">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium mb-2">No transactions found</h3>
-                  <p className="text-gray-500">No transactions have been recorded yet</p>
+                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-bold text-foreground mb-2">No transactions found</h3>
+                  <p className="text-muted-foreground">No transactions have been recorded yet</p>
                 </CardContent>
               </Card>
           ) : (
-              <Card>
+              <Card className="pos-modal-content border-none shadow-xl">
                 <CardHeader>
                   <CardTitle>Recent Transactions</CardTitle>
                 </CardHeader>
@@ -300,17 +303,17 @@ export default function ReportsPage() {
                     <table className="w-full">
                       <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Method</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Total</th>
-                        <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Method</th>
+                        <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground">Total</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">Actions</th>
                       </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                       {transactions.map((t) => (
-                          <tr key={t.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                          <tr key={t.id} className="hover:bg-background/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                               {formatDate(t.created_at)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
@@ -321,7 +324,7 @@ export default function ReportsPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                               {t.payment_method}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-foreground text-right">
                               {formatCurrency(t.total)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -329,7 +332,7 @@ export default function ReportsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleViewDetails(t)}
-                                className="h-8 w-8 p-0"
+                                className="h-8 w-8 p-0 text-primary-brand hover:bg-primary-brand/10"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>

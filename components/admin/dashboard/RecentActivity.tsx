@@ -50,87 +50,168 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <div className="p-4 rounded-lg bg-muted/30 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Clock className="h-8 w-8 text-muted-foreground/50" />
+          <div className="text-center py-8 sm:py-12 text-muted-foreground">
+            <div className="p-3 sm:p-4 rounded-lg bg-muted/30 w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 flex items-center justify-center">
+              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50" />
             </div>
-            <p className="text-sm font-medium">No recent activity</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Activity will appear here as it happens</p>
+            <p className="text-sm font-medium mb-1">No recent activity</p>
+            <p className="text-xs text-muted-foreground/70">Activity will appear here as it happens</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {activities.map((activity) => (
-              <div
-                key={activity.id}
-                onClick={() => {
-                  console.log(`[DASHBOARD] Activity item clicked:`, {
-                    activityId: activity.id,
-                    activityType: activity.type,
-                    description: activity.description,
-                    timestamp: new Date().toISOString()
-                  });
-                  onActivityClick?.(activity);
-                }}
-                className={`pos-transaction-card transition-theme ${
-                  onActivityClick
-                    ? "cursor-pointer group"
-                    : ""
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
-                      {activity.description}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1">
-                      {activity.user_name && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <User className="h-3 w-3" />
-                          {activity.user_name}
-                        </p>
-                      )}
-                      {activity.amount && (
-                        <p className="text-xs font-semibold text-success flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          {formatCurrency(activity.amount)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    <div className="text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDateTime(activity.created_at)}
+          <div className="sm:hidden">
+            {/* Mobile View - Horizontal Scroll */}
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="flex gap-3 pb-2 min-w-max px-4">
+                {activities.map((activity) => {
+                  return (
+                    <div
+                      key={activity.id}
+                      onClick={() => {
+                        console.log(`[DASHBOARD] Mobile activity item clicked:`, {
+                          activityId: activity.id,
+                          activityType: activity.type,
+                          description: activity.description,
+                          timestamp: new Date().toISOString()
+                        });
+                        onActivityClick?.(activity);
+                      } }
+                      className={`pos-transaction-card transition-theme ${onActivityClick
+                        ? "cursor-pointer group"
+                        : ""} flex-shrink-0 w-72 sm:w-auto`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-left">
+                            {activity.description}
+                          </p>
+                          <div className="flex flex-col gap-1 mt-1">
+                            {activity.user_name && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                <span className="truncate max-w-20">{activity.user_name}</span>
+                              </p>
+                            )}
+                            {activity.amount && (
+                              <p className="text-xs font-semibold text-success flex items-center gap-1">
+                                <DollarSign className="h-3 w-3" />
+                                {formatCurrency(activity.amount)}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{new Date(activity.created_at).toLocaleDateString("id-ID")}</span>
+                              </div>
+                            </div>
+                            {onActivityClick && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log(`[DASHBOARD] Mobile activity detail button clicked:`, {
+                                    activityId: activity.id,
+                                    activityType: activity.type,
+                                    source: 'recent_activity_card_mobile',
+                                    timestamp: new Date().toISOString()
+                                  });
+                                  onActivityClick(activity);
+                                } }
+                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    {onActivityClick && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log(`[DASHBOARD] Activity detail button clicked:`, {
-                            activityId: activity.id,
-                            activityType: activity.type,
-                            source: 'recent_activity_card',
-                            timestamp: new Date().toISOString()
-                          });
-                          onActivityClick(activity);
-                        }}
-                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
-                      >
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                    )}
+                  );
+                })}
+              </div>
+            </div>
+          <div className="hidden sm:block">
+            {/* Desktop View - Original Layout */}
+            <div className="space-y-2 sm:space-y-3">
+              {activities.map((activity) => {
+                return (
+                  <div
+                    key={activity.id}
+                    onClick={() => {
+                      console.log(`[DASHBOARD] Desktop activity item clicked:`, {
+                        activityId: activity.id,
+                        activityType: activity.type,
+                        description: activity.description,
+                        timestamp: new Date().toISOString()
+                      });
+                      onActivityClick?.(activity);
+                    } }
+                    className={`pos-transaction-card transition-theme ${onActivityClick
+                      ? "cursor-pointer group"
+                      : ""}`}
+                  >
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <div className="flex-shrink-0 p-1.5 sm:p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-left">
+                          {activity.description}
+                        </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-1">
+                          {activity.user_name && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              <span className="truncate max-w-20 sm:max-w-none">{activity.user_name}</span>
+                            </p>
+                          )}
+                          {activity.amount && (
+                            <p className="text-xs font-semibold text-success flex items-center gap-1">
+                              <DollarSign className="h-3 w-3" />
+                              {formatCurrency(activity.amount)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
+                        <div className="text-xs text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span className="hidden sm:inline">{formatDateTime(activity.created_at)}</span>
+                            <span className="sm:hidden">{new Date(activity.created_at).toLocaleDateString("id-ID")}</span>
+                          </div>
+                        </div>
+                        {onActivityClick && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log(`[DASHBOARD] Desktop activity detail button clicked:`, {
+                                activityId: activity.id,
+                                activityType: activity.type,
+                                source: 'recent_activity_card_desktop',
+                                timestamp: new Date().toISOString()
+                              });
+                              onActivityClick(activity);
+                            } }
+                            className="h-6 w-6 sm:h-8 sm:w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 hover:text-primary"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              );
+            })}
+            </div>
         )}
       </CardContent>
     </Card>

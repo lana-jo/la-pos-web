@@ -64,29 +64,41 @@ export const TransactionChart = ({ data, preset }: TransactionChartProps) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ShoppingCart className="h-5 w-5 text-blue-600" />
-          Transaction Volume ({getPresetLabel(preset as any)})
+          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+          <span className="text-sm sm:text-base">Transaction Volume ({getPresetLabel(preset as any)})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={250} minHeight={300}>
           <BarChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke={theme === "dark" ? "hsl(var(--border))" : "#e5e7eb"}
             />
-            <XAxis dataKey="date" {...getAxisTheme()} />
-            <YAxis {...getAxisTheme()} />
+            <XAxis 
+              dataKey="date" 
+              {...getAxisTheme()}
+              tick={{ fontSize: 10 }}
+            />
+            <YAxis 
+              {...getAxisTheme()}
+              tick={{ fontSize: 10 }}
+            />
             <Tooltip
-              formatter={(value) => [Number(value), "Transactions"]}
+              formatter={(value) => [
+                value,
+                "Transactions",
+              ]}
               labelFormatter={(label) => `Date: ${label}`}
               {...getTooltipTheme()}
+              contentStyle={{
+                fontSize: 12
+              }}
             />
-            <Legend {...getLegendTheme()} />
             <Bar
               dataKey="transactions"
               fill={getThemeColors().transactions}
-              name="Transactions"
+              {...getLegendTheme()}
             />
           </BarChart>
         </ResponsiveContainer>

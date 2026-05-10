@@ -15,23 +15,38 @@ const movementSchema = z.object({
 
 export async function GET() {
   try {
+    // First try simple query without complex joins
     const { data, error } = await supabaseServer
       .from("inventory_movements")
       .select(`
-        *,
-        products!inner(name, barcode),
-        product_variants!inner(name, barcode),
-        profiles!inner(full_name)
+        id,
+        product_id,
+        product_variant_id,
+        movement_type,
+        reference_type,
+        reference_id,
+        qty_change,
+        unit_cost,
+        notes,
+        created_at,
+        created_by
       `)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100); // Limit to prevent timeout
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error:", error);
+      throw error;
+    }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data || []);
   } catch (error) {
     console.error("Error fetching stock movements:", error);
     return NextResponse.json(
-      { error: "Failed to fetch stock movements" },
+      { 
+        error: "Failed to fetch stock movements",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }

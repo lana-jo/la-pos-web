@@ -96,22 +96,22 @@ export const ActivityDetailModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleModalClose}>
-      <DialogContent className="pos-modal-content max-w-md transition-theme">
-        <DialogHeader className="pos-modal-header">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
+      <DialogContent className="pos-modal-content max-w-md w-[95vw] sm:w-full max-h-[85vh] overflow-y-auto transition-theme">
+        <DialogHeader className="pos-modal-header px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="p-2 sm:p-2 rounded-lg bg-primary/10">
               {getActivityIcon(activity.type)}
             </div>
-            <div>
-              <DialogTitle className="pos-modal-title text-lg">Activity Details</DialogTitle>
-              <DialogDescription className="text-primary/80">
+            <div className="flex-1 min-w-0">
+              <DialogTitle className="pos-modal-title text-base sm:text-lg">Activity Details</DialogTitle>
+              <DialogDescription className="text-primary/80 text-sm">
                 {getActivityTypeLabel(activity.type)}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="pos-modal-body space-y-4">
+        <div className="pos-modal-body px-4 sm:px-6 py-4 sm:py-6 space-y-4">
           {/* Activity Type */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 transition-theme">
             <span className="text-sm font-medium text-muted-foreground">Type</span>
@@ -122,13 +122,13 @@ export const ActivityDetailModal = ({
 
           {/* Description */}
           <Card className="pos-transaction-card transition-theme">
-            <CardContent className="pt-4">
+            <CardContent className="pt-3 sm:pt-4">
               <div className="space-y-2">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/5">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-primary/5">
                     <PackageIcon className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-foreground">Description</p>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {activity.description}
@@ -141,27 +141,27 @@ export const ActivityDetailModal = ({
 
           {/* User Information */}
           {activity.user_name && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 border border-border/50 transition-theme hover:bg-muted/50 hover:border-primary/20">
-              <div className="p-2 rounded-lg bg-accent/10">
+            <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 border border-border/50 transition-theme hover:bg-muted/50 hover:border-primary/20">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-accent/10">
                 <User className="h-4 w-4 text-accent-foreground" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground">Performed by</p>
-                <p className="text-sm text-muted-foreground mt-0.5">{activity.user_name}</p>
+                <p className="text-sm text-muted-foreground mt-0.5 truncate">{activity.user_name}</p>
               </div>
             </div>
           )}
 
           {/* Amount */}
           {activity.amount && (
-            <div className="pos-card-success p-4 transition-theme">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-success/20">
+            <div className="pos-card-success p-3 sm:p-4 transition-theme">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-success/20">
                   <DollarSign className="h-4 w-4 text-success" />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Amount</p>
-                  <p className="text-lg font-bold text-success mt-0.5">
+                  <p className="text-base sm:text-lg font-bold text-success mt-0.5">
                     {formatCurrency(activity.amount)}
                   </p>
                 </div>
@@ -170,22 +170,23 @@ export const ActivityDetailModal = ({
           )}
 
           {/* Timestamp */}
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 border border-border/50 transition-theme hover:bg-muted/50 hover:border-primary/20">
-            <div className="p-2 rounded-lg bg-primary/10">
+          <div className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 border border-border/50 transition-theme hover:bg-muted/50 hover:border-primary/20">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
               <Clock className="h-4 w-4 text-primary" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Timestamp</p>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {formatDateTime(activity.created_at)}
+                <span className="sm:inline">{formatDateTime(activity.created_at)}</span>
+                <span className="sm:hidden">{new Date(activity.created_at).toLocaleDateString("id-ID")}</span>
               </p>
             </div>
           </div>
 
           {/* Activity ID */}
-          <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20 border border-border/30 transition-theme">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/20 border border-border/30 transition-theme">
             <span className="text-sm font-medium text-muted-foreground">Activity ID</span>
-            <span className="text-xs font-mono bg-muted px-3 py-1.5 rounded-md border border-border/50">
+            <span className="text-xs font-mono bg-muted px-2 sm:px-3 py-1 sm:py-1.5 rounded-md border border-border/50 truncate max-w-32 sm:max-w-none">
               {activity.id}
             </span>
           </div>

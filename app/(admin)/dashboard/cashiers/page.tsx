@@ -88,57 +88,60 @@ export default function CashiersPage() {
   const showEmptyState = cashiers.length === 0 && !filters.searchTerm && filters.statusFilter === 'all'
 
   return (
-    <>
+    <div className="min-h-screen pos-terminal p-8">
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Kasir</h1>
-        <p className="text-muted-foreground">Kelola akun kasir</p>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+          <UserCircle className="h-8 w-8 text-primary-brand" />
+          CASHIER MANAGEMENT
+        </h1>
+        <p className="text-muted-foreground mt-2">Manage your cashier accounts and activity.</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard 
           title="Total Kasir" 
           value={stats.total} 
           icon={Users} 
-          color="bg-blue-100 text-blue-600" 
+          color="bg-primary/10 text-primary" 
         />
         <StatCard 
           title="Aktif" 
           value={stats.active} 
           icon={UserCheck} 
-          color="bg-green-100 text-green-600" 
+          color="bg-green-500/10 text-green-600" 
         />
         <StatCard 
           title="Nonaktif" 
           value={stats.inactive} 
           icon={UserX} 
-          color="bg-red-100 text-red-600" 
+          color="bg-red-500/10 text-red-600" 
         />
         <StatCard 
           title="Baru Bulan Ini" 
           value={stats.newThisMonth} 
           icon={Calendar} 
-          color="bg-purple-100 text-purple-600" 
+          color="bg-purple-500/10 text-purple-600" 
         />
       </div>
 
       {showEmptyState ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-muted/30 rounded-lg border border-dashed">
+        <div className="pos-modal-content border-none shadow-xl flex flex-col items-center justify-center py-16 rounded-2xl border border-border/50">
           <UserCircle className="h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Belum ada kasir</h3>
+          <h3 className="text-lg font-medium text-foreground mb-2">Belum ada kasir</h3>
           <p className="text-muted-foreground mb-6 text-center max-w-md">
             Mulai dengan menambahkan kasir pertama Anda untuk mengelola transaksi POS
           </p>
           <button
             onClick={() => setModalType('add')}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+            className="pos-button-primary px-6 py-2 rounded-full transition-all"
           >
             + Tambah Kasir Pertama
           </button>
         </div>
       ) : (
-        <>
+        <div className="pos-modal-content border-none shadow-xl rounded-2xl">
           <FilterBar
             searchTerm={filters.searchTerm}
             onSearchChange={setSearchTerm}
@@ -160,9 +163,9 @@ export default function CashiersPage() {
             onEdit={openEdit}
             onDelete={openDelete}
             onPreviousPage={goToPreviousPage}
-            onNextPage={goToNextPage}
+            onNextPage={goToPreviousPage}
           />
-        </>
+        </div>
       )}
 
       {/* Dialogs */}
@@ -198,6 +201,6 @@ export default function CashiersPage() {
         cashier={selectedCashier}
         isSubmitting={isSubmitting}
       />
-    </>
+    </div>
   )
 }

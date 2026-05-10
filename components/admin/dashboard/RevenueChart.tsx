@@ -65,18 +65,22 @@ export const RevenueChart = ({ data, preset, formatCurrency }: RevenueChartProps
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-green-600" />
-          Revenue Trend ({getPresetLabel(preset as any)})
+          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+          <span className="text-sm sm:text-base">Revenue Trend ({getPresetLabel(preset as any)})</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={250} minHeight={300}>
           <LineChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke={theme === "dark" ? "hsl(var(--border))" : "#e5e7eb"}
             />
-            <XAxis dataKey="date" {...getAxisTheme()} />
+            <XAxis 
+              dataKey="date" 
+              {...getAxisTheme()}
+              tick={{ fontSize: 10 }}
+            />
             <YAxis
               tickFormatter={(value) => {
                 if (value >= 1000000000) {
@@ -90,6 +94,7 @@ export const RevenueChart = ({ data, preset, formatCurrency }: RevenueChartProps
                 }
               }}
               {...getAxisTheme()}
+              tick={{ fontSize: 10 }}
             />
             <Tooltip
               formatter={(value) => [
@@ -98,15 +103,18 @@ export const RevenueChart = ({ data, preset, formatCurrency }: RevenueChartProps
               ]}
               labelFormatter={(label) => `Date: ${label}`}
               {...getTooltipTheme()}
+              contentStyle={{
+                fontSize: 12
+              }}
             />
-            <Legend {...getLegendTheme()} />
             <Line
               type="monotone"
               dataKey="revenue"
               stroke={getThemeColors().revenue}
-              strokeWidth={2}
-              dot={{ fill: getThemeColors().revenue }}
-              name="Revenue"
+              strokeWidth={1.5}
+              dot={{ fill: getThemeColors().revenue, strokeWidth: 3, r: 4 }}
+              activeDot={{ r: 5 }}
+              {...getLegendTheme()}
             />
           </LineChart>
         </ResponsiveContainer>

@@ -220,13 +220,13 @@ export default function DashboardPage() {
   if (!mounted) return null;
 
   return (
-    <div className="page-background p-8">
-      <div className="space-y-8">
+    <div className="page-background p-4 sm:p-6 lg:p-8">
+      <div className="space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             DASHBOARD
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Welcome to Dashboard, {userName || 'User'}
           </p>
         </div>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
           />
         </AnalyticsOverview>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <RevenueChart
             data={chartData.dailyRevenue}
             preset={selectedPreset}
@@ -256,7 +256,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <TopProductsChart
             data={chartData.topProducts}
             preset={selectedPreset}
