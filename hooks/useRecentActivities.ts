@@ -70,11 +70,13 @@ export const useRecentActivities = () => {
 
       // Add transactions with proper typing
       (transactions as any[])?.forEach((transaction: any) => {
+        const cashierName = transaction.profiles?.full_name ?? "Unknown";
+        const description = `Transaction #${transaction.id.slice(-6)} completed — ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(transaction.total)}`;
         activities.push({
           id: transaction.id,
           type: "transaction",
-          description: "Transaction completed",
-          user_name: transaction.profiles.full_name,
+          description,
+          user_name: cashierName,
           amount: transaction.total,
           created_at: transaction.created_at,
         });

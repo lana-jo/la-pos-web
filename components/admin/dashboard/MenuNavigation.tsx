@@ -38,9 +38,9 @@ interface MenuSectionProps {
 
 const MenuCard = ({ href, icon: Icon, color, title, description, disabled }: MenuItem) => {
   const content = (
-    <div className={`p-4 rounded-lg border ${disabled ? 'opacity-50' : 'hover:bg-muted/50 transition-colors cursor-pointer'}`}>
-      <Icon className={`h-6 w-6 ${disabled ? 'text-gray-400' : color} mb-2`} />
-      <h4 className="font-medium">{title}</h4>
+    <div className={`p-4 rounded-lg border transition-all duration-300 ${disabled ? 'opacity-50' : 'hover:bg-muted/50 hover:shadow-md hover:shadow-primary/10 hover:-translate-y-1 cursor-pointer'}`}>
+      <Icon className={`h-6 w-6 mb-2 transition-transform duration-200 ${disabled ? 'text-gray-400' : color} ${!disabled && 'hover:scale-110'}`} />
+      <h4 className={`font-medium transition-colors duration-200 ${!disabled && 'hover:text-primary'}`}>{title}</h4>
       <p className="text-sm text-muted-foreground">{description}</p>
     </div>
   );
@@ -53,10 +53,10 @@ const MenuCard = ({ href, icon: Icon, color, title, description, disabled }: Men
 };
 
 export const MenuSection = ({ title, icon: Icon, iconColor, items }: MenuSectionProps) => (
-  <Card>
+  <Card className="transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Icon className={`h-5 w-5 ${iconColor}`} />
+      <CardTitle className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
+        <Icon className={`h-5 w-5 ${iconColor} transition-transform duration-300 hover:rotate-12`} />
         {title}
       </CardTitle>
     </CardHeader>
@@ -72,9 +72,9 @@ export const MenuSection = ({ title, icon: Icon, iconColor, items }: MenuSection
 
 export const MenuNavigation = () => (
   <div className="space-y-6 mb-8">
-    <div className="flex items-center gap-2 mb-4">
-      <Settings className="h-5 w-5 text-muted-foreground" />
-      <h2 className="text-lg font-semibold">Menu Overview</h2>
+    <div className="flex items-center gap-2 mb-4 p-4 rounded-lg bg-card border transition-all duration-300 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-0.5">
+      <Settings className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors duration-200" />
+      <h2 className="text-lg font-semibold hover:text-primary transition-colors duration-200">Menu Overview</h2>
     </div>
 
     {/* Product Management */}

@@ -181,7 +181,12 @@ export function useTransactions() {
 
       const { data, error } = await supabase
         .from("transactions")
-        .select("*, items:transaction_items(*)")
+        .select(`
+          *,
+          items:transaction_items(*),
+          cashier:profiles(id, full_name),
+          customer:customers(id, name)
+        `)
         .eq("cashier_id", session.user.id)
         .order("created_at", { ascending: false })
         .limit(20);
@@ -189,8 +194,14 @@ export function useTransactions() {
       if (error) throw error;
 
       setTransactions(data || []);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
+    } catch (error: any) {
+      console.error("Error fetching transactions details:", {
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        code: error?.code,
+        fullError: error
+      });
       toast.error("Failed to load transactions");
     } finally {
       setLoading(false);

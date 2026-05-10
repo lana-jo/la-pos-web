@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -47,15 +47,16 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
   };
 
   return (
-    <Card>
+    <Card className="pos-modal-content border-none shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Package className="h-5 w-5 text-purple-600" />
+          <Package className="h-5 w-5 text-primary-brand" />
           Top Products by Revenue ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
@@ -64,7 +65,7 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
             <XAxis
               dataKey="name"
               tick={{
-                fontSize: 12,
+                fontSize: 10,
                 fill:
                   theme === "dark"
                     ? "hsl(var(--muted-foreground))"
@@ -82,6 +83,7 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
                 return `Rp${value}`;
               }}
               {...getAxisTheme()}
+              tick={{ fontSize: 10 }}
             />
             <Tooltip
               formatter={(value) => [
@@ -89,11 +91,16 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
                 "Revenue",
               ]}
               labelFormatter={(label) => `Product: ${label}`}
-              {...getTooltipTheme()}
+              contentStyle={{
+                ...getTooltipTheme().contentStyle,
+                fontSize: 12,
+              }}
+              labelStyle={getTooltipTheme().labelStyle}
             />
-            <Bar dataKey="revenue" fill={getThemeColors().products} />
+            <Bar dataKey="revenue" fill={getThemeColors().products} animationDuration={1000} animationBegin={0} />
           </BarChart>
         </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

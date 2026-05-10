@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShoppingCart } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -45,42 +45,28 @@ export const TransactionChart = ({ data, preset }: TransactionChartProps) => {
     };
   };
 
-  const getLegendTheme = () => {
-    const isDark = theme === "dark";
-    return {
-      wrapperStyle: {
-        paddingTop: "20px",
-      },
-      iconType: "circle" as const,
-      formatter: (value: string) => (
-        <span style={{ color: isDark ? "hsl(var(--foreground))" : "#111827" }}>
-          {value}
-        </span>
-      ),
-    };
-  };
-
   return (
-    <Card>
+    <Card className="pos-modal-content border-none shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-          <span className="text-sm sm:text-base">Transaction Volume ({getPresetLabel(preset as any)})</span>
+          <ShoppingCart className="h-5 w-5 text-primary-brand" />
+          Transaction Volume ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={250} minHeight={300}>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke={theme === "dark" ? "hsl(var(--border))" : "#e5e7eb"}
             />
-            <XAxis 
-              dataKey="date" 
+            <XAxis
+              dataKey="date"
               {...getAxisTheme()}
               tick={{ fontSize: 10 }}
             />
-            <YAxis 
+            <YAxis
               {...getAxisTheme()}
               tick={{ fontSize: 10 }}
             />
@@ -90,18 +76,21 @@ export const TransactionChart = ({ data, preset }: TransactionChartProps) => {
                 "Transactions",
               ]}
               labelFormatter={(label) => `Date: ${label}`}
-              {...getTooltipTheme()}
               contentStyle={{
-                fontSize: 12
+                ...getTooltipTheme().contentStyle,
+                fontSize: 12,
               }}
+              labelStyle={getTooltipTheme().labelStyle}
             />
             <Bar
               dataKey="transactions"
               fill={getThemeColors().transactions}
-              {...getLegendTheme()}
+              animationDuration={1200}
+              animationBegin={200}
             />
           </BarChart>
         </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

@@ -44,26 +44,30 @@ export const PaymentMethodsChart = ({ data, preset }: PaymentMethodsChartProps) 
   const colors = getThemeColors();
 
   return (
-    <Card>
+    <Card className="pos-modal-content border-none shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5 text-orange-600" />
+          <CreditCard className="h-5 w-5 text-primary-brand" />
           Payment Methods Distribution ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
           <RePieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
+              nameKey="method"
               labelLine={false}
               label={(entry) =>
-                `${entry.method}: ${entry.payload.percentage}%`
+                `${entry.name}: ${entry.payload.percentage}%`
               }
               outerRadius={80}
               dataKey="count"
+              animationDuration={1000}
+              animationBegin={0}
             >
               {data.map((entry, index) => (
                 <Cell
@@ -74,10 +78,15 @@ export const PaymentMethodsChart = ({ data, preset }: PaymentMethodsChartProps) 
             </Pie>
             <Tooltip
               formatter={(value) => [Number(value), "Transactions"]}
-              {...getTooltipTheme()}
+              contentStyle={{
+                ...getTooltipTheme().contentStyle,
+                fontSize: 12,
+              }}
+              labelStyle={getTooltipTheme().labelStyle}
             />
           </RePieChart>
         </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

@@ -70,7 +70,7 @@ export const useChartData = (dateRange: DateRange) => {
       // Process daily revenue data
       const dailyRevenueMap = new Map<
         string,
-        { revenue: number; transactions: number }
+        { displayDate: string; revenue: number; transactions: number }
       >();
 
       // Initialize date range
@@ -81,49 +81,37 @@ export const useChartData = (dateRange: DateRange) => {
             dateRange.to.getDate() + 1,
           )
         : now;
-      const daysDiff =
-        Math.ceil(filterToDate.getTime() - sevenDaysAgo.getTime()) /
-        (1000 * 60 * 60 * 24);
+      const daysDiff = Math.ceil(
+        (filterToDate.getTime() - sevenDaysAgo.getTime()) /
+        (1000 * 60 * 60 * 24),
+      );
       const daysToShow = Math.min(Math.max(daysDiff, 1), 90); // Limit to 90 days max
 
-      for (let i = daysToShow - 1; i >= 0; i--) {
+      for (let i = 0; i < daysToShow; i++) {
         const date = new Date(sevenDaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-        const dateStr = date.toLocaleDateString("id-ID", {
+        const isoDate = date.toISOString().split('T')[0];
+        const displayDate = date.toLocaleDateString("id-ID", {
           day: "numeric",
           month: "short",
         });
-        dailyRevenueMap.set(dateStr, { revenue: 0, transactions: 0 });
+        dailyRevenueMap.set(isoDate, { displayDate, revenue: 0, transactions: 0 });
       }
 
       // Aggregate daily data
       (dailyTransactions as any[])?.forEach((transaction: any) => {
-        const date = new Date(transaction.created_at);
-        const dateStr = date.toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "short",
-        });
-        const existing = dailyRevenueMap.get(dateStr) || {
-          revenue: 0,
-          transactions: 0,
-        };
-        dailyRevenueMap.set(dateStr, {
-          revenue: existing.revenue + transaction.total,
-          transactions: existing.transactions + 1,
-        });
+        const isoDate = transaction.created_at.split('T')[0];
+        const existing = dailyRevenueMap.get(isoDate);
+        if (existing) {
+          existing.revenue += transaction.total;
+          existing.transactions += 1;
+        }
       });
 
-      const dailyRevenue = Array.from(dailyRevenueMap.entries())
-        .map(([date, data]) => ({
-          date,
-          revenue: data.revenue,
-          transactions: data.transactions,
-        }))
-        .sort((a, b) => {
-          // Parse dates in Indonesian format and sort chronologically
-          const dateA = new Date(a.date + " 2024"); // Add year to make it parsable
-          const dateB = new Date(b.date + " 2024");
-          return dateA.getTime() - dateB.getTime();
-        });
+      const dailyRevenue = Array.from(dailyRevenueMap.values()).map((item) => ({
+        date: item.displayDate,
+        revenue: item.revenue,
+        transactions: item.transactions,
+      }));
 
       // Fetch top products (filtered by date range)
       const { data: topProductsData, error: topProductsError } = await supabase
