@@ -1,30 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ReactSelect } from '@/components/ui/react-select'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
-  Settings, 
   Store, 
   CreditCard, 
   Printer, 
   Shield,
-  Bell,
-  Globe,
-  Database,
-  Smartphone,
-  Download,
-  Upload
+  Bell
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getSettings, updateSettings, updateAllSettings, testPrinterConnection, testPrint, exportSettings, importSettings } from '@/lib/settings/actions'
+
+// Refactored Components
+import { SettingsHeader } from '@/components/admin/dashboard/settings/SettingsHeader'
+import { GeneralTab } from '@/components/admin/dashboard/settings/GeneralTab'
+import { PaymentTab } from '@/components/admin/dashboard/settings/PaymentTab'
+import { PrinterTab } from '@/components/admin/dashboard/settings/PrinterTab'
+import { SystemTab } from '@/components/admin/dashboard/settings/SystemTab'
+import { NotificationTab } from '@/components/admin/dashboard/settings/NotificationTab'
 
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -149,55 +143,6 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSaveAll = async () => {
-    setIsSaving(true)
-    try {
-      // Prepare all form data for saving
-      const allDataToSave: Record<string, Record<string, any>> = {}
-      
-      // Process each category and filter relevant fields
-      Object.entries(formData).forEach(([category, categoryData]) => {
-        const mergedData = {
-          ...settings,
-          ...categoryData
-        }
-        
-        const filteredData: Record<string, any> = {}
-        Object.keys(mergedData).forEach(key => {
-          if (category === 'general' && ['store_name', 'store_phone', 'store_email', 'store_address', 'language', 'currency', 'timezone'].includes(key)) {
-            filteredData[key] = mergedData[key]
-          } else if (category === 'payment' && (key.includes('qris') || key.includes('cash') || key.includes('card') || key.includes('midtrans'))) {
-            filteredData[key] = mergedData[key]
-          } else if (category === 'printer' && (key.includes('print') || key.includes('printer') || key.includes('paper'))) {
-            filteredData[key] = mergedData[key]
-          } else if (category === 'system' && (key.includes('session') || key.includes('login') || key.includes('backup'))) {
-            filteredData[key] = mergedData[key]
-          } else if (category === 'notifications' && (key.includes('alert') || key.includes('notification') || key.includes('update') || key.includes('error'))) {
-            filteredData[key] = mergedData[key]
-          }
-        })
-        
-        if (Object.keys(filteredData).length > 0) {
-          allDataToSave[category] = filteredData
-        }
-      })
-      
-      const result = await updateAllSettings(allDataToSave)
-      
-      if (result.success) {
-        toast.success(result.message)
-        // Reload settings to get the latest data
-        await loadSettings()
-      } else {
-        toast.error(result.error)
-      }
-    } catch (error) {
-      toast.error('Gagal menyimpan semua pengaturan')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   const handleInputChange = (category: string, key: string, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -288,628 +233,86 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen pos-terminal p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-          <Settings className="h-8 w-8 text-primary-brand" />
-          SYSTEM SETTINGS
-        </h1>
-        <p className="text-muted-foreground mt-2">Manage your POS system configuration and preferences.</p>
-      </div>
+      <SettingsHeader 
+        handleExportSettings={handleExportSettings}
+        handleImportSettings={handleImportSettings}
+        isLoading={isLoading}
+      />
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="bg-background/50 border border-border p-1 rounded-full w-full justify-start overflow-x-auto">
-          <TabsTrigger value="general" className="rounded-full data-[state=active]:pos-button-primary">General</TabsTrigger>
-          <TabsTrigger value="payment" className="rounded-full data-[state=active]:pos-button-primary">Payments</TabsTrigger>
-          <TabsTrigger value="printer" className="rounded-full data-[state=active]:pos-button-primary">Printer</TabsTrigger>
-          <TabsTrigger value="system" className="rounded-full data-[state=active]:pos-button-primary">System</TabsTrigger>
-          <TabsTrigger value="notifications" className="rounded-full data-[state=active]:pos-button-primary">Notifications</TabsTrigger>
-        </TabsList>
-      </Tabs>
-    </div>
-  )
-}
+          <TabsTrigger value="general" className="rounded-full data-[state=active]:pos-button-primary flex items-center gap-2">
             <Store className="h-4 w-4" />
-            Umum
+            General
           </TabsTrigger>
-          <TabsTrigger value="payment" className="flex items-center gap-2">
+          <TabsTrigger value="payment" className="rounded-full data-[state=active]:pos-button-primary flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Pembayaran
+            Payments
           </TabsTrigger>
-          <TabsTrigger value="printer" className="flex items-center gap-2">
+          <TabsTrigger value="printer" className="rounded-full data-[state=active]:pos-button-primary flex items-center gap-2">
             <Printer className="h-4 w-4" />
             Printer
           </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center gap-2">
+          <TabsTrigger value="system" className="rounded-full data-[state=active]:pos-button-primary flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Sistem
+            System
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
+          <TabsTrigger value="notifications" className="rounded-full data-[state=active]:pos-button-primary flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            Notifikasi
+            Notifications
           </TabsTrigger>
         </TabsList>
 
-        {/* General Settings */}
-        <TabsContent value="general" className="space-y-6">
-          <Card className="pos-modal-content border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Store className="h-5 w-5" />
-                Informasi Toko
-              </CardTitle>
-              <CardDescription>
-                Kelola informasi dasar toko Anda
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="store-name">Nama Toko</Label>
-                  <Input 
-                    id="store-name" 
-                    value={formData.general?.store_name || ''}
-                    onChange={(e) => handleInputChange('general', 'store_name', e.target.value)}
-                    placeholder="Masukkan nama toko"
-                    disabled={isLoading}
-                    className="pos-form-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="store-phone">Telepon</Label>
-                  <Input 
-                    id="store-phone" 
-                    value={formData.general?.store_phone || ''}
-                    onChange={(e) => handleInputChange('general', 'store_phone', e.target.value)}
-                    placeholder="Masukkan nomor telepon"
-                    disabled={isLoading}
-                    className="pos-form-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="store-email">Email</Label>
-                  <Input 
-                    id="store-email" 
-                    value={formData.general?.store_email || ''}
-                    onChange={(e) => handleInputChange('general', 'store_email', e.target.value)}
-                    placeholder="Masukkan email"
-                    type="email"
-                    disabled={isLoading}
-                    className="pos-form-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="store-address">Alamat</Label>
-                  <Input 
-                    id="store-address" 
-                    value={formData.general?.store_address || ''}
-                    onChange={(e) => handleInputChange('general', 'store_address', e.target.value)}
-                    placeholder="Masukkan alamat"
-                    disabled={isLoading}
-                    className="pos-form-input"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={() => handleSave('general')}
-                  disabled={isSaving || isLoading}
-                  className="pos-button-primary"
-                >
-                  {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="pos-modal-content border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Pengaturan Regional
-              </CardTitle>
-              <CardDescription>
-                Konfigurasi bahasa, mata uang, dan zona waktu
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="language">Bahasa</Label>
-                  <ReactSelect
-                    value={{ value: formData.general?.language || 'id', label: formData.general?.language === 'en' ? 'English' : 'Bahasa Indonesia' }}
-                    onChange={(option) => handleInputChange('general', 'language', option?.value)}
-                    options={[
-                      { value: 'id', label: 'Bahasa Indonesia' },
-                      { value: 'en', label: 'English' }
-                    ]}
-                    placeholder="Pilih bahasa"
-                    className="w-full"
-                    isDisabled={isLoading}
-                    instanceId="language-select"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Mata Uang</Label>
-                  <ReactSelect
-                    value={{ value: formData.general?.currency || 'IDR', label: formData.general?.currency === 'USD' ? 'US Dollar (USD)' : 'Indonesian Rupiah (IDR)' }}
-                    onChange={(option) => handleInputChange('general', 'currency', option?.value)}
-                    options={[
-                      { value: 'IDR', label: 'Indonesian Rupiah (IDR)' },
-                      { value: 'USD', label: 'US Dollar (USD)' }
-                    ]}
-                    placeholder="Pilih mata uang"
-                    className="w-full"
-                    isDisabled={isLoading}
-                    instanceId="currency-select"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Zona Waktu</Label>
-                  <ReactSelect
-                    value={{ value: formData.general?.timezone || 'Asia/Jakarta', label: formData.general?.timezone === 'Asia/Makassar' ? 'Makassar (WITA)' : formData.general?.timezone === 'Asia/Jayapura' ? 'Jayapura (WIT)' : 'Jakarta (WIB)' }}
-                    onChange={(option) => handleInputChange('general', 'timezone', option?.value)}
-                    options={[
-                      { value: 'Asia/Jakarta', label: 'Jakarta (WIB)' },
-                      { value: 'Asia/Makassar', label: 'Makassar (WITA)' },
-                      { value: 'Asia/Jayapura', label: 'Jayapura (WIT)' }
-                    ]}
-                    placeholder="Pilih zona waktu"
-                    className="w-full"
-                    isDisabled={isLoading}
-                    instanceId="timezone-select"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={() => handleSave('general')}
-                  disabled={isSaving || isLoading}
-                  className="pos-button-primary"
-                >
-                  {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="general">
+          <GeneralTab 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSave={handleSave}
+            isLoading={isLoading}
+            isSaving={isSaving}
+          />
         </TabsContent>
 
-        {/* Payment Settings */}
-        <TabsContent value="payment" className="space-y-6">
-          <Card className="pos-modal-content border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Konfigurasi Pembayaran
-              </CardTitle>
-              <CardDescription>
-                Kelola metode pembayaran dan gateway pembayaran
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="qris-enabled">QRIS Payment</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Aktifkan pembayaran QRIS melalui Midtrans
-                    </p>
-                  </div>
-                  <Switch 
-                    id="qris-enabled" 
-                    checked={formData.payment?.qris_enabled !== false}
-                    onCheckedChange={(checked) => handleInputChange('payment', 'qris_enabled', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <Separator className="bg-border" />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="cash-enabled">Pembayaran Tunai</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Aktifkan pembayaran tunai
-                    </p>
-                  </div>
-                  <Switch 
-                    id="cash-enabled" 
-                    checked={formData.payment?.cash_enabled !== false}
-                    onCheckedChange={(checked) => handleInputChange('payment', 'cash_enabled', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <Separator className="bg-border" />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="card-enabled">Pembayaran Kartu</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Aktifkan pembayaran kartu kredit/debit
-                    </p>
-                  </div>
-                  <Switch 
-                    id="card-enabled" 
-                    checked={formData.payment?.card_enabled !== false}
-                    onCheckedChange={(checked) => handleInputChange('payment', 'card_enabled', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Midtrans Configuration</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="midtrans-merchant">Merchant ID</Label>
-                    <Input 
-                      id="midtrans-merchant" 
-                      value={formData.payment?.midtrans_merchant_id || ''}
-                      onChange={(e) => handleInputChange('payment', 'midtrans_merchant_id', e.target.value)}
-                      placeholder="Masukkan Midtrans Merchant ID"
-                      type="password"
-                      disabled={isLoading}
-                      className="pos-form-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="midtrans-key">Server Key</Label>
-                    <Input 
-                      id="midtrans-key" 
-                      value={formData.payment?.midtrans_server_key || ''}
-                      onChange={(e) => handleInputChange('payment', 'midtrans_server_key', e.target.value)}
-                      placeholder="Masukkan Midtrans Server Key"
-                      type="password"
-                      disabled={isLoading}
-                      className="pos-form-input"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="midtrans-env">Environment</Label>
-                  <ReactSelect
-                    value={{ value: formData.payment?.midtrans_environment || 'sandbox', label: formData.payment?.midtrans_environment === 'production' ? 'Production' : 'Sandbox (Testing)' }}
-                    onChange={(option) => handleInputChange('payment', 'midtrans_environment', option?.value)}
-                    options={[
-                      { value: 'sandbox', label: 'Sandbox (Testing)' },
-                      { value: 'production', label: 'Production' }
-                    ]}
-                    placeholder="Pilih environment"
-                    className="w-full"
-                    isDisabled={isLoading}
-                    instanceId="midtrans-env-select"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={() => handleSave('payment')}
-                  disabled={isSaving || isLoading}
-                  className="pos-button-primary"
-                >
-                  {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="payment">
+          <PaymentTab 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSave={handleSave}
+            isLoading={isLoading}
+            isSaving={isSaving}
+          />
         </TabsContent>
 
-        {/* Printer Settings */}
-        <TabsContent value="printer" className="space-y-6">
-          <Card className="pos-modal-content border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Printer className="h-5 w-5" />
-                Konfigurasi Printer
-              </CardTitle>
-              <CardDescription>
-                Pengaturan printer thermal dan printer struk
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="auto-print">Auto Print Receipt</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Cetak struk otomatis setelah pembayaran berhasil
-                    </p>
-                  </div>
-                  <Switch 
-                    id="auto-print" 
-                    checked={formData.printer?.auto_print !== false}
-                    onCheckedChange={(checked) => handleInputChange('printer', 'auto_print', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <Separator className="bg-border" />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="print-logo">Print Logo</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Cetak logo toko pada struk
-                    </p>
-                  </div>
-                  <Switch 
-                    id="print-logo" 
-                    checked={formData.printer?.print_logo !== false}
-                    onCheckedChange={(checked) => handleInputChange('printer', 'print_logo', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Printer Configuration</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="printer-type">Tipe Printer</Label>
-                    <ReactSelect
-                      value={{ value: formData.printer?.printer_type || 'thermal', label: formData.printer?.printer_type === 'laser' ? 'Laser/Inkjet Printer' : formData.printer?.printer_type === 'network' ? 'Network Printer' : 'Thermal Printer' }}
-                      onChange={(option) => handleInputChange('printer', 'printer_type', option?.value)}
-                      options={[
-                        { value: 'thermal', label: 'Thermal Printer' },
-                        { value: 'laser', label: 'Laser/Inkjet Printer' },
-                        { value: 'network', label: 'Network Printer' }
-                      ]}
-                      placeholder="Pilih tipe printer"
-                      className="w-full"
-                      isDisabled={isLoading}
-                      instanceId="printer-type-select"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="printer-port">Port/Connection</Label>
-                    <Input 
-                      id="printer-port" 
-                      value={formData.printer?.printer_port || ''}
-                      onChange={(e) => handleInputChange('printer', 'printer_port', e.target.value)}
-                      placeholder="USB001 atau IP Address"
-                      disabled={isLoading}
-                      className="pos-form-input"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paper-width">Lebar Kertas</Label>
-                  <ReactSelect
-                    value={{ value: formData.printer?.paper_width || '58mm', label: formData.printer?.paper_width === '80mm' ? '80mm' : formData.printer?.paper_width === 'a4' ? 'A4' : '58mm' }}
-                    onChange={(option) => handleInputChange('printer', 'paper_width', option?.value)}
-                    options={[
-                      { value: '58mm', label: '58mm' },
-                      { value: '80mm', label: '80mm' },
-                      { value: 'a4', label: 'A4' }
-                    ]}
-                    placeholder="Pilih lebar kertas"
-                    className="w-full"
-                    isDisabled={isLoading}
-                    instanceId="paper-width-select"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Test Printer</h4>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={handleTestPrint} disabled={isLoading} className="border-primary-brand text-primary-brand">
-                    <Printer className="h-4 w-4 mr-2" />
-                    Test Print
-                  </Button>
-                  <Button variant="outline" onClick={handleTestPrinterConnection} disabled={isLoading} className="border-primary-brand text-primary-brand">
-                    <Database className="h-4 w-4 mr-2" />
-                    Test Connection
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={() => handleSave('printer')}
-                  disabled={isSaving || isLoading}
-                  className="pos-button-primary"
-                >
-                  {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="printer">
+          <PrinterTab 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSave={handleSave}
+            handleTestPrint={handleTestPrint}
+            handleTestPrinterConnection={handleTestPrinterConnection}
+            isLoading={isLoading}
+            isSaving={isSaving}
+          />
         </TabsContent>
 
-        {/* System Settings */}
-        <TabsContent value="system" className="space-y-6">
-          <Card className="pos-modal-content border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Pengaturan Sistem
-              </CardTitle>
-              <CardDescription>
-                Konfigurasi keamanan dan backup sistem
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Security Settings</h4>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="session-timeout">Session Timeout</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Logout otomatis setelah tidak aktif
-                    </p>
-                  </div>
-                  <Switch 
-                    id="session-timeout" 
-                    checked={formData.system?.session_timeout_enabled !== false}
-                    onCheckedChange={(checked) => handleInputChange('system', 'session_timeout_enabled', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="timeout-duration">Durasi (menit)</Label>
-                    <Input 
-                      id="timeout-duration" 
-                      type="number"
-                      value={formData.system?.session_timeout_duration || 30}
-                      onChange={(e) => handleInputChange('system', 'session_timeout_duration', parseInt(e.target.value))}
-                      min="5"
-                      max="480"
-                      disabled={isLoading}
-                      className="pos-form-input"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="max-login">Max Login Attempts</Label>
-                    <Input 
-                      id="max-login" 
-                      type="number"
-                      value={formData.system?.max_login_attempts || 5}
-                      onChange={(e) => handleInputChange('system', 'max_login_attempts', parseInt(e.target.value))}
-                      min="3"
-                      max="10"
-                      disabled={isLoading}
-                      className="pos-form-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Backup Settings</h4>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="auto-backup">Auto Backup</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Backup database otomatis
-                    </p>
-                  </div>
-                  <Switch 
-                    id="auto-backup" 
-                    checked={formData.system?.auto_backup_enabled !== false}
-                    onCheckedChange={(checked) => handleInputChange('system', 'auto_backup_enabled', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="backup-frequency">Backup Frequency</Label>
-                  <ReactSelect
-                    value={{ value: formData.system?.backup_frequency || 'daily', label: formData.system?.backup_frequency === 'weekly' ? 'Mingguan' : formData.system?.backup_frequency === 'monthly' ? 'Bulanan' : 'Harian' }}
-                    onChange={(option) => handleInputChange('system', 'backup_frequency', option?.value)}
-                    options={[
-                      { value: 'daily', label: 'Harian' },
-                      { value: 'weekly', label: 'Mingguan' },
-                      { value: 'monthly', label: 'Bulanan' }
-                    ]}
-                    placeholder="Pilih frekuensi backup"
-                    className="w-full"
-                    isDisabled={isLoading}
-                    instanceId="backup-frequency-select"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={() => handleSave('system')}
-                  disabled={isSaving || isLoading}
-                  className="pos-button-primary"
-                >
-                  {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="system">
+          <SystemTab 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSave={handleSave}
+            isLoading={isLoading}
+            isSaving={isSaving}
+          />
         </TabsContent>
 
-        {/* Notification Settings */}
-        <TabsContent value="notifications" className="space-y-6">
-          <Card className="pos-modal-content border-none shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Pengaturan Notifikasi
-              </CardTitle>
-              <CardDescription>
-                Kelola notifikasi sistem dan alert
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Sales Notifications</h4>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="sale-alert">Sale Alert</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Notifikasi saat ada transaksi baru
-                    </p>
-                  </div>
-                  <Switch 
-                    id="sale-alert" 
-                    checked={formData.notifications?.sale_alert !== false}
-                    onCheckedChange={(checked) => handleInputChange('notifications', 'sale_alert', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="low-stock">Low Stock Alert</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Notifikasi stok produk menipis
-                    </p>
-                  </div>
-                  <Switch 
-                    id="low-stock" 
-                    checked={formData.notifications?.low_stock_alert !== false}
-                    onCheckedChange={(checked) => handleInputChange('notifications', 'low_stock_alert', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <Separator className="bg-border" />
-
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">System Notifications</h4>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="system-update">System Updates</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Notifikasi pembaruan sistem
-                    </p>
-                  </div>
-                  <Switch 
-                    id="system-update" 
-                    checked={formData.notifications?.system_updates !== false}
-                    onCheckedChange={(checked) => handleInputChange('notifications', 'system_updates', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label htmlFor="error-report">Error Reports</Label>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Notifikasi error sistem
-                    </p>
-                  </div>
-                  <Switch 
-                    id="error-report" 
-                    checked={formData.notifications?.error_reports !== false}
-                    onCheckedChange={(checked) => handleInputChange('notifications', 'error_reports', checked)}
-                    disabled={isLoading}
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button 
-                  onClick={() => handleSave('notifications')}
-                  disabled={isSaving || isLoading}
-                  className="pos-button-primary"
-                >
-                  {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="notifications">
+          <NotificationTab 
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSave={handleSave}
+            isLoading={isLoading}
+            isSaving={isSaving}
+          />
         </TabsContent>
       </Tabs>
     </div>
