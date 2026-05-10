@@ -12,63 +12,57 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
     const currentStock = product.track_stock ? product.cached_stock : product.stock;
     const threshold = product.low_stock_threshold || 5;
     
-    if (currentStock === 0) return { color: "bg-red-500", text: "Out of Stock", icon: AlertTriangle };
+    if (currentStock === 0) return { color: "bg-destructive", text: "Out of Stock", icon: AlertTriangle };
     if (currentStock <= threshold) return { color: "bg-yellow-500", text: "Low Stock", icon: AlertTriangle };
-    return { color: "bg-green-500", text: "In Stock", icon: Package };
+    return { color: "bg-primary-brand", text: "In Stock", icon: Package };
   };
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full text-sm">
         <thead>
-          <tr className="border-b">
-            <th className="text-left p-2">Product</th>
-            <th className="text-left p-2">Category</th>
-            <th className="text-left p-2">Barcode</th>
-            <th className="text-center p-2">Current Stock</th>
-            <th className="text-right p-2">Unit Price</th>
-            <th className="text-right p-2">Total Value</th>
-            <th className="text-center p-2">Status</th>
-            <th className="text-center p-2">Actions</th>
+          <tr className="border-b border-border text-left">
+            <th className="p-4 font-bold text-muted-foreground uppercase">Product</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Category</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Barcode</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Stock</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-right">Price</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Status</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-border/50">
           {products.map((product) => {
             const status = getStockStatus(product);
             const StatusIcon = status.icon;
             const currentStock = product.track_stock ? product.cached_stock : product.stock;
             return (
-              <tr key={product.id} className="border-b hover:bg-muted/50">
-                <td className="p-2">
-                  <div>
-                    <div className="font-medium">{product.name}</div>
-                    <div className="text-sm text-muted-foreground">ID: {product.id}</div>
-                    {!product.track_stock && (
-                      <div className="text-xs text-orange-600">Stock tracking disabled</div>
-                    )}
-                  </div>
+              <tr key={product.id} className="hover:bg-background/50 transition-colors">
+                <td className="p-4">
+                  <div className="font-semibold text-foreground">{product.name}</div>
+                  {!product.track_stock && (
+                    <div className="text-xs text-orange-500 font-medium">Tracking Disabled</div>
+                  )}
                 </td>
-                <td className="p-2">{product.category_name}</td>
-                <td className="p-2 font-mono text-sm">{product.barcode}</td>
-                <td className="p-2 text-center">
-                  <span className={`font-bold ${currentStock <= (product.low_stock_threshold || 5) ? 'text-yellow-600' : ''}`}>
-                    {currentStock}
-                  </span>
+                <td className="p-4 text-muted-foreground">{product.category_name}</td>
+                <td className="p-4 font-mono text-muted-foreground">{product.barcode}</td>
+                <td className="p-4 text-center font-bold text-foreground">
+                  {currentStock}
                 </td>
-                <td className="p-2 text-right">Rp {product.price.toLocaleString('id-ID')}</td>
-                <td className="p-2 text-right">
-                  Rp {(currentStock * product.price).toLocaleString('id-ID')}
+                <td className="p-4 text-right font-black text-primary-brand">
+                  Rp {product.price.toLocaleString('id-ID')}
                 </td>
-                <td className="p-2 text-center">
+                <td className="p-4 text-center">
                   <Badge className={`${status.color} text-white`}>
                     <StatusIcon className="h-3 w-3 mr-1" />
                     {status.text}
                   </Badge>
                 </td>
-                <td className="p-2 text-center">
+                <td className="p-4 text-center">
                   <Button
                     size="sm"
                     variant="outline"
+                    className="border-primary-brand text-primary-brand hover:bg-primary-brand/10"
                     onClick={() => onAdjust(product)}
                   >
                     Update
