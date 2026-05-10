@@ -32,45 +32,53 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-border/50">
-          {products.map((product) => {
-            const status = getStockStatus(product);
-            const StatusIcon = status.icon;
-            const currentStock = product.track_stock ? product.cached_stock : product.stock;
-            return (
-              <tr key={product.id} className="hover:bg-background/50 transition-colors">
-                <td className="p-4">
-                  <div className="font-semibold text-foreground">{product.name}</div>
-                  {!product.track_stock && (
-                    <div className="text-xs text-orange-500 font-medium">Tracking Disabled</div>
-                  )}
-                </td>
-                <td className="p-4 text-muted-foreground">{product.category_name}</td>
-                <td className="p-4 font-mono text-muted-foreground">{product.barcode}</td>
-                <td className="p-4 text-center font-bold text-foreground">
-                  {currentStock}
-                </td>
-                <td className="p-4 text-right font-black text-primary-brand">
-                  Rp {product.price.toLocaleString('id-ID')}
-                </td>
-                <td className="p-4 text-center">
-                  <Badge className={`${status.color} text-white`}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
-                    {status.text}
-                  </Badge>
-                </td>
-                <td className="p-4 text-center">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-primary-brand text-primary-brand hover:bg-primary-brand/10"
-                    onClick={() => onAdjust(product)}
-                  >
-                    Update
-                  </Button>
-                </td>
-              </tr>
-            );
-          })}
+          {products.length === 0 ? (
+            <tr>
+              <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                No products found matching your criteria.
+              </td>
+            </tr>
+          ) : (
+            products.map((product) => {
+              const status = getStockStatus(product);
+              const StatusIcon = status.icon;
+              const currentStock = product.track_stock ? product.cached_stock : product.stock;
+              return (
+                <tr key={product.id} className="hover:bg-background/50 transition-colors">
+                  <td className="p-4">
+                    <div className="font-semibold text-foreground">{product.name}</div>
+                    {!product.track_stock && (
+                      <div className="text-xs text-orange-500 font-medium">Tracking Disabled</div>
+                    )}
+                  </td>
+                  <td className="p-4 text-muted-foreground">{product.category_name}</td>
+                  <td className="p-4 font-mono text-muted-foreground">{product.barcode}</td>
+                  <td className="p-4 text-center font-bold text-foreground">
+                    {currentStock}
+                  </td>
+                  <td className="p-4 text-right font-black text-primary-brand">
+                    Rp {product.price.toLocaleString('id-ID')}
+                  </td>
+                  <td className="p-4 text-center">
+                    <Badge variant="outline" className={`${status.color} text-white border-none`}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {status.text}
+                    </Badge>
+                  </td>
+                  <td className="p-4 text-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-primary-brand text-primary-brand hover:bg-primary-brand/10"
+                      onClick={() => onAdjust(product)}
+                    >
+                      Update
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })
+          )}
         </tbody>
       </table>
     </div>
