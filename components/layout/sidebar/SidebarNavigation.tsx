@@ -15,13 +15,6 @@ function isDropdownItem(item: NavigationItem | DropdownItem): item is DropdownIt
 }
 
 export function SidebarNavigation({ items, isCollapsed }: SidebarNavigationProps) {
-  const handleSettingsClick = () => {
-    toast.info("Fitur Pengaturan akan segera hadir! 🚧", {
-      description: "Kami sedang mengembangkan fitur ini untuk pengalaman yang lebih baik.",
-      duration: 4000,
-    });
-  };
-
   return (
     <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
       {items.map((item) => {
@@ -37,7 +30,6 @@ export function SidebarNavigation({ items, isCollapsed }: SidebarNavigationProps
           );
         }
 
-        const isSettings = item.href === "/dashboard/settings";
         return (
           <SidebarItem
             key={item.href}
@@ -46,10 +38,6 @@ export function SidebarNavigation({ items, isCollapsed }: SidebarNavigationProps
             icon={item.icon}
             isCollapsed={isCollapsed}
             description={item.description}
-            disabled={isSettings}
-            onClick={isSettings ? handleSettingsClick : undefined}
-            badge={isSettings ? "Coming Soon" : undefined}
-            badgeVariant="secondary"
           />
         );
       })}

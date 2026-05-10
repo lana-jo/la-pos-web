@@ -304,25 +304,10 @@ export default function SettingsPage() {
           <TabsTrigger value="system" className="rounded-full data-[state=active]:pos-button-primary">System</TabsTrigger>
           <TabsTrigger value="notifications" className="rounded-full data-[state=active]:pos-button-primary">Notifications</TabsTrigger>
         </TabsList>
-            <Button variant="outline" disabled={isLoading}>
-              <Upload className="h-4 w-4 mr-2" />
-              Import
-            </Button>
-          </div>
-          <Button 
-            onClick={handleSaveAll} 
-            disabled={isSaving || isLoading}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            {isSaving ? 'Menyimpan...' : 'Simpan Semua Perubahan'}
-          </Button>
-        </div>
-      </div>
-
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="general" className="flex items-center gap-2">
+      </Tabs>
+    </div>
+  )
+}
             <Store className="h-4 w-4" />
             Umum
           </TabsTrigger>
