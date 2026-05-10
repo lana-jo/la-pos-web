@@ -237,7 +237,7 @@ export default function ReportsPage() {
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Revenue</CardTitle>
                 <DollarSign className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
@@ -248,7 +248,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Transactions</CardTitle>
                 <ShoppingCart className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
@@ -261,7 +261,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Average Transaction</CardTitle>
                 <TrendingUp className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
@@ -272,7 +272,7 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Success Rate</CardTitle>
                 <TrendingUp className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
@@ -286,7 +286,7 @@ export default function ReportsPage() {
 
           {/* ── Transactions Table ── */}
           {transactions.length === 0 ? (
-              <Card className="pos-modal-content border-none shadow-xl">
+              <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
                 <CardContent className="text-center py-12">
                   <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                   <h3 className="text-lg font-bold text-foreground mb-2">No transactions found</h3>
@@ -294,7 +294,7 @@ export default function ReportsPage() {
                 </CardContent>
               </Card>
           ) : (
-              <Card className="pos-modal-content border-none shadow-xl">
+              <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
                 <CardHeader>
                   <CardTitle>Recent Transactions</CardTitle>
                 </CardHeader>
