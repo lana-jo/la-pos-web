@@ -71,6 +71,11 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: { user } } = await supabaseServer.auth.getUser();
+    if (!user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // Insert into inventory_movements table (trigger will handle stock updates)
     const { data: movement, error: movementError } = await supabaseServer
       .from("inventory_movements")
@@ -83,7 +88,7 @@ export async function POST(request: Request) {
         qty_change: validatedData.qty_change,
         unit_cost: validatedData.unit_cost || 0,
         notes: validatedData.notes || `Manual ${validatedData.movement_type}`,
-        created_by: (await supabaseServer.auth.getUser()).data.user?.id
+        created_by: user.id
       } as any) // Type assertion to bypass TypeScript issues
       .select(`
         *,
@@ -91,7 +96,10 @@ export async function POST(request: Request) {
       `)
       .single();
 
-    if (movementError) throw movementError;
+    if (movementError) {
+      console.error("Supabase Movement Error:", movementError);
+      throw new Error(movementError.message || "Failed to create stock movement");
+    }
 
     // Get updated stock after trigger
     const { data: updatedProduct, error: fetchError } = await supabaseServer
