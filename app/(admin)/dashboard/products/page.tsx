@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Plus, Package, Scan, Camera } from 'lucide-react'
 import { toast } from 'sonner'
+import { LoadingSpinner } from '@/components/ui/LoadingStates'
 import { Category, Product, ProductVariant, Unit, Supplier } from '@/types'
 import { FormVariant } from '@/components/admin/dashboard/products'
 import { useAdminBarcodeScanner } from '@/hooks/useAdminBarcodeScanner'
@@ -472,7 +473,11 @@ export default function ProductsPage() {
                     </div>
                 </div>
                 {/* Content */}
-                {filteredProducts.length === 0 ? (
+                {loading ? (
+                    <div className="flex justify-center py-12">
+                        <LoadingSpinner size="lg" />
+                    </div>
+                ) : filteredProducts.length === 0 ? (
                     <EmptyState
                         isCategoryFiltered={selectedCategory !== 'all' || searchTerm !== ''}
                         onAddProduct={() => setModal('add')}

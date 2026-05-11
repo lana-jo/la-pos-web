@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Edit2, Trash2, Building, Phone, Mail, MapPin } from 'lucide-react'
 import { toast } from 'sonner'
+import { LoadingSpinner } from '@/components/ui/LoadingStates'
 import { Supplier } from '@/types'
 import { fetchSuppliers, createSupplier, updateSupplier, deactivateSupplier } from '@/lib/suppliers/actions'
 
@@ -133,10 +134,7 @@ export default function SuppliersPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <Building className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-          <p>Loading pemasok...</p>
-        </div>
+        <LoadingSpinner size="lg" />
       </div>
     )
   }
