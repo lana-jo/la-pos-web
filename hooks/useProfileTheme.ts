@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/contexts/AuthContext'
 import { ThemePreference } from '@/types'
-import { updateThemePreference } from '@/lib/auth/user-actions'
+import { updateProfile } from '@/lib/profile/actions-new'
 
 export function useProfileTheme() {
   const { theme, setTheme, resolvedTheme } = useTheme()
@@ -51,7 +51,10 @@ export function useProfileTheme() {
 
       if (user) {
         try {
-          const result = await updateThemePreference(newTheme)
+          const result = await updateProfile(user.id, {
+            full_name: profile?.full_name || '',
+            theme_preference: newTheme
+          })
           console.log(`[THEME] Theme preference saved to database:`, {
             userId: user.id,
             theme: newTheme,
