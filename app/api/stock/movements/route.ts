@@ -16,7 +16,6 @@ const movementSchema = z.object({
 
 export async function GET() {
   try {
-    // First try simple query without complex joins
     const { data, error } = await supabaseServer
       .from("inventory_movements")
       .select(`
@@ -27,13 +26,19 @@ export async function GET() {
         reference_type,
         reference_id,
         qty_change,
+        qty_before,
+        qty_after,
         unit_cost,
         notes,
         created_at,
-        created_by
+        created_by,
+        products (
+          name,
+          barcode
+        )
       `)
       .order("created_at", { ascending: false })
-      .limit(100); // Limit to prevent timeout
+      .limit(100);
 
     if (error) {
       console.error("Supabase error:", error);
@@ -55,7 +60,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { user } = await getServerSession();
+    const session = await getServerSession();
+    const user = session?.user;
+
     if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -68,7 +75,7 @@ export async function POST(request: Request) {
       .from("products")
       .select("stock, cached_stock, track_stock, low_stock_threshold, name")
       .eq("id", validatedData.product_id)
-      .single() as { data: { name: string; stock: number; cached_stock: number; track_stock: boolean; low_stock_threshold: number } | null; error: any };
+      .single();
 
     if (productError || !product) {
       return NextResponse.json(
@@ -90,10 +97,10 @@ export async function POST(request: Request) {
         unit_cost: validatedData.unit_cost || 0,
         notes: validatedData.notes || `Manual ${validatedData.movement_type}`,
         created_by: user.id
-      } as any) // Type assertion to bypass TypeScript issues
+      })
       .select(`
         *,
-        products!inner(name, barcode)
+        products (name, barcode)
       `)
       .single();
 
@@ -102,19 +109,9 @@ export async function POST(request: Request) {
       throw new Error(movementError.message || "Failed to create stock movement");
     }
 
-    // Get updated stock after trigger
-    const { data: updatedProduct, error: fetchError } = await supabaseServer
-      .from("products")
-      .select("cached_stock, stock")
-      .eq("id", validatedData.product_id)
-      .single();
-
-    if (fetchError) throw fetchError;
-
     return NextResponse.json({
       success: true,
       movement,
-      new_stock: (updatedProduct as any)?.cached_stock || 0,
       product_name: product.name
     });
 
