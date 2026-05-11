@@ -448,6 +448,14 @@ export default function ProductsPage() {
                             </select>
                         </div>
                         <div className="flex gap-2">
+                            <Button variant="outline" onClick={exportToCSV} className="border-primary-brand text-primary-brand">
+                                <Download className="h-4 w-4 mr-2" />
+                                Export
+                            </Button>
+                            <Button variant="outline" className="border-primary-brand text-primary-brand">
+                                <Upload className="h-4 w-4 mr-2" />
+                                Import
+                            </Button>
                             <Button
                                 variant="outline"
                                 onClick={startScanning}

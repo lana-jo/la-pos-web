@@ -12,6 +12,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const updateProfileSchema = z.object({
   full_name: z.string().min(1, "Nama lengkap harus diisi").max(100, "Nama terlalu panjang"),
   theme_preference: z.enum(['light', 'dark', 'system']).optional(),
+  avatar_url: z.string().url().optional(),
 });
 
 export async function updateProfile(
@@ -28,6 +29,7 @@ export async function updateProfile(
       .update({
         full_name: validatedData.full_name,
         theme_preference: validatedData.theme_preference,
+        avatar_url: validatedData.avatar_url,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)

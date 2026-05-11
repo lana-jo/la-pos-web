@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 
 function ProfileButton({ isCollapsed }: { isCollapsed: boolean }) {
@@ -152,8 +153,9 @@ export function SidebarFooter({
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => {
+            <DropdownMenuPortal>
+                <DropdownMenuContent align="end" className="w-40 z-50 bg-popover border border-border shadow-lg">
+                  <DropdownMenuItem onClick={() => {
                 console.log(`[THEME] Sidebar footer theme button clicked:`, {
                   theme: 'light',
                   source: 'sidebar_footer',
@@ -177,8 +179,9 @@ export function SidebarFooter({
                 });
                 onToggleTheme('system');
               }}>System</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenu>
         )}
 
         {/* Logout button */}

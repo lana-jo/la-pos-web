@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { updateProfile } from "@/lib/profile/actions-new";
 import { createProfile } from "@/lib/auth/actions";
 import { ChangePasswordModal } from "@/components/ui/change-password-modal";
-import { User, Mail, Shield, Calendar, Edit2, Save, X, Lock, ArrowLeft, Moon, Sun, Monitor } from "lucide-react";
+import { User, Mail, Shield, Calendar, Edit2, Save, X, Lock, ArrowLeft, Moon, Sun, Monitor, Camera, Upload } from "lucide-react";
 import { useProfileTheme } from "@/hooks/useProfileTheme";
 
 export default function ProfilePage() {
@@ -32,6 +32,7 @@ export default function ProfilePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useEffect(() => {
     if (profile && user) {
@@ -275,6 +276,87 @@ export default function ProfilePage() {
     }
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!profile || !event.target.files || !event.target.files[0]) return;
+
+    const file = event.target.files[0];
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('File harus berupa gambar (JPG, PNG, GIF, WebP)');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran file maksimal 5MB');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    
+    try {
+      console.log(`[PROFILE] Avatar upload started:`, {
+        userId: profile.id,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        source: 'profile_page',
+        timestamp: new Date().toISOString()
+      });
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', profile.id);
+
+      // Upload to your API endpoint (you'll need to create this)
+      const response = await fetch('/api/upload-avatar', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update profile with new avatar URL
+        const updateResult = await updateProfile(profile.id, {
+          full_name: profile.full_name || '',
+          avatar_url: result.avatarUrl
+        });
+
+        if (updateResult.success) {
+          console.log(`[PROFILE] Avatar upload successful:`, {
+            userId: profile.id,
+            avatarUrl: result.avatarUrl,
+            source: 'profile_page',
+            timestamp: new Date().toISOString()
+          });
+          toast.success('Avatar berhasil diperbarui!');
+          window.location.reload();
+        } else {
+          throw new Error(updateResult.error || 'Failed to update profile');
+        }
+      } else {
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      console.error('[PROFILE] Avatar upload error:', {
+        userId: profile.id,
+        error,
+        source: 'profile_page',
+        timestamp: new Date().toISOString()
+      });
+      toast.error('Gagal mengupload avatar. Silakan coba lagi.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="page-background flex items-center justify-center">
@@ -354,12 +436,34 @@ export default function ProfilePage() {
           {/* Profile Card */}
           <Card className="md:col-span-1 card-background shadow-xl">
             <CardHeader className="text-center">
-              <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-background">
-                {/* <AvatarImage src={profile.avatar_url} /> */}
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xl dark:from-primary/30 dark:to-primary/20 dark:text-primary-foreground">
-                  {profile.full_name?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative inline-block">
+                <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-background">
+                  <AvatarImage src={profile.avatar_url || ""} alt={`${profile.full_name}'s avatar`} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600 text-xl dark:from-blue-900 dark:to-blue-800 dark:text-blue-200">
+                    {profile.full_name?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute bottom-2 right-0">
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    disabled={isUploadingAvatar}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="avatar-upload"
+                    className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-colors shadow-lg"
+                  >
+                    {isUploadingAvatar ? (
+                      <div className="animate-spin rounded-full h-3 w-3 border border-current border-t-transparent" />
+                    ) : (
+                      <Camera className="w-3 h-3" />
+                    )}
+                  </label>
+                </div>
+              </div>
               <CardTitle className="text-xl">
                 {profile.full_name || "User"}
               </CardTitle>
