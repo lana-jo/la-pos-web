@@ -34,7 +34,8 @@ export default function StockManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | any>(null);
+  const [selectedVariantId, setSelectedVariantId] = useState("");
   const [movementType, setMovementType] = useState<'in' | 'out'>('in');
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
@@ -101,10 +102,11 @@ export default function StockManagementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_id: selectedProduct.id,
+          product_variant_id: selectedVariantId || undefined,
           movement_type: movementTypeMap,
           qty_change: movementType === 'in' ? parseInt(quantity) : -parseInt(quantity),
           unit_cost: 0,
-          notes: notes || `Manual ${movementTypeMap}`
+          notes: notes || `Manual ${movementTypeMap}${selectedVariantId ? ' (Variant)' : ''}`
         })
       });
 
@@ -117,6 +119,7 @@ export default function StockManagementPage() {
       toast.success(`Stock ${movementType === 'in' ? 'added' : 'removed'} successfully`);
       setShowMovementModal(false);
       setSelectedProduct(null);
+      setSelectedVariantId("");
       setQuantity("");
       setNotes("");
       fetchProducts();
@@ -277,7 +280,10 @@ export default function StockManagementPage() {
         onClose={() => setShowMovementModal(false)}
         selectedProduct={selectedProduct}
         products={products}
-        onSelectProduct={(id) => setSelectedProduct(products.find(p => p.id === id) || null)}
+        onSelectProduct={(id) => {
+          setSelectedProduct(products.find(p => p.id === id) || null);
+          setSelectedVariantId("");
+        }}
         onSubmit={handleStockMovement}
         isSubmitting={isSubmitting}
         movementType={movementType}
@@ -286,6 +292,8 @@ export default function StockManagementPage() {
         onQuantityChange={setQuantity}
         notes={notes}
         onNotesChange={setNotes}
+        selectedVariantId={selectedVariantId}
+        onSelectVariant={setSelectedVariantId}
       />
 
       <Card className="pos-modal-content border-none shadow-xl">

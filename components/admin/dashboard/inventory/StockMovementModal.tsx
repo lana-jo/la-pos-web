@@ -18,13 +18,18 @@ interface StockMovementModalProps {
   onQuantityChange: (q: string) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  selectedVariantId: string;
+  onSelectVariant: (id: string) => void;
 }
 
 export function StockMovementModal({ 
   isOpen, onClose, selectedProduct, products, onSelectProduct, onSubmit, isSubmitting,
-  movementType, onMovementTypeChange, quantity, onQuantityChange, notes, onNotesChange
+  movementType, onMovementTypeChange, quantity, onQuantityChange, notes, onNotesChange,
+  selectedVariantId, onSelectVariant
 }: StockMovementModalProps) {
   if (!isOpen) return null;
+
+  const hasVariants = selectedProduct?.variants && selectedProduct.variants.length > 0;
   
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -45,12 +50,40 @@ export function StockMovementModal({
               <SelectContent className="pos-modal-content">
                 {products.map(product => (
                   <SelectItem key={product.id} value={product.id}>
-                    {product.name} (Current: {product.track_stock ? product.cached_stock : product.stock})
+                    {product.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {hasVariants && (
+            <div>
+              <Label className="pos-form-label">Variant</Label>
+              <Select 
+                value={selectedVariantId || "none"} 
+                onValueChange={(val) => onSelectVariant(val === "none" ? "" : val)}
+              >
+                <SelectTrigger className="pos-form-input">
+                  <SelectValue placeholder="Select variant" />
+                </SelectTrigger>
+                <SelectContent className="pos-modal-content">
+                  <SelectItem value="none">No Variant (Main Product)</SelectItem>
+                  {selectedProduct.variants.map((v: any) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.variant_name} (Current: {v.cached_stock})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {!hasVariants && selectedProduct && (
+            <div className="text-sm text-muted-foreground px-1">
+              Current Stock: {selectedProduct.track_stock ? selectedProduct.cached_stock : selectedProduct.stock}
+            </div>
+          )}
           
           <div>
             <Label className="pos-form-label">Movement Type</Label>
@@ -59,8 +92,8 @@ export function StockMovementModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="pos-modal-content">
-                <SelectItem value="in">Stock In</SelectItem>
-                <SelectItem value="out">Stock Out</SelectItem>
+                <SelectItem value="in">Stock In (Purchase/Return)</SelectItem>
+                <SelectItem value="out">Stock Out (Adjustment/Damage)</SelectItem>
               </SelectContent>
             </Select>
           </div>

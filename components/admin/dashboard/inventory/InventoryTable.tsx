@@ -40,13 +40,25 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
             </tr>
           ) : (
             products.map((product) => {
-              const status = getStockStatus(product);
+              const hasVariants = product.variants && product.variants.length > 0;
+              const totalStock = hasVariants 
+                ? product.variants.reduce((sum: number, v: any) => sum + (v.cached_stock || 0), 0)
+                : (product.track_stock ? product.cached_stock : product.stock) || 0;
+              
+              const status = getStockStatus({ ...product, cached_stock: totalStock });
               const StatusIcon = status.icon;
-              const currentStock = (product.track_stock ? product.cached_stock : product.stock) || 0;
+              
               return (
                 <tr key={product.id} className="hover:bg-background/50 transition-colors">
                   <td className="p-4">
-                    <div className="font-semibold text-foreground">{product.name}</div>
+                    <div className="font-semibold text-foreground">
+                      {product.name}
+                      {hasVariants && (
+                        <Badge variant="secondary" className="ml-2 text-[10px] h-4 px-1">
+                          {product.variants.length} Variants
+                        </Badge>
+                      )}
+                    </div>
                     {!product.track_stock && (
                       <div className="text-xs text-orange-500 font-medium">Tracking Disabled</div>
                     )}
@@ -54,7 +66,7 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                   <td className="p-4 text-muted-foreground">{product.category_name}</td>
                   <td className="p-4 font-mono text-muted-foreground">{product.barcode}</td>
                   <td className="p-4 text-center font-bold text-foreground">
-                    {currentStock}
+                    {totalStock}
                   </td>
                   <td className="p-4 text-right font-black text-primary-brand">
                     Rp {product.price.toLocaleString('id-ID')}
@@ -77,9 +89,9 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                       </Button>
                     </div>
                   </td>
-                  </tr>
-                  );
-                  })
+                </tr>
+              );
+            })
                   )}
                   </tbody>
                   </table>

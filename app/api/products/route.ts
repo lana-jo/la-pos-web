@@ -8,7 +8,8 @@ export async function GET() {
       .select(`
         *,
         categories(name),
-        suppliers(name)
+        suppliers(name),
+        product_variants (*)
       `)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
@@ -22,7 +23,8 @@ export async function GET() {
     const formattedData = (data || []).map((product: any) => ({
       ...product,
       category_name: product.categories?.name || 'Uncategorized',
-      supplier_name: product.suppliers?.name || '-'
+      supplier_name: product.suppliers?.name || '-',
+      variants: product.product_variants || []
     }));
 
     return NextResponse.json(formattedData);

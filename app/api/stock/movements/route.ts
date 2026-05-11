@@ -35,6 +35,9 @@ export async function GET() {
         products (
           name,
           barcode
+        ),
+        product_variants (
+          variant_name
         )
       `)
       .order("created_at", { ascending: false })

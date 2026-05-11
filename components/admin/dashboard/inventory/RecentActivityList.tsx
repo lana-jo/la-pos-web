@@ -26,7 +26,14 @@ export function RecentActivityList({ movements }: RecentActivityListProps) {
                 {new Date(m.created_at).toLocaleDateString('id-ID')}
               </td>
               <td className="p-4">
-                <div className="font-semibold text-foreground">{m.products?.name || 'Unknown'}</div>
+                <div className="font-semibold text-foreground">
+                  {m.products?.name || 'Unknown'}
+                  {m.product_variants?.variant_name && (
+                    <span className="ml-2 text-xs font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                      {m.product_variants.variant_name}
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs text-muted-foreground font-mono">{m.products?.barcode}</div>
               </td>
               <td className="p-4">
