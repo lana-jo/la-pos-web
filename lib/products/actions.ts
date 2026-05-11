@@ -339,22 +339,22 @@ export async function updateProductWithVariants(
 }
 
 export async function deleteProduct(productId: string) {
-  console.log('🗑️ [DEBUG] deleteProduct called', { productId })
+  console.log('🗑️ [DEBUG] deleteProduct (soft-delete) called', { productId })
   
   try {
-    console.log('📝 [DEBUG] Deleting product', { productId })
+    console.log('📝 [DEBUG] Soft-deleting product', { productId })
     
     const { error } = await supabaseUntyped
       .from('products')
-      .delete()
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', productId)
 
     if (error) {
-      console.error('❌ [ERROR] Product deletion failed', error)
+      console.error('❌ [ERROR] Product soft-delete failed', error)
       return { success: false, error: error.message }
     }
 
-    console.log('✅ [SUCCESS] Product deleted successfully')
+    console.log('✅ [SUCCESS] Product soft-deleted successfully')
     revalidatePath('/dashboard/products')
     return { success: true }
   } catch (error) {
