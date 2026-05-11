@@ -356,7 +356,7 @@ export default function ProfilePage() {
             <CardHeader className="text-center">
               <Avatar className="w-20 h-20 mx-auto mb-4 border-4 border-background">
                 {/* <AvatarImage src={profile.avatar_url} /> */}
-                <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xl dark:from-primary/30 dark:to-primary/20 dark:text-primary-foreground">
                   {profile.full_name?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
