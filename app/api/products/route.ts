@@ -7,8 +7,8 @@ export async function GET() {
       .from("products")
       .select(`
         *,
-        categories!inner(name, slug),
-        suppliers!inner(name)
+        categories(name),
+        suppliers(name)
       `)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
@@ -18,7 +18,14 @@ export async function GET() {
       throw error;
     }
 
-    return NextResponse.json(data || []);
+    // Map data to include category_name as a top-level property
+    const formattedData = (data || []).map((product: any) => ({
+      ...product,
+      category_name: product.categories?.name || 'Uncategorized',
+      supplier_name: product.suppliers?.name || '-'
+    }));
+
+    return NextResponse.json(formattedData);
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(

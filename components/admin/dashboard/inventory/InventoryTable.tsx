@@ -79,10 +79,10 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                   </td>
                   </tr>
                   );
-                  })}
+                  })
+                  )}
                   </tbody>
                   </table>
                   </div>
                   );
                   }
-}
