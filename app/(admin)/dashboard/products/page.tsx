@@ -70,6 +70,29 @@ export default function ProductsPage() {
     const [isScanning, setIsScanning] = useState(false)
     const [showCameraScanner, setShowCameraScanner] = useState(false)
 
+    // ── Export Logic ──────────────────────────────────────────────────────────
+    const exportToCSV = () => {
+        const headers = ["ID", "Name", "Barcode", "Price", "Stock", "Category"];
+        const csvContent = [
+            headers.join(","),
+            ...products.map(p => [
+                p.id, 
+                `"${p.name.replace(/"/g, '""')}"`, 
+                p.barcode, 
+                p.price, 
+                p.stock, 
+                p.categories?.name || ""
+            ].join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `products_${new Date().toISOString().slice(0, 10)}.csv`);
+        a.click();
+    };
+
     // ── Auth guard ─────────────────────────────────────────────────────────────
     const checkUserRole = useCallback(async () => {
         try {
