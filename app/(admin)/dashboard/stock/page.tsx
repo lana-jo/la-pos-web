@@ -72,6 +72,9 @@ export default function StockManagementPage() {
   };
 
   const filteredProducts = products.filter(product => {
+    // Pastikan hanya produk aktif yang ditampilkan
+    if (!product.is_active) return false;
+
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.barcode.includes(searchTerm);
     const matchesCategory = selectedCategory === "all" || product.category_name === selectedCategory;
@@ -84,7 +87,7 @@ export default function StockManagementPage() {
     else if (stockFilter === "out") matchesStock = currentStock === 0;
     else if (stockFilter === "available") matchesStock = currentStock > 0;
     
-    return matchesSearch && matchesCategory && matchesStock && product.is_active;
+    return matchesSearch && matchesCategory && matchesStock;
   });
 
   const handleStockMovement = async () => {
