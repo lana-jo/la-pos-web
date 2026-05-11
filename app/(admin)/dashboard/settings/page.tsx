@@ -232,7 +232,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen pos-terminal p-8">
+    <div className="min-h-screen page-background p-8">
       <SettingsHeader 
         handleExportSettings={handleExportSettings}
         handleImportSettings={handleImportSettings}
