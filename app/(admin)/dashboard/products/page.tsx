@@ -65,6 +65,7 @@ export default function ProductsPage() {
     const [selectedProduct, setSelectedProduct] = useState<ProductWithCategory | null>(null)
     const [formData, setFormData] = useState<FormData>(EMPTY_FORM)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
+    const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'inactive'>('active')
     const [searchTerm, setSearchTerm] = useState('')
     const [isScanning, setIsScanning] = useState(false)
     const [showCameraScanner, setShowCameraScanner] = useState(false)
@@ -430,12 +431,21 @@ export default function ProductsPage() {
                 <div className="flex flex-col gap-4 mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex items-center gap-4">
-                            <h2 className="text-3xl font-bold text-foreground">Products ({products.length})</h2>
+                            <h2 className="text-3xl font-bold text-foreground">Products ({filteredProducts.length})</h2>
                             <CategoryFilter
                                 categories={categories}
                                 selectedCategory={selectedCategory}
                                 onSelectCategory={setSelectedCategory}
                             />
+                            <select
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value as any)}
+                                className="bg-background border border-border rounded-lg px-3 py-2 text-sm"
+                            >
+                                <option value="all">Semua Status</option>
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Nonaktif</option>
+                            </select>
                         </div>
                         <div className="flex gap-2">
                             <Button
