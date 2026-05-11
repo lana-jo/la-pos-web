@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { toast } from 'sonner'
 import { Moon, Sun, Monitor } from 'lucide-react'
 import { useProfileTheme } from '@/hooks/useProfileTheme'
 import { Button } from '@/components/ui/button'
@@ -35,12 +36,8 @@ export function ThemeToggle() {
       <DropdownMenuContent align="end" className="pos-modal-content">
         <DropdownMenuItem
           onSelect={() => {
-            console.log(`[THEME] Theme toggle component button clicked:`, {
-              theme: 'light',
-              source: 'theme_toggle_component',
-              timestamp: new Date().toISOString()
-            });
             setTheme('light');
+            toast.success('Tema diubah ke Terang');
           }}
           className={theme === 'light' ? 'bg-primary/10 text-primary' : ''}
         >
@@ -49,12 +46,8 @@ export function ThemeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
-            console.log(`[THEME] Theme toggle component button clicked:`, {
-              theme: 'dark',
-              source: 'theme_toggle_component',
-              timestamp: new Date().toISOString()
-            });
             setTheme('dark');
+            toast.success('Tema diubah ke Gelap');
           }}
           className={theme === 'dark' ? 'bg-primary/10 text-primary' : ''}
         >
@@ -63,12 +56,8 @@ export function ThemeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={() => {
-            console.log(`[THEME] Theme toggle component button clicked:`, {
-              theme: 'system',
-              source: 'theme_toggle_component',
-              timestamp: new Date().toISOString()
-            });
             setTheme('system');
+            toast.success('Tema diubah ke Sistem');
           }}
           className={theme === 'system' ? 'bg-primary/10 text-primary' : ''}
         >
