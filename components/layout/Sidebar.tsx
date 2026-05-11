@@ -25,7 +25,7 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { theme, setTheme, mounted } = useProfileTheme();
-  const { profile, loading } = useAuth();
+  const { profile, loading, refreshProfile } = useAuth(); // Import refreshProfile
   const themeClasses = useSidebarTheme();
 
   const navigationItems = getNavigationByRole(userRole);
@@ -34,9 +34,11 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
     setIsMobileOpen((prev) => !prev);
   }, []);
 
-  const handleThemeChange = useCallback((newTheme: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = useCallback(async (newTheme: 'light' | 'dark' | 'system') => {
     setTheme(newTheme);
-  }, [setTheme]);
+    // Refresh auth context profile so the database change reflects immediately in ProfilePage
+    await refreshProfile(); 
+  }, [setTheme, refreshProfile]);
 
   const handleLogout = useCallback(async () => {
     if (isLoggingOut) return;
