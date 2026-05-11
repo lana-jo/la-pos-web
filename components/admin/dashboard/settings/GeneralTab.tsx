@@ -18,7 +18,7 @@ interface GeneralTabProps {
 export function GeneralTab({ formData, handleInputChange, handleSave, isLoading, isSaving }: GeneralTabProps) {
   return (
     <div className="space-y-6">
-      <Card className="pos-modal-content border-none shadow-xl">
+      <Card className="pos-modal-content border-none shadow-xl card-hover">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Store className="h-5 w-5" />
@@ -31,7 +31,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="store-name">Store Name</Label>
+              <Label htmlFor="store-name" className="pos-form-label">Store Name</Label>
               <Input 
                 id="store-name" 
                 value={formData.general?.store_name || ''}
@@ -42,7 +42,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="store-phone">Phone</Label>
+              <Label htmlFor="store-phone" className="pos-form-label">Phone</Label>
               <Input 
                 id="store-phone" 
                 value={formData.general?.store_phone || ''}
@@ -53,7 +53,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="store-email">Email</Label>
+              <Label htmlFor="store-email" className="pos-form-label">Email</Label>
               <Input 
                 id="store-email" 
                 value={formData.general?.store_email || ''}
@@ -65,7 +65,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="store-address">Address</Label>
+              <Label htmlFor="store-address" className="pos-form-label">Address</Label>
               <Input 
                 id="store-address" 
                 value={formData.general?.store_address || ''}
@@ -88,7 +88,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
         </CardContent>
       </Card>
 
-      <Card className="pos-modal-content border-none shadow-xl">
+      <Card className="pos-modal-content border-none shadow-xl card-hover">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
@@ -101,7 +101,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="language">Language</Label>
+              <Label htmlFor="language" className="pos-form-label">Language</Label>
               <ReactSelect
                 value={{ value: formData.general?.language || 'id', label: formData.general?.language === 'en' ? 'English' : 'Bahasa Indonesia' }}
                 onChange={(option) => handleInputChange('general', 'language', option?.value)}
@@ -116,7 +116,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+              <Label htmlFor="currency" className="pos-form-label">Currency</Label>
               <ReactSelect
                 value={{ value: formData.general?.currency || 'IDR', label: formData.general?.currency === 'USD' ? 'US Dollar (USD)' : 'Indonesian Rupiah (IDR)' }}
                 onChange={(option) => handleInputChange('general', 'currency', option?.value)}
@@ -131,7 +131,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timezone">Timezone</Label>
+              <Label htmlFor="timezone" className="pos-form-label">Timezone</Label>
               <ReactSelect
                 value={{ value: formData.general?.timezone || 'Asia/Jakarta', label: formData.general?.timezone === 'Asia/Makassar' ? 'Makassar (WITA)' : formData.general?.timezone === 'Asia/Jayapura' ? 'Jayapura (WIT)' : 'Jakarta (WIB)' }}
                 onChange={(option) => handleInputChange('general', 'timezone', option?.value)}
