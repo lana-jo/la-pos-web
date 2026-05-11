@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarProvider";
 import { logout } from "@/lib/auth/actions";
@@ -38,6 +39,7 @@ export function Sidebar({ className, userRole = "admin" }: SidebarProps) {
     setTheme(newTheme);
     // Refresh auth context profile so the database change reflects immediately in ProfilePage
     await refreshProfile(); 
+    toast.success('Tema berhasil diperbarui');
   }, [setTheme, refreshProfile]);
 
   const handleLogout = useCallback(async () => {
