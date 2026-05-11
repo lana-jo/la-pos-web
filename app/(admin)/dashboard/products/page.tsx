@@ -264,8 +264,8 @@ export default function ProductsPage() {
             is_default: v.is_default,
         }))
 
-        const minStock = parseInt(formData.min_stock, 10) || null
-        const maxStock = parseInt(formData.max_stock, 10) || null
+        const minStock = parseInt(formData.min_stock, 10) || 0
+        const maxStock = parseInt(formData.max_stock, 10) || 0
         const lowStockThreshold = parseInt(formData.low_stock_threshold, 10) || 5
 
         return {
