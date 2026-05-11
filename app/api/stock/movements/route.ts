@@ -77,11 +77,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: { user } } = await supabaseServer.auth.getUser();
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     // Insert into inventory_movements table (trigger will handle stock updates)
     const { data: movement, error: movementError } = await supabaseServer
       .from("inventory_movements")
