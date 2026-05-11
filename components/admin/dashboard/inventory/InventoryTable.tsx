@@ -66,21 +66,23 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                     </Badge>
                   </td>
                   <td className="p-4 text-center">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="border-primary-brand text-primary-brand hover:bg-primary-brand/10"
-                      onClick={() => onAdjust(product)}
-                    >
-                      Update
-                    </Button>
+                    <div className="flex justify-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-primary-brand hover:bg-primary-brand/10"
+                        onClick={() => onAdjust(product)}
+                      >
+                        Update
+                      </Button>
+                    </div>
                   </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+                  </tr>
+                  );
+                  })}
+                  </tbody>
+                  </table>
+                  </div>
+                  );
+                  }
 }

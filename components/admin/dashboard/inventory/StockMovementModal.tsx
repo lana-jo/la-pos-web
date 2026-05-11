@@ -27,22 +27,22 @@ export function StockMovementModal({
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Update Stock</CardTitle>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md pos-modal-content border-none shadow-2xl p-6 rounded-2xl">
+        <CardHeader className="px-0 pt-0">
+          <CardTitle className="text-2xl font-bold text-foreground">Update Stock</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 px-0 pb-0">
           <div>
-            <Label>Product</Label>
+            <Label className="pos-form-label">Product</Label>
             <Select 
               value={selectedProduct?.id || ""} 
               onValueChange={onSelectProduct}
             >
-              <SelectTrigger>
+              <SelectTrigger className="pos-form-input">
                 <SelectValue placeholder="Select product" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="pos-modal-content">
                 {products.map(product => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.name} (Current: {product.track_stock ? product.cached_stock : product.stock})
@@ -53,12 +53,12 @@ export function StockMovementModal({
           </div>
           
           <div>
-            <Label>Movement Type</Label>
+            <Label className="pos-form-label">Movement Type</Label>
             <Select value={movementType} onValueChange={(value: 'in' | 'out') => onMovementTypeChange(value)}>
-              <SelectTrigger>
+              <SelectTrigger className="pos-form-input">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="pos-modal-content">
                 <SelectItem value="in">Stock In</SelectItem>
                 <SelectItem value="out">Stock Out</SelectItem>
               </SelectContent>
@@ -66,30 +66,32 @@ export function StockMovementModal({
           </div>
           
           <div>
-            <Label>Quantity</Label>
+            <Label className="pos-form-label">Quantity</Label>
             <Input
               type="number"
               placeholder="Enter quantity"
               value={quantity}
               onChange={(e) => onQuantityChange(e.target.value)}
               min="1"
+              className="pos-form-input"
             />
           </div>
           
           <div>
-            <Label>Notes (Optional)</Label>
+            <Label className="pos-form-label">Notes (Optional)</Label>
             <Input
               placeholder="Reason for stock movement"
               value={notes}
               onChange={(e) => onNotesChange(e.target.value)}
+              className="pos-form-input"
             />
           </div>
           
-          <div className="flex gap-2">
-            <Button onClick={onSubmit} className="flex-1" disabled={isSubmitting}>
+          <div className="flex gap-2 pt-4">
+            <Button onClick={onSubmit} className="flex-1 pos-button-primary h-12 shadow-lg" disabled={isSubmitting}>
               {isSubmitting ? 'Processing...' : (movementType === 'in' ? 'Add Stock' : 'Remove Stock')}
             </Button>
-            <Button variant="outline" onClick={onClose} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1 h-12 border-border">
               Cancel
             </Button>
           </div>
