@@ -42,7 +42,7 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
             products.map((product) => {
               const status = getStockStatus(product);
               const StatusIcon = status.icon;
-              const currentStock = product.track_stock ? product.cached_stock : product.stock;
+              const currentStock = (product.track_stock ? product.cached_stock : product.stock) || 0;
               return (
                 <tr key={product.id} className="hover:bg-background/50 transition-colors">
                   <td className="p-4">
