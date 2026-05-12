@@ -462,6 +462,16 @@ export default function ProductsPage() {
                         <h2 className="text-3xl font-bold text-foreground">Produk ({filteredProducts.length})</h2>
 
                         <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <select
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value as any)}
+                                className="h-10 px-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-brand"
+                            >
+                                <option value="all">Semua Status</option>
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Nonaktif</option>
+                            </select>
+
                             {/* Utility Actions */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -494,7 +504,7 @@ export default function ProductsPage() {
                         </div>
                     </div>
 
-                    {/* Search Input & Filter Pill Row */}
+                    {/* Search Input & Category Filter Pill Row */}
                     <div className="space-y-4">
                         <div className="w-full">
                             <input
@@ -511,15 +521,6 @@ export default function ProductsPage() {
                                 selectedCategory={selectedCategory}
                                 onSelectCategory={setSelectedCategory}
                             />
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="h-9 px-3 rounded-full border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
-                            >
-                                <option value="all">Semua Status</option>
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Nonaktif</option>
-                            </select>
                         </div>
                     </div>
                 </div>                {/* Content */}
