@@ -465,7 +465,7 @@ export default function ProductsPage() {
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="h-10 px-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-brand"
+                                className="h-9 px-4 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm"
                             >
                                 <option value="all">Semua Status</option>
                                 <option value="active">Aktif</option>
