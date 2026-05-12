@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit2, Trash2, Package, Barcode } from 'lucide-react'
+import { Plus, Edit2, Trash2, Package, RefreshCw,  Barcode } from 'lucide-react'
+import { generateBarcode } from '@/lib/pos/utils'
 import { toast } from 'sonner'
 import { ProductVariant } from '@/types'
 import {
@@ -346,14 +347,30 @@ export default function ProductVariantsPage() {
 
               <div>
                 <Label htmlFor="barcode" className="pos-form-label">Barcode</Label>
-                <Input
-                  id="barcode"
-                  value={formData.barcode}
-                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                  placeholder="Barcode khusus untuk varian ini"
-                  disabled={isSubmitting}
-                  className="pos-form-input"
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="barcode"
+                    value={formData.barcode}
+                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                    placeholder="Barcode khusus untuk varian ini"
+                    disabled={isSubmitting}
+                    className="pos-form-input"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const newBarcode = generateBarcode()
+                      setFormData({ ...formData, barcode: newBarcode })
+                      toast.success(`Barcode varian digenerate: ${newBarcode}`)
+                    }}
+                    disabled={isSubmitting}
+                    title="Generate Barcode"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

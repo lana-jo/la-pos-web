@@ -16,9 +16,9 @@ export class PrintManager {
         return PrintManager.instance;
     }
 
-    async printReceipt(
-        transaction: Transaction & { items: TransactionItem[] },
-        cashierName: string,
+    async printBarcode(
+        barcode: string,
+        productName: string,
         options: PrintOptions = {},
     ): Promise<boolean> {
         if (this.isPrinting) {
@@ -29,26 +29,84 @@ export class PrintManager {
         this.isPrinting = true;
 
         try {
-            // Method 1: Try ESC/POS direct printing (USB thermal)
-            if (options.silent && options.printerName) {
-                const success = await this.printESCPOS(
-                    transaction,
-                    cashierName,
-                    options.printerName,
-                );
-                if (success) return true;
-            }
-
-            // Method 2: Browser print API (universal compatibility)
-            await this.printBrowser(transaction, cashierName, options.silent);
-
+            // Using browser print API for barcode labels as it's more flexible
+            await this.printBarcodeBrowser(barcode, productName);
             return true;
         } catch (error) {
-            console.error("Print failed:", error);
+            console.error("Print barcode failed:", error);
             return false;
         } finally {
             this.isPrinting = false;
         }
+    }
+
+    private async printBarcodeBrowser(
+        barcode: string,
+        productName: string,
+    ): Promise<void> {
+        console.log("[printBarcodeBrowser] Starting print...");
+
+        const printWindow = window.open("", "_blank", "width=400,height=300");
+        if (!printWindow) {
+            throw new Error("Failed to open print window");
+        }
+
+        const barcodeHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 0;
+                        padding: 10px;
+                        font-family: sans-serif;
+                    }
+                    .label {
+                        width: 50mm;
+                        text-align: center;
+                        border: 1px solid #eee;
+                        padding: 5px;
+                    }
+                    .product-name {
+                        font-size: 12px;
+                        margin-bottom: 5px;
+                        word-wrap: break-word;
+                    }
+                    .barcode {
+                        font-size: 24px;
+                        font-family: 'Libre Barcode 128', cursive;
+                    }
+                    .barcode-text {
+                        font-size: 10px;
+                        letter-spacing: 2px;
+                    }
+                    @media print {
+                        @page { size: 50mm 30mm; margin: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="label">
+                    <div class="product-name">${productName}</div>
+                    <div class="barcode">*${barcode}*</div>
+                    <div class="barcode-text">${barcode}</div>
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.close();
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.write(barcodeHTML);
+        printWindow.document.close();
     }
 
     private async printBrowser(

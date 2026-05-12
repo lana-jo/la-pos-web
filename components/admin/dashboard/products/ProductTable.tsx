@@ -3,9 +3,11 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Package, Edit, Trash2, Layers, ChevronDown, ChevronUp, Barcode } from 'lucide-react'
+import { Package, Edit, Trash2, Layers, ChevronDown, ChevronUp, Barcode, Printer } from 'lucide-react'
 import { Category, Product } from '@/types'
 import { useState } from 'react'
+import { PrintManager } from '@/lib/printer/printManager'
+import { toast } from 'sonner'
 
 type ProductWithCategory = Product & {
     categories: Pick<Category, 'name'> | null
@@ -54,16 +56,17 @@ export function ProductTable({
                         <TableHead className="w-16 font-semibold">Image</TableHead>
                         <TableHead className="w-64 font-semibold">Product Name</TableHead>
                         <TableHead className="w-32 font-semibold">Barcode</TableHead>
-                        <TableHead className="w-40 font-semibold">Category</TableHead>
+                        <TableHead className="w-40 font-semibold hidden lg:table-cell">Category</TableHead>
                         <TableHead className="w-32 text-right font-semibold">Price (Base)</TableHead>
-                        <TableHead className="w-28 text-center font-semibold">Stock (Base)</TableHead>
-                        <TableHead className="w-28 text-center font-semibold">Status</TableHead>
+                        <TableHead className="w-28 text-center font-semibold">Stock</TableHead>
+                        <TableHead className="w-28 text-center font-semibold hidden md:table-cell">Status</TableHead>
                         <TableHead className="w-24 text-center font-semibold">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
+                            {/* ... existing Image cell ... */}
                             <TableCell className="w-16">
                                 <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center border">
                                     {product.image_url ? (
@@ -77,12 +80,12 @@ export function ProductTable({
                                     )}
                                 </div>
                             </TableCell>
+                            {/* ... existing Name cell ... */}
                             <TableCell className="w-64 font-medium">
                                 <div className="max-w-none">
                                     <p className="truncate" title={product.name}>
                                         {product.name}
                                     </p>
-                                    {/* Variant count indicator with expand button */}
                                     {product.variants && product.variants.length > 0 && (
                                         <div className="mt-1 flex items-center gap-1">
                                             <Badge 
@@ -91,7 +94,7 @@ export function ProductTable({
                                                 onClick={() => toggleRow(product.id)}
                                             >
                                                 <Layers className="h-3 w-3" />
-                                                {product.variants.length} satuan
+                                                {product.variants.length}
                                                 {expandedRows.has(product.id) ? (
                                                     <ChevronUp className="h-3 w-3" />
                                                 ) : (
@@ -107,7 +110,7 @@ export function ProductTable({
                                     {product.barcode}
                                 </code>
                             </TableCell>
-                            <TableCell className="w-40">
+                            <TableCell className="w-40 hidden lg:table-cell">
                                 {product.categories?.name || (
                                     <Badge variant="secondary">Uncategorized</Badge>
                                 )}
@@ -115,46 +118,20 @@ export function ProductTable({
                             <TableCell className="w-32 text-right font-medium text-primary-brand">
                                 {product.variants && product.variants.length > 0 ? (
                                     <div className="space-y-1">
-                                        {/* Show default variant price or first variant */}
                                         <p className="font-semibold">
                                             {formatCurrency(product.price)}
-                                            <span className="text-xs text-muted-foreground font-normal ml-1">
-                                                (base)
-                                            </span>
                                         </p>
-                                        {/* Show variant price range */}
-                                        <div className="text-xs text-muted-foreground">
-                                            {(() => {
-                                                const prices = product.variants?.map(v => v.price) || [product.price]
-                                                const minPrice = Math.min(...prices)
-                                                const maxPrice = Math.max(...prices)
-                                                return minPrice === maxPrice 
-                                                    ? formatCurrency(minPrice)
-                                                    : `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`
-                                            })()}
-                                        </div>
                                     </div>
                                 ) : (
                                     formatCurrency(product.price)
                                 )}
                             </TableCell>
                             <TableCell className="w-28 text-center">
-                                <div className="space-y-1">
-                                    <Badge 
-                                        variant={product.stock > 10 ? 'default' : 'secondary'}
-                                        className={product.stock > 10 ? 'status-active' : ''}
-                                    >
-                                        {product.stock > 10 ? 'In Stock' : `${product.stock}`}
-                                    </Badge>
-                                    {/* Variant stock summary - variants don't have separate stock */}
-                                    {product.variants && product.variants.length > 0 && (
-                                        <div className="text-xs text-muted-foreground">
-                                            {product.variants.length} variants available
-                                        </div>
-                                    )}
-                                </div>
+                                <Badge variant={product.stock > 10 ? 'default' : 'secondary'}>
+                                    {product.stock}
+                                </Badge>
                             </TableCell>
-                            <TableCell className="w-28 text-center">
+                            <TableCell className="w-28 text-center hidden md:table-cell">
                                 <Badge 
                                     variant={product.is_active ? 'default' : 'secondary'}
                                     className={product.is_active ? 'status-active' : 'status-inactive'}
@@ -212,6 +189,22 @@ export function ProductTable({
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                    title="Cetak Barcode"
+                                                    onClick={async () => {
+                                                        if (variant.barcode) {
+                                                            const printer = PrintManager.getInstance()
+                                                            await printer.printBarcode(variant.barcode, `${product.name} (${variant.variant_name})`)
+                                                        } else {
+                                                            toast.error("Barcode tidak tersedia")
+                                                        }
+                                                    }}
+                                                >
+                                                    <Printer className="h-4 w-4" />
+                                                </Button>
                                                 <div className="text-right">
                                                     <p className="font-semibold text-primary-brand">
                                                         {formatCurrency(variant.price)}

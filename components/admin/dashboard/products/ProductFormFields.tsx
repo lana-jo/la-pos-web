@@ -9,7 +9,8 @@ import { Category, Supplier, Unit } from '@/types'
 import { useAdminBarcodeScanner } from '@/hooks/useAdminBarcodeScanner'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Plus, Trash2, Check, Package } from 'lucide-react'
+import { Plus, Trash2, Check, Package, RefreshCw } from 'lucide-react'
+import { generateBarcode } from '@/lib/pos/utils'
 
 export type FormVariant = {
     id?: string  // undefined for new variants
@@ -125,15 +126,31 @@ export function ProductFormFields({
                         📷 Scanner Aktif
                     </span>
                 </Label>
-                <Input
-                    id={field('barcode')}
-                    data-scanner-input
-                    value={formData.barcode}
-                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder="Scan barcode atau ketik manual"
-                    disabled={isSubmitting}
-                    className="border-green-200 focus:border-green-400"
-                />
+                <div className="flex gap-2">
+                    <Input
+                        id={field('barcode')}
+                        data-scanner-input
+                        value={formData.barcode}
+                        onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                        placeholder="Scan barcode atau ketik manual"
+                        disabled={isSubmitting}
+                        className="border-green-200 focus:border-green-400"
+                    />
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                            const newBarcode = generateBarcode()
+                            setFormData({ ...formData, barcode: newBarcode })
+                            toast.success(`Barcode digenerate: ${newBarcode}`)
+                        }}
+                        disabled={isSubmitting}
+                        title="Generate Barcode"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                    </Button>
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                     Gunakan scanner USB atau ketik barcode secara manual
                 </p>
@@ -355,7 +372,7 @@ export function ProductFormFields({
 
                 {formData.variants.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic">
-                        Belum ada varian. Klik "Tambah Satuan" untuk menambahkan (contoh: Eceran, Grosir, Box, Dus)
+                        Belum ada varian. Klik &quot;Tambah Satuan&quot; untuk menambahkan (contoh: Eceran, Grosir, Box, Dus)
                     </p>
                 ) : (
                     <div className="space-y-3">
@@ -484,17 +501,36 @@ export function ProductFormFields({
                                     </div>
                                     <div className="col-span-2">
                                         <Label className="text-xs">Barcode (Opsional)</Label>
-                                        <Input
-                                            value={variant.barcode}
-                                            onChange={(e) => {
-                                                const updated = [...formData.variants]
-                                                updated[index].barcode = e.target.value
-                                                setFormData({ ...formData, variants: updated })
-                                            }}
-                                            placeholder="Barcode khusus untuk varian ini"
-                                            disabled={isSubmitting}
-                                            className="h-8"
-                                        />
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={variant.barcode}
+                                                onChange={(e) => {
+                                                    const updated = [...formData.variants]
+                                                    updated[index].barcode = e.target.value
+                                                    setFormData({ ...formData, variants: updated })
+                                                }}
+                                                placeholder="Barcode khusus untuk varian ini"
+                                                disabled={isSubmitting}
+                                                className="h-8"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={() => {
+                                                    const newBarcode = generateBarcode()
+                                                    const updated = [...formData.variants]
+                                                    updated[index].barcode = newBarcode
+                                                    setFormData({ ...formData, variants: updated })
+                                                    toast.success(`Barcode varian digenerate: ${newBarcode}`)
+                                                }}
+                                                disabled={isSubmitting}
+                                                className="h-8 w-8"
+                                                title="Generate Barcode"
+                                            >
+                                                <RefreshCw className="h-3 w-3" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

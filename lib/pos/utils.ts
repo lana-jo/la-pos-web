@@ -105,3 +105,11 @@ export function debounce<T extends (...args: any[]) => void>(
     timeout = setTimeout(() => func(...args), wait);
   };
 }
+
+export function generateBarcode(): string {
+  // Generate a 13-digit barcode for internal use
+  // Prefix '200' is often used for internal products
+  const prefix = '200';
+  const randomPart = Math.floor(Math.random() * 10000000000).toString().padStart(10, '0');
+  return prefix + randomPart;
+}

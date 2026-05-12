@@ -4,7 +4,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Plus, Package, Scan, Camera, Download, Upload } from 'lucide-react'
+import { Plus, Package, Scan, Camera, Download, Upload, MoreVertical } from 'lucide-react'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/ui/LoadingStates'
 import { Category, Product, ProductVariant, Unit, Supplier } from '@/types'
@@ -463,42 +469,45 @@ export default function ProductsPage() {
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="bg-background border border-border rounded-lg px-3 py-2 text-sm"
+                                className="pos-form-input"
                             >
                                 <option value="all">Semua Status</option>
                                 <option value="active">Aktif</option>
                                 <option value="inactive">Nonaktif</option>
                             </select>
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={exportToCSV} className="border-primary-brand text-primary-brand">
-                                <Download className="h-4 w-4 mr-2" />
-                                Export
-                            </Button>
-                            <Button variant="outline" className="border-primary-brand text-primary-brand">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Import
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={startScanning}
-                                disabled={isScanning}
-                                className="border-primary-brand text-primary-brand"
-                            >
-                                <Scan className="h-4 w-4 mr-2" />
-                                {isScanning ? 'Scanning...' : 'Scan USB'}
-                            </Button>
-                            <Button
-                                variant="outline"
-                                onClick={startCameraScanning}
-                                className="border-primary-brand text-primary-brand"
-                            >
-                                <Camera className="h-4 w-4 mr-2" />
-                                Scan Kamera
-                            </Button>
-                            <Button onClick={() => setModal('add')} className="pos-button-primary shadow-lg">
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Product
+                        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full lg:w-auto">
+                            {/* Utility Actions Group */}
+                            <div className="flex items-center gap-2">
+                                <div className="flex gap-1">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="border-primary-brand text-primary-brand h-9 px-3">
+                                                <MoreVertical className="h-4 w-4 mr-1" />
+                                                Tools
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={exportToCSV}>
+                                                <Download className="h-4 w-4 mr-2" /> Export CSV
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem>
+                                                <Upload className="h-4 w-4 mr-2" /> Import Data
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={startScanning}>
+                                                <Scan className="h-4 w-4 mr-2" /> {isScanning ? 'Scanning...' : 'Scan USB'}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={startCameraScanning}>
+                                                <Camera className="h-4 w-4 mr-2" /> Scan Kamera
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </div>
+                            {/* Primary Action */}
+                            <Button onClick={() => setModal('add')} className="pos-button-primary shadow-sm h-9 px-4">
+                                <Plus className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Add Product</span>
                             </Button>
                         </div>
                     </div>
