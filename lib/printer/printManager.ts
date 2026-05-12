@@ -47,6 +47,7 @@ export class PrintManager {
     async printBarcode(
         barcode: string,
         productName: string,
+        barcodeType: 'ean13' | 'code128' = 'code128',
         options: PrintOptions = {},
     ): Promise<boolean> {
         if (this.isPrinting) {
@@ -58,7 +59,7 @@ export class PrintManager {
 
         try {
             // Using browser print API for barcode labels as it's more flexible
-            await this.printBarcodeBrowser(barcode, productName);
+            await this.printBarcodeBrowser(barcode, productName, barcodeType);
             return true;
         } catch (error) {
             console.error("Print barcode failed:", error);
@@ -71,8 +72,9 @@ export class PrintManager {
     private async printBarcodeBrowser(
         barcode: string,
         productName: string,
+        barcodeType: 'ean13' | 'code128',
     ): Promise<void> {
-        console.log("[printBarcodeBrowser] Starting print...");
+        console.log(`[printBarcodeBrowser] Printing ${barcodeType} barcode...`);
 
         const printWindow = window.open("", "_blank", "width=400,height=300");
         if (!printWindow) {
@@ -88,39 +90,45 @@ export class PrintManager {
                         display: flex;
                         flex-direction: column;
                         align-items: center;
-                        justify-content: center;
+                        justify-content: flex-start;
                         margin: 0;
-                        padding: 10px;
-                        font-family: sans-serif;
+                        padding: 5mm;
+                        font-family: Arial, sans-serif;
                     }
                     .label {
                         width: 50mm;
                         text-align: center;
-                        border: 1px solid #eee;
-                        padding: 5px;
+                        border: 1px solid #ccc;
+                        padding: 10px;
+                        border-radius: 8px;
                     }
                     .product-name {
-                        font-size: 12px;
-                        margin-bottom: 5px;
-                        word-wrap: break-word;
+                        font-size: 14px;
+                        font-weight: bold;
+                        margin-bottom: 8px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
                     .barcode {
-                        font-size: 24px;
-                        font-family: 'Libre Barcode 128', cursive;
+                        font-size: ${barcodeType === 'ean13' ? '28px' : '24px'};
+                        margin: 10px 0;
+                        font-family: '${barcodeType === 'ean13' ? 'Libre Barcode EAN13' : 'Code128'}', cursive;
                     }
                     .barcode-text {
-                        font-size: 10px;
+                        font-size: 12px;
+                        font-weight: bold;
                         letter-spacing: 2px;
                     }
                     @media print {
                         @page { size: 50mm 30mm; margin: 0; }
+                        .label { border: none; }
                     }
                 </style>
             </head>
             <body>
                 <div class="label">
                     <div class="product-name">${productName}</div>
-                    <div class="barcode">*${barcode}*</div>
+                    <div class="barcode">${barcode}</div>
                     <div class="barcode-text">${barcode}</div>
                 </div>
                 <script>
