@@ -454,9 +454,10 @@ export default function ProductsPage() {
 
     const filteredProducts = products.filter(p => {
         const matchesCategory = selectedCategory === 'all' || p.category_id === selectedCategory
+        const matchesStatus = selectedStatus === 'all' || (selectedStatus === 'active' ? p.is_active : !p.is_active)
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                              (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
-        return matchesCategory && matchesSearch
+        return matchesCategory && matchesStatus && matchesSearch
     })
 
     // ── Render ─────────────────────────────────────────────────────────────────
