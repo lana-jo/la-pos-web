@@ -19,13 +19,6 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
-import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/ui/LoadingStates'
 import { Category, Product, ProductVariant, Unit, Supplier } from '@/types'
 import { FormVariant } from '@/components/admin/dashboard/products'
