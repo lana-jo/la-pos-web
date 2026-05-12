@@ -366,7 +366,7 @@ export default function ProductVariantsPage() {
                       toast.success(`Barcode varian digenerate: ${newBarcode}`)
                     }}
                     disabled={isSubmitting}
-                    title="Generate Barcode"
+                    title="Buat Barcode"
                   >
                     <RefreshCw className="h-4 w-4" />
                   </Button>
