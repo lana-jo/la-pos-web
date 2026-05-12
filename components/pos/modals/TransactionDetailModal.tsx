@@ -62,20 +62,20 @@ export function TransactionDetailModal({
     setIsPrinting(true);
     try {
       const printManager = PrintManager.getInstance();
-      const cashierName = transaction.cashier?.full_name || 'Unknown';
-      const success = await printManager.printReceipt(
+      const cashierName = transaction.cashier?.full_name || 'Tidak diketahui';
+      const success = await printManager.printTransaction(
         transaction as Transaction & { items: TransactionItem[] },
         cashierName,
         { silent: false }
       );
       if (success) {
-        toast.success('Receipt printed successfully');
+        toast.success('Struk berhasil dicetak');
       } else {
-        toast.error('Failed to print receipt');
+        toast.error('Gagal mencetak struk');
       }
     } catch (error) {
       console.error('Print error:', error);
-      toast.error('Failed to print receipt');
+      toast.error('Gagal mencetak struk');
     } finally {
       setIsPrinting(false);
     }
@@ -89,7 +89,7 @@ export function TransactionDetailModal({
         <DialogHeader className="pos-modal-header">
           <DialogTitle className="pos-modal-title flex items-center gap-2">
             <Receipt className="h-5 w-5" />
-            Transaction #{transaction.id.slice(-6)}
+            Transaksi #{transaction.id.slice(-6)}
           </DialogTitle>
         </DialogHeader>
 
@@ -98,14 +98,14 @@ export function TransactionDetailModal({
             {/* Header Info */}
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant={getPaymentStatusColor(transaction.payment_status)}>
-                {transaction.payment_status}
+                {transaction.payment_status === 'paid' ? 'Lunas' : transaction.payment_status === 'pending' ? 'Tertunda' : transaction.payment_status}
               </Badge>
               <Badge variant="outline" className="flex items-center gap-1">
                 <span>{getPaymentMethodIcon(transaction.payment_method)}</span>
-                {transaction.payment_method}
+                {transaction.payment_method === 'cash' ? 'Tunai' : transaction.payment_method === 'qris' ? 'QRIS' : transaction.payment_method}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {transaction.items?.length || 0} items
+                {transaction.items?.length || 0} item
               </span>
             </div>
 
@@ -125,13 +125,13 @@ export function TransactionDetailModal({
               {transaction.cashier && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <User className="h-4 w-4" />
-                  <span>{transaction.cashier.full_name || 'Unknown'}</span>
+                  <span>{transaction.cashier.full_name || 'Tidak diketahui'}</span>
                 </div>
               )}
               {transaction.customer && (
                 <div className="flex items-center gap-2 text-muted-foreground col-span-2">
                   <CreditCard className="h-4 w-4" />
-                  <span>Customer: {transaction.customer.name}</span>
+                  <span>Pelanggan: {transaction.customer.name}</span>
                 </div>
               )}
             </div>
@@ -142,7 +142,7 @@ export function TransactionDetailModal({
             <div>
               <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
                 <Package className="h-4 w-4" />
-                Items
+                Item
               </h3>
               {transaction.items && transaction.items.length > 0 ? (
                 <div className="space-y-2">
@@ -169,7 +169,7 @@ export function TransactionDetailModal({
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No item details available</p>
+                <p className="text-sm text-muted-foreground">Detail item tidak tersedia</p>
               )}
             </div>
 
@@ -183,13 +183,13 @@ export function TransactionDetailModal({
               </div>
               {transaction.discount_amount > 0 && (
                 <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
+                  <span>Diskon</span>
                   <span>-{formatCurrency(transaction.discount_amount)}</span>
                 </div>
               )}
               {transaction.tax_amount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax</span>
+                  <span className="text-muted-foreground">Pajak</span>
                   <span>{formatCurrency(transaction.tax_amount)}</span>
                 </div>
               )}
@@ -200,12 +200,12 @@ export function TransactionDetailModal({
               {transaction.amount_paid > 0 && (
                 <>
                   <div className="flex justify-between text-muted-foreground">
-                    <span>Amount Paid</span>
+                    <span>Jumlah Dibayar</span>
                     <span>{formatCurrency(transaction.amount_paid)}</span>
                   </div>
                   {transaction.change_amount > 0 && (
                     <div className="flex justify-between text-green-600">
-                      <span>Change</span>
+                      <span>Kembalian</span>
                       <span>{formatCurrency(transaction.change_amount)}</span>
                     </div>
                   )}
@@ -217,7 +217,7 @@ export function TransactionDetailModal({
               <>
                 <Separator />
                 <div>
-                  <h3 className="text-sm font-semibold mb-1">Notes</h3>
+                  <h3 className="text-sm font-semibold mb-1">Catatan</h3>
                   <p className="text-sm text-muted-foreground">{transaction.notes}</p>
                 </div>
               </>
@@ -237,11 +237,11 @@ export function TransactionDetailModal({
               ) : (
                 <Printer className="h-4 w-4 mr-2" />
               )}
-              {isPrinting ? 'Printing...' : 'Print'}
+              {isPrinting ? 'Mencetak...' : 'Cetak'}
             </Button>
             <Button className="pos-button-secondary" onClick={onClose}>
               <X className="h-4 w-4 mr-2" />
-              Close
+              Tutup
             </Button>
           </div>
         </DialogFooter>
