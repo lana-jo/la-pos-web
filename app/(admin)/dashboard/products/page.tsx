@@ -11,6 +11,20 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { toast } from 'sonner'
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/ui/LoadingStates'
 import { Category, Product, ProductVariant, Unit, Supplier } from '@/types'
@@ -462,15 +476,19 @@ export default function ProductsPage() {
                         <h2 className="text-3xl font-bold text-foreground">Produk ({filteredProducts.length})</h2>
 
                         <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <select
+                            <Select
                                 value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="h-9 px-4 rounded-full border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm dark:bg-card dark:border-border dark:text-foreground"
+                                onValueChange={(value) => setSelectedStatus(value)}
                             >
-                                <option value="all">Semua Status</option>
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Nonaktif</option>
-                            </select>
+                                <SelectTrigger className="h-9 px-4 rounded-full border border-primary-brand/30 bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm dark:bg-card dark:border-primary-brand/30 dark:text-foreground cursor-pointer hover:border-primary-brand/60 transition-colors w-full sm:w-auto">
+                                    <SelectValue placeholder="Pilih Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Semua Status</SelectItem>
+                                    <SelectItem value="active">Aktif</SelectItem>
+                                    <SelectItem value="inactive">Nonaktif</SelectItem>
+                                </SelectContent>
+                            </Select>
 
                             {/* Utility Actions */}
                             <DropdownMenu>
