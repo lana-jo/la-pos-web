@@ -456,68 +456,67 @@ export default function ProductsPage() {
     return (
         <div className="min-h-screen pos-terminal">
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
-                <div className="flex flex-col gap-4 mb-6">
+                {/* Header Section */}
+                <div className="flex flex-col gap-6 mb-8">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <h2 className="text-3xl font-bold text-foreground">Produk ({filteredProducts.length})</h2>
 
-                        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full lg:w-auto">
-                            {/* Utility Actions Group */}
-                            <div className="flex items-center gap-2">
-                                <div className="flex gap-1">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="border-primary-brand text-primary-brand h-9 px-3">
-                                                <MoreVertical className="h-4 w-4 mr-1" />
-                                                Alat
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={exportToCSV}>
-                                                <Download className="h-4 w-4 mr-2" /> Ekspor CSV
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem>
-                                                <Upload className="h-4 w-4 mr-2" /> Impor Data
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={startScanning}>
-                                                <Scan className="h-4 w-4 mr-2" /> {isScanning ? 'Memindai...' : 'Scan USB'}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={startCameraScanning}>
-                                                <Camera className="h-4 w-4 mr-2" /> Scan Kamera
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            {/* Utility Actions */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="border-primary-brand text-primary-brand h-10 px-4">
+                                        <MoreVertical className="h-4 w-4 mr-2" />
+                                        Alat
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={exportToCSV}>
+                                        <Download className="h-4 w-4 mr-2" /> Ekspor CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem>
+                                        <Upload className="h-4 w-4 mr-2" /> Impor Data
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={startScanning}>
+                                        <Scan className="h-4 w-4 mr-2" /> {isScanning ? 'Memindai...' : 'Scan USB'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={startCameraScanning}>
+                                        <Camera className="h-4 w-4 mr-2" /> Scan Kamera
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                             {/* Primary Action */}
-                            <Button onClick={() => setModal('add')} className="pos-button-primary shadow-sm h-9 px-4">
-                                <Plus className="h-4 w-4 mr-1" />
+                            <Button onClick={() => setModal('add')} className="pos-button-primary shadow-lg h-10 px-6">
+                                <Plus className="h-4 w-4 mr-2" />
                                 <span className="hidden sm:inline">Tambah Produk</span>
                             </Button>
                         </div>
                     </div>
 
                     {/* Filters Row */}
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex flex-col md:flex-row gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
                         <div className="flex-1">
                             <input
                                 type="text"
                                 placeholder="Cari produk berdasarkan nama atau barcode..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-border bg-background pos-form-input shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
+                                className="w-full h-10 px-4 rounded-lg border border-border bg-background shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
                             />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <CategoryFilter
-                                categories={categories}
-                                selectedCategory={selectedCategory}
-                                onSelectCategory={setSelectedCategory}
-                            />
+                        <div className="flex gap-3">
+                            <div className="min-w-[160px]">
+                                <CategoryFilter
+                                    categories={categories}
+                                    selectedCategory={selectedCategory}
+                                    onSelectCategory={setSelectedCategory}
+                                />
+                            </div>
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="pos-form-input h-[42px] px-3 rounded-lg border border-border"
+                                className="h-10 px-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-brand"
                             >
                                 <option value="all">Semua Status</option>
                                 <option value="active">Aktif</option>
@@ -525,8 +524,7 @@ export default function ProductsPage() {
                             </select>
                         </div>
                     </div>
-                </div>
-                {/* Content */}
+                </div>                {/* Content */}
                 {loading ? (
                     <div className="flex justify-center py-12">
                         <LoadingSpinner size="lg" />
