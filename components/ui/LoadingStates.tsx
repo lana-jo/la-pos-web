@@ -116,11 +116,12 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
       {action}
     </div>
   );
+}
 
 export function SearchEmptyState() {
   return (
     <EmptyState
-      icon={<Search className="h-12 w-12 text-gray-400" />}
+      icon={<Search className="h-12 w-12 text-muted-foreground" />}
       title="Hasil tidak ditemukan"
       description="Coba sesuaikan kata kunci pencarian atau filter Anda"
     />
