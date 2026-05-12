@@ -144,6 +144,22 @@ export function ProductTable({
                                     <Button
                                         variant="outline"
                                         size="sm"
+                                        title="Cetak Barcode"
+                                        className="h-8 w-8 p-0"
+                                        onClick={async () => {
+                                            if (product.barcode) {
+                                                const printer = PrintManager.getInstance()
+                                                await printer.printBarcode(product.barcode, product.name)
+                                            } else {
+                                                toast.error("Barcode tidak tersedia")
+                                            }
+                                        }}
+                                    >
+                                        <Printer className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
                                         onClick={() => onEdit(product)}
                                         className="h-8 w-8 p-0 focus-ring transition-theme"
                                     >
