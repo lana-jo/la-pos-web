@@ -465,7 +465,7 @@ export default function ProductsPage() {
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="h-9 px-4 rounded-full border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm"
+                                className="h-9 px-4 rounded-full border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm dark:bg-card dark:border-border dark:text-foreground"
                             >
                                 <option value="all">Semua Status</option>
                                 <option value="active">Aktif</option>
@@ -475,7 +475,7 @@ export default function ProductsPage() {
                             {/* Utility Actions */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" className="border-primary-brand text-primary-brand h-10 px-4">
+                                    <Button variant="outline" className="border-primary-brand text-primary-brand h-10 px-4 rounded-full shadow-sm hover:bg-primary-brand/10">
                                         <MoreVertical className="h-4 w-4 mr-2" />
                                         Alat
                                     </Button>

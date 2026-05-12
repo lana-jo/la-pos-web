@@ -15,7 +15,11 @@ export function CategoryFilter({ categories, selectedCategory, onSelectCategory 
             <Button
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
                 size="sm"
-                className="rounded-full px-4"
+                className={`rounded-full px-4 border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm transition-all duration-200 ${
+                    selectedCategory === 'all' 
+                        ? 'bg-primary-brand text-white border-primary-brand' 
+                        : 'hover:bg-muted'
+                }`}
                 onClick={() => onSelectCategory('all')}
             >
                 Semua
@@ -25,7 +29,11 @@ export function CategoryFilter({ categories, selectedCategory, onSelectCategory 
                     key={cat.id}
                     variant={selectedCategory === cat.id ? 'default' : 'outline'}
                     size="sm"
-                    className="rounded-full px-4"
+                    className={`rounded-full px-4 border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm transition-all duration-200 ${
+                        selectedCategory === cat.id 
+                            ? 'bg-primary-brand text-white border-primary-brand' 
+                            : 'hover:bg-muted'
+                    }`}
                     onClick={() => onSelectCategory(cat.id)}
                 >
                     {cat.name}
