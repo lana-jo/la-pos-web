@@ -48,7 +48,7 @@ export const PaymentMethodsChart = ({ data, preset }: PaymentMethodsChartProps) 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-primary-brand" />
-          Payment Methods Distribution ({getPresetLabel(preset as any)})
+          Distribusi Metode Pembayaran ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -77,7 +77,7 @@ export const PaymentMethodsChart = ({ data, preset }: PaymentMethodsChartProps) 
               ))}
             </Pie>
             <Tooltip
-              formatter={(value) => [Number(value), "Transactions"]}
+              formatter={(value) => [Number(value), "Transaksi"]}
               contentStyle={{
                 ...getTooltipTheme().contentStyle,
                 fontSize: 12,

@@ -243,11 +243,11 @@ export default function SettingsPage() {
         <TabsList className="pos-modal-content border border-border/50 p-1 rounded-full w-full justify-start shadow-lg">
           <TabsTrigger value="general" className="rounded-full data-[state=active]:pos-button-primary data-[state=inactive]:bg-background/80 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/60 transition-all duration-300 flex items-center gap-2">
             <Store className="h-4 w-4" />
-            General
+            Umum
           </TabsTrigger>
           <TabsTrigger value="payment" className="rounded-full data-[state=active]:pos-button-primary data-[state=inactive]:bg-background/80 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/60 transition-all duration-300 flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Payments
+            Pembayaran
           </TabsTrigger>
           <TabsTrigger value="printer" className="rounded-full data-[state=active]:pos-button-primary data-[state=inactive]:bg-background/80 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/60 transition-all duration-300 flex items-center gap-2">
             <Printer className="h-4 w-4" />
@@ -255,11 +255,11 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="system" className="rounded-full data-[state=active]:pos-button-primary data-[state=inactive]:bg-background/80 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/60 transition-all duration-300 flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            System
+            Sistem
           </TabsTrigger>
           <TabsTrigger value="notifications" className="rounded-full data-[state=active]:pos-button-primary data-[state=inactive]:bg-background/80 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-background/60 transition-all duration-300 flex items-center gap-2">
             <Bell className="h-4 w-4" />
-            Notifications
+            Notifikasi
           </TabsTrigger>
         </TabsList>
 

@@ -73,7 +73,7 @@ export default function LoginPage() {
                 timestamp: new Date().toISOString()
               });
               setTheme('light');
-            }}>Light</DropdownMenuItem>
+            }}>Terang</DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
               console.log(`[THEME] Login page theme button clicked:`, {
                 theme: 'dark',
@@ -81,7 +81,7 @@ export default function LoginPage() {
                 timestamp: new Date().toISOString()
               });
               setTheme('dark');
-            }}>Dark</DropdownMenuItem>
+            }}>Gelap</DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
               console.log(`[THEME] Login page theme button clicked:`, {
                 theme: 'system',
@@ -89,7 +89,7 @@ export default function LoginPage() {
                 timestamp: new Date().toISOString()
               });
               setTheme('system');
-            }}>System</DropdownMenuItem>
+            }}>Sistem</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -98,7 +98,7 @@ export default function LoginPage() {
           <div className="w-12 h-12 bg-primary-brand rounded-full flex items-center justify-center mb-4 shadow-lg">
             <Store className="h-6 w-6 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-primary">POS System Login</CardTitle>
+          <CardTitle className="text-2xl font-bold text-primary">Login Sistem POS</CardTitle>
           <CardDescription className="text-center">
             Masukkan kredensial Anda untuk mengakses sistem
           </CardDescription>
@@ -119,13 +119,13 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" title="password" className="pos-form-label">Password</Label>
+              <Label htmlFor="password" title="password" className="pos-form-label">Kata Sandi</Label>
               <PasswordInput
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Masukkan password"
+                placeholder="Masukkan kata sandi"
                 disabled={loading}
                 className="pos-form-input"
               />

@@ -53,14 +53,14 @@ export function ProductTable({
             <Table>
                 <TableHeader className="bg-muted/50">
                     <TableRow>
-                        <TableHead className="w-16 font-semibold">Image</TableHead>
-                        <TableHead className="w-64 font-semibold">Product Name</TableHead>
+                        <TableHead className="w-16 font-semibold">Gambar</TableHead>
+                        <TableHead className="w-64 font-semibold">Nama Produk</TableHead>
                         <TableHead className="w-32 font-semibold">Barcode</TableHead>
-                        <TableHead className="w-40 font-semibold hidden lg:table-cell">Category</TableHead>
-                        <TableHead className="w-32 text-right font-semibold">Price (Base)</TableHead>
-                        <TableHead className="w-28 text-center font-semibold">Stock</TableHead>
+                        <TableHead className="w-40 font-semibold hidden lg:table-cell">Kategori</TableHead>
+                        <TableHead className="w-32 text-right font-semibold">Harga (Dasar)</TableHead>
+                        <TableHead className="w-28 text-center font-semibold">Stok</TableHead>
                         <TableHead className="w-28 text-center font-semibold hidden md:table-cell">Status</TableHead>
-                        <TableHead className="w-24 text-center font-semibold">Actions</TableHead>
+                        <TableHead className="w-24 text-center font-semibold">Aksi</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -112,7 +112,7 @@ export function ProductTable({
                             </TableCell>
                             <TableCell className="w-40 hidden lg:table-cell">
                                 {product.categories?.name || (
-                                    <Badge variant="secondary">Uncategorized</Badge>
+                                    <Badge variant="secondary">Tanpa Kategori</Badge>
                                 )}
                             </TableCell>
                             <TableCell className="w-32 text-right font-medium text-primary-brand">
@@ -136,7 +136,7 @@ export function ProductTable({
                                     variant={product.is_active ? 'default' : 'secondary'}
                                     className={product.is_active ? 'status-active' : 'status-inactive'}
                                 >
-                                    {product.is_active ? 'Active' : 'Inactive'}
+                                    {product.is_active ? 'Aktif' : 'Nonaktif'}
                                 </Badge>
                             </TableCell>
                             <TableCell className="w-24 text-center">
@@ -178,7 +178,7 @@ export function ProductTable({
                                                 <div className="flex items-center gap-2">
                                                     <Barcode className="h-4 w-4 text-muted-foreground" />
                                                     <code className="text-xs bg-muted px-2 py-1 rounded border">
-                                                        {variant.barcode || 'No barcode'}
+                                                        {variant.barcode || 'Tanpa barcode'}
                                                     </code>
                                                 </div>
                                                 <div>
@@ -217,7 +217,7 @@ export function ProductTable({
                                                     variant={variant.is_active ? 'default' : 'secondary'}
                                                     className={variant.is_active ? 'status-active' : 'status-inactive'}
                                                 >
-                                                    {variant.is_active ? 'Active' : 'Inactive'}
+                                                    {variant.is_active ? 'Aktif' : 'Nonaktif'}
                                                 </Badge>
                                             </div>
                                         </div>

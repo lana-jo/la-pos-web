@@ -50,7 +50,7 @@ export const TransactionChart = ({ data, preset }: TransactionChartProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShoppingCart className="h-5 w-5 text-primary-brand" />
-          Transaction Volume ({getPresetLabel(preset as any)})
+          Volume Transaksi ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -73,9 +73,9 @@ export const TransactionChart = ({ data, preset }: TransactionChartProps) => {
             <Tooltip
               formatter={(value) => [
                 value,
-                "Transactions",
+                "Transaksi",
               ]}
-              labelFormatter={(label) => `Date: ${label}`}
+              labelFormatter={(label) => `Tanggal: ${label}`}
               contentStyle={{
                 ...getTooltipTheme().contentStyle,
                 fontSize: 12,

@@ -93,9 +93,9 @@ export default function CashiersPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
           <UserCircle className="h-8 w-8 text-primary-brand" />
-          CASHIER MANAGEMENT
+          MANAJEMEN KASIR
         </h1>
-        <p className="text-muted-foreground mt-2">Manage your cashier accounts and activity.</p>
+        <p className="text-muted-foreground mt-2">Kelola akun dan aktivitas kasir Anda.</p>
       </div>
 
       {/* Stats Cards */}

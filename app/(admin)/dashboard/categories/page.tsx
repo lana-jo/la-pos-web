@@ -334,7 +334,7 @@ export default function CategoriesPage() {
     <div className="min-h-screen bg-background">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Categories</h2>
+          <h2 className="text-2xl font-bold">Kategori</h2>
           <div className="flex gap-2">
             <Button variant="outline" onClick={fetchData}>
               <Grid3x3 className="h-4 w-4 mr-2" />
@@ -342,7 +342,7 @@ export default function CategoriesPage() {
             </Button>
             <Button onClick={() => setShowAddModal(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Category
+              Tambah Kategori
             </Button>
           </div>
         </div>

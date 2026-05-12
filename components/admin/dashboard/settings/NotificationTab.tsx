@@ -21,20 +21,20 @@ export function NotificationTab({ formData, handleInputChange, handleSave, isLoa
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
-          Notification Settings
+          Pengaturan Notifikasi
         </CardTitle>
         <CardDescription>
-          Manage system notifications and alerts
+          Kelola notifikasi dan peringatan sistem
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Sales Notifications</h4>
+          <h4 className="text-lg font-semibold">Notifikasi Penjualan</h4>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="sale-alert">Sale Alert</Label>
+              <Label htmlFor="sale-alert">Peringatan Penjualan</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Notify when there is a new transaction
+                Beritahu jika ada transaksi baru
               </p>
             </div>
             <Switch 
@@ -46,9 +46,9 @@ export function NotificationTab({ formData, handleInputChange, handleSave, isLoa
           </div>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="low-stock">Low Stock Alert</Label>
+              <Label htmlFor="low-stock">Peringatan Stok Rendah</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Notify when product stock is low
+                Beritahu saat stok produk menipis
               </p>
             </div>
             <Switch 
@@ -63,12 +63,12 @@ export function NotificationTab({ formData, handleInputChange, handleSave, isLoa
         <Separator className="bg-border" />
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">System Notifications</h4>
+          <h4 className="text-lg font-semibold">Notifikasi Sistem</h4>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="system-update">System Updates</Label>
+              <Label htmlFor="system-update">Pembaruan Sistem</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Notify about system updates
+                Beritahu tentang pembaruan sistem
               </p>
             </div>
             <Switch 
@@ -80,9 +80,9 @@ export function NotificationTab({ formData, handleInputChange, handleSave, isLoa
           </div>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="error-report">Error Reports</Label>
+              <Label htmlFor="error-report">Laporan Kesalahan</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Notify about system errors
+                Beritahu tentang kesalahan sistem
               </p>
             </div>
             <Switch 
@@ -100,7 +100,7 @@ export function NotificationTab({ formData, handleInputChange, handleSave, isLoa
             disabled={isSaving || isLoading}
             className="pos-button-primary"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
         </div>
       </CardContent>

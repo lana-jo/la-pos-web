@@ -22,32 +22,32 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Store className="h-5 w-5" />
-            Store Information
+            Informasi Toko
           </CardTitle>
           <CardDescription>
-            Manage your basic store information
+            Kelola informasi dasar toko Anda
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="store-name" className="pos-form-label">Store Name</Label>
+              <Label htmlFor="store-name" className="pos-form-label">Nama Toko</Label>
               <Input 
                 id="store-name" 
                 value={formData.general?.store_name || ''}
                 onChange={(e) => handleInputChange('general', 'store_name', e.target.value)}
-                placeholder="Enter store name"
+                placeholder="Masukkan nama toko"
                 disabled={isLoading}
                 className="pos-form-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="store-phone" className="pos-form-label">Phone</Label>
+              <Label htmlFor="store-phone" className="pos-form-label">Telepon</Label>
               <Input 
                 id="store-phone" 
                 value={formData.general?.store_phone || ''}
                 onChange={(e) => handleInputChange('general', 'store_phone', e.target.value)}
-                placeholder="Enter phone number"
+                placeholder="Masukkan nomor telepon"
                 disabled={isLoading}
                 className="pos-form-input"
               />
@@ -58,19 +58,19 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
                 id="store-email" 
                 value={formData.general?.store_email || ''}
                 onChange={(e) => handleInputChange('general', 'store_email', e.target.value)}
-                placeholder="Enter email"
+                placeholder="Masukkan email"
                 type="email"
                 disabled={isLoading}
                 className="pos-form-input"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="store-address" className="pos-form-label">Address</Label>
+              <Label htmlFor="store-address" className="pos-form-label">Alamat</Label>
               <Input 
                 id="store-address" 
                 value={formData.general?.store_address || ''}
                 onChange={(e) => handleInputChange('general', 'store_address', e.target.value)}
-                placeholder="Enter address"
+                placeholder="Masukkan alamat"
                 disabled={isLoading}
                 className="pos-form-input"
               />
@@ -82,7 +82,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               disabled={isSaving || isLoading}
               className="pos-button-primary"
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
             </Button>
           </div>
         </CardContent>
@@ -92,16 +92,16 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
-            Regional Settings
+            Pengaturan Regional
           </CardTitle>
           <CardDescription>
-            Configure language, currency, and timezone
+            Konfigurasi bahasa, mata uang, dan zona waktu
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="language" className="pos-form-label">Language</Label>
+              <Label htmlFor="language" className="pos-form-label">Bahasa</Label>
               <ReactSelect
                 value={{ value: formData.general?.language || 'id', label: formData.general?.language === 'en' ? 'English' : 'Bahasa Indonesia' }}
                 onChange={(option) => handleInputChange('general', 'language', option?.value)}
@@ -109,14 +109,14 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
                   { value: 'id', label: 'Bahasa Indonesia' },
                   { value: 'en', label: 'English' }
                 ]}
-                placeholder="Select language"
+                placeholder="Pilih bahasa"
                 className="w-full"
                 isDisabled={isLoading}
                 instanceId="language-select"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency" className="pos-form-label">Currency</Label>
+              <Label htmlFor="currency" className="pos-form-label">Mata Uang</Label>
               <ReactSelect
                 value={{ value: formData.general?.currency || 'IDR', label: formData.general?.currency === 'USD' ? 'US Dollar (USD)' : 'Indonesian Rupiah (IDR)' }}
                 onChange={(option) => handleInputChange('general', 'currency', option?.value)}
@@ -124,14 +124,14 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
                   { value: 'IDR', label: 'Indonesian Rupiah (IDR)' },
                   { value: 'USD', label: 'US Dollar (USD)' }
                 ]}
-                placeholder="Select currency"
+                placeholder="Pilih mata uang"
                 className="w-full"
                 isDisabled={isLoading}
                 instanceId="currency-select"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timezone" className="pos-form-label">Timezone</Label>
+              <Label htmlFor="timezone" className="pos-form-label">Zona Waktu</Label>
               <ReactSelect
                 value={{ value: formData.general?.timezone || 'Asia/Jakarta', label: formData.general?.timezone === 'Asia/Makassar' ? 'Makassar (WITA)' : formData.general?.timezone === 'Asia/Jayapura' ? 'Jayapura (WIT)' : 'Jakarta (WIB)' }}
                 onChange={(option) => handleInputChange('general', 'timezone', option?.value)}
@@ -140,7 +140,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
                   { value: 'Asia/Makassar', label: 'Makassar (WITA)' },
                   { value: 'Asia/Jayapura', label: 'Jayapura (WIT)' }
                 ]}
-                placeholder="Select timezone"
+                placeholder="Pilih zona waktu"
                 className="w-full"
                 isDisabled={isLoading}
                 instanceId="timezone-select"
@@ -153,7 +153,7 @@ export function GeneralTab({ formData, handleInputChange, handleSave, isLoading,
               disabled={isSaving || isLoading}
               className="pos-button-primary"
             >
-              {isSaving ? 'Saving...' : 'Save Changes'}
+              {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
             </Button>
           </div>
         </CardContent>

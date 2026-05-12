@@ -28,7 +28,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
           type="button"
           onClick={togglePasswordVisibility}
           className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground focus:outline-none"
-          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
         >
           {showPassword ? (
             <svg

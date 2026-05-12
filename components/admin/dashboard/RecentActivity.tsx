@@ -45,7 +45,7 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
       <CardHeader>
         <CardTitle className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
           <Clock className="h-5 w-5 text-primary animate-pulse" />
-          Recent Activity
+          Aktivitas Terkini
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -54,8 +54,8 @@ export const RecentActivityCard = ({ activities, formatCurrency, onActivityClick
             <div className="p-3 sm:p-4 rounded-lg bg-muted/30 w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 flex items-center justify-center">
               <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground/50" />
             </div>
-            <p className="text-sm font-medium mb-1">No recent activity</p>
-            <p className="text-xs text-muted-foreground/70">Activity will appear here as it happens</p>
+            <p className="text-sm font-medium mb-1">Tidak ada aktivitas terkini</p>
+            <p className="text-xs text-muted-foreground/70">Aktivitas akan muncul di sini saat terjadi</p>
           </div>
         ) : (
           <div>

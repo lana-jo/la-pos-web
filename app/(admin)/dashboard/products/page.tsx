@@ -78,7 +78,7 @@ export default function ProductsPage() {
 
     // ── Export Logic ──────────────────────────────────────────────────────────
     const exportToCSV = () => {
-        const headers = ["ID", "Name", "Barcode", "Price", "Stock", "Category"];
+        const headers = ["ID", "Nama", "Barcode", "Harga", "Stok", "Kategori"];
         const csvContent = [
             headers.join(","),
             ...products.map(p => [
@@ -95,7 +95,7 @@ export default function ProductsPage() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.setAttribute('href', url);
-        a.setAttribute('download', `products_${new Date().toISOString().slice(0, 10)}.csv`);
+        a.setAttribute('download', `produk_${new Date().toISOString().slice(0, 10)}.csv`);
         a.click();
     };
 
@@ -460,7 +460,7 @@ export default function ProductsPage() {
                 <div className="flex flex-col gap-4 mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex items-center gap-4">
-                            <h2 className="text-3xl font-bold text-foreground">Products ({filteredProducts.length})</h2>
+                            <h2 className="text-3xl font-bold text-foreground">Produk ({filteredProducts.length})</h2>
                             <CategoryFilter
                                 categories={categories}
                                 selectedCategory={selectedCategory}
@@ -484,18 +484,18 @@ export default function ProductsPage() {
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="outline" className="border-primary-brand text-primary-brand h-9 px-3">
                                                 <MoreVertical className="h-4 w-4 mr-1" />
-                                                Tools
+                                                Alat
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem onClick={exportToCSV}>
-                                                <Download className="h-4 w-4 mr-2" /> Export CSV
+                                                <Download className="h-4 w-4 mr-2" /> Ekspor CSV
                                             </DropdownMenuItem>
                                             <DropdownMenuItem>
-                                                <Upload className="h-4 w-4 mr-2" /> Import Data
+                                                <Upload className="h-4 w-4 mr-2" /> Impor Data
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={startScanning}>
-                                                <Scan className="h-4 w-4 mr-2" /> {isScanning ? 'Scanning...' : 'Scan USB'}
+                                                <Scan className="h-4 w-4 mr-2" /> {isScanning ? 'Memindai...' : 'Scan USB'}
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={startCameraScanning}>
                                                 <Camera className="h-4 w-4 mr-2" /> Scan Kamera
@@ -506,10 +506,9 @@ export default function ProductsPage() {
                             </div>
                             {/* Primary Action */}
                             <Button onClick={() => setModal('add')} className="pos-button-primary shadow-sm h-9 px-4">
-                                <Plus className="h-4 w-4 mr-1" />
-                                <span className="hidden sm:inline">Add Product</span>
-                            </Button>
-                        </div>
+                            <Plus className="h-4 w-4 mr-1" />
+                            <span className="hidden sm:inline">Tambah Produk</span>
+                            </Button>                        </div>
                     </div>
                     {/* Search Input */}
                     <div className="max-w-md">

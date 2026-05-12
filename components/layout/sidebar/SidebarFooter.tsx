@@ -116,7 +116,7 @@ export function SidebarFooter({
           >
             <div className="flex items-center gap-2 mb-1">
               <div className="h-2 w-2 bg-blue-500 rounded-full" />
-              {isProfileLoading ? "Loading..." : profileName || "User"}
+              {isProfileLoading ? "Memuat..." : profileName || "Pengguna"}
             </div>
             <div className={cn("text-xs font-medium capitalize mt-1", themeClasses.role)}>
               {ROLE_LABELS[userRole] || userRole}
@@ -149,7 +149,9 @@ export function SidebarFooter({
               >
                 {theme === 'dark' ? <Moon className="h-4 w-4" /> : theme === 'light' ? <Sun className="h-4 w-4" /> : <Laptop className="h-4 w-4" />}
                 {!isCollapsed && (
-                  <span className="ml-2 capitalize">{theme}</span>
+                  <span className="ml-2">
+                    {theme === 'light' ? 'Terang' : theme === 'dark' ? 'Gelap' : 'Sistem'}
+                  </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
@@ -162,7 +164,7 @@ export function SidebarFooter({
                   timestamp: new Date().toISOString()
                 });
                 onToggleTheme('light');
-              }}>Light</DropdownMenuItem>
+              }}>Terang</DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
                 console.log(`[THEME] Sidebar footer theme button clicked:`, {
                   theme: 'dark',
@@ -170,7 +172,7 @@ export function SidebarFooter({
                   timestamp: new Date().toISOString()
                 });
                 onToggleTheme('dark');
-              }}>Dark</DropdownMenuItem>
+              }}>Gelap</DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
                 console.log(`[THEME] Sidebar footer theme button clicked:`, {
                   theme: 'system',
@@ -178,7 +180,7 @@ export function SidebarFooter({
                   timestamp: new Date().toISOString()
                 });
                 onToggleTheme('system');
-              }}>System</DropdownMenuItem>
+              }}>Sistem</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenuPortal>
             </DropdownMenu>

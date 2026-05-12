@@ -217,7 +217,7 @@ export default function ProductVariantsPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Package className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-          <p>Loading varian produk...</p>
+          <p>Memuat varian produk...</p>
         </div>
       </div>
     )

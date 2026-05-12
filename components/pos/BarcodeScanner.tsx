@@ -58,13 +58,13 @@ export function BarcodeScanner() {
             {scanMode === 'usb' ? (
               <>
                 <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Switch to Camera</span>
-                <span className="sm:hidden">Camera</span>
+                <span className="hidden sm:inline">Ganti ke Kamera</span>
+                <span className="sm:hidden">Kamera</span>
               </>
             ) : (
               <>
                 <Keyboard className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Switch to USB</span>
+                <span className="hidden sm:inline">Ganti ke USB</span>
                 <span className="sm:hidden">USB</span>
               </>
             )}
@@ -80,14 +80,14 @@ export function BarcodeScanner() {
               <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-primary-brand" />
             )}
             <span className="font-medium text-sm sm:text-base">
-              {scanMode === 'usb' ? 'USB Scanner' : 'Webcam Scanner'}
+              {scanMode === 'usb' ? 'Pemindai USB' : 'Pemindai Kamera'}
             </span>
           </div>
           <Badge 
             variant={scanMode === 'usb' ? 'default' : 'secondary'} 
             className={`text-xs font-semibold ${scanMode === 'usb' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-primary/10 text-primary border-primary/20'}`}
           >
-            {scanMode === 'usb' ? 'Active' : webcamScanning ? 'Scanning' : 'Ready'}
+            {scanMode === 'usb' ? 'Aktif' : webcamScanning ? 'Memindai' : 'Siap'}
           </Badge>
         </div>
 
@@ -96,7 +96,7 @@ export function BarcodeScanner() {
             <div className="flex items-center gap-2">
               <Keyboard className="h-5 w-5 text-green-600" />
               <p className="text-xs sm:text-sm font-medium text-green-800">
-                USB scanner is active. Scan barcodes using your USB scanner device.
+                Pemindai USB aktif. Pindai kode bar menggunakan perangkat pemindai USB Anda.
               </p>
             </div>
           </div>
@@ -110,14 +110,14 @@ export function BarcodeScanner() {
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                   <div className="text-white text-center">
                     <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto mb-2 text-primary-brand" />
-                    <p className="text-xs sm:text-sm font-medium">Initializing camera...</p>
+                    <p className="text-xs sm:text-sm font-medium">Menginisialisasi kamera...</p>
                   </div>
                 </div>
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                   <div className="text-white text-center">
                     <Camera className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-75 text-primary-brand" />
-                    <p className="text-xs sm:text-sm opacity-90 font-medium">Camera preview</p>
+                    <p className="text-xs sm:text-sm opacity-90 font-medium">Pratinjau kamera</p>
                   </div>
                 </div>
               )}

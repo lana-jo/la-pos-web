@@ -7,7 +7,7 @@ interface POSHeaderProps {
   userRole?: string;
 }
 
-export function POSHeader({ userName = "Loading...", userRole = "Cashier" }: POSHeaderProps) {
+export function POSHeader({ userName = "Memuat...", userRole = "Kasir" }: POSHeaderProps) {
   return (
     <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border px-4 sm:px-6 lg:px-8 py-6 shadow-sm">
       <div className="max-w-7xl mx-auto">
@@ -15,10 +15,10 @@ export function POSHeader({ userName = "Loading...", userRole = "Cashier" }: POS
           <div>
             <h1 className="text-3xl font-bold text-primary-brand flex items-center gap-3">
               <div className="w-2 h-8 bg-primary-brand rounded-full"></div>
-              POS TERMINAL
+              TERMINAL POS
             </h1>
             <p className="text-muted-foreground mt-2 font-medium">
-              Point of Sale System • {userName}
+              Sistem Point of Sale • {userName}
             </p>
           </div>
           <div className="flex items-center gap-3">

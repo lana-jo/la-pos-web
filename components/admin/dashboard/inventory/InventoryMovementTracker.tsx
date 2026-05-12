@@ -64,12 +64,12 @@ export function InventoryMovementTracker() {
   const fetchMovements = async () => {
     try {
       const response = await fetch(`/api/stock/movements?period=${dateFilter}`);
-      if (!response.ok) throw new Error('Failed to fetch movements');
+      if (!response.ok) throw new Error('Gagal mengambil data pergerakan');
       const data = await response.json();
       setMovements(data);
       calculateSummary(data);
     } catch (error) {
-      toast.error('Error loading inventory movements');
+      toast.error('Gagal memuat pergerakan stok');
     } finally {
       setLoading(false);
     }
@@ -258,8 +258,7 @@ export function InventoryMovementTracker() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
+          <CardTitle>Filter</CardTitle>        </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">

@@ -113,7 +113,7 @@ export default function RegisterPage() {
                 timestamp: new Date().toISOString()
               });
               setTheme('light');
-            }}>Light</DropdownMenuItem>
+            }}>Terang</DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
               console.log(`[THEME] Register page theme button clicked:`, {
                 theme: 'dark',
@@ -121,7 +121,7 @@ export default function RegisterPage() {
                 timestamp: new Date().toISOString()
               });
               setTheme('dark');
-            }}>Dark</DropdownMenuItem>
+            }}>Gelap</DropdownMenuItem>
             <DropdownMenuItem onClick={() => {
               console.log(`[THEME] Register page theme button clicked:`, {
                 theme: 'system',
@@ -129,7 +129,7 @@ export default function RegisterPage() {
                 timestamp: new Date().toISOString()
               });
               setTheme('system');
-            }}>System</DropdownMenuItem>
+            }}>Sistem</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -140,7 +140,7 @@ export default function RegisterPage() {
           </div>
           <CardTitle className="text-2xl font-bold text-primary">Daftar Akun Baru</CardTitle>
           <CardDescription className="text-center">
-            Buat akun customer untuk mengakses katalog produk
+            Buat akun pelanggan untuk mengakses katalog produk
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -170,7 +170,7 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" title="password" className="pos-form-label">Password</Label>
+              <Label htmlFor="password" title="password" className="pos-form-label">Kata Sandi</Label>
               <PasswordInput
                 id="password"
                 value={password}
@@ -181,13 +181,13 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword" title="confirmPassword" className="pos-form-label">Konfirmasi Password</Label>
+              <Label htmlFor="confirmPassword" title="confirmPassword" className="pos-form-label">Konfirmasi Kata Sandi</Label>
               <PasswordInput
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                placeholder="Ulangi password"
+                placeholder="Ulangi kata sandi"
                 className="pos-form-input"
               />
             </div>

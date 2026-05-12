@@ -662,7 +662,7 @@ export default function UsersPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Users className="h-12 w-12 mx-auto mb-4 text-blue-600" />
-          <p className="text-lg">Loading users...</p>
+          <p className="text-lg">Memuat pengguna...</p>
         </div>
       </div>
     );
@@ -688,10 +688,10 @@ export default function UsersPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Users ({users.length})</h2>
+          <h2 className="text-2xl font-bold">Pengguna ({users.length})</h2>
           <Button onClick={() => setModal("add")}>
             <Plus className="h-4 w-4 mr-2" />
-            Add User
+            Tambah Pengguna
           </Button>
         </div>
 
@@ -700,8 +700,8 @@ export default function UsersPage() {
           <Card>
             <CardContent className="text-center py-12">
               <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium mb-2">No users found</h3>
-              <p className="text-gray-500">No users have been registered yet</p>  
+              <h3 className="text-lg font-medium mb-2">Pengguna tidak ditemukan</h3>
+              <p className="text-gray-500">Belum ada pengguna yang terdaftar</p>  
             </CardContent>
           </Card>
         ) : (
@@ -710,10 +710,10 @@ export default function UsersPage() {
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    User
+                    Pengguna
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Role
+                    Peran
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                     Telepon
@@ -722,10 +722,10 @@ export default function UsersPage() {
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Joined
+                    Bergabung
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
-                    Actions
+                    Aksi
                   </th>
                 </tr>
               </thead>
@@ -737,7 +737,7 @@ export default function UsersPage() {
                         {user.avatar_url ? (
                           <img
                             src={user.avatar_url}
-                            alt={user.full_name ?? "User"}
+                            alt={user.full_name ?? "Pengguna"}
                             className="h-10 w-10 rounded-full object-cover border"
                           />
                         ) : (
@@ -753,7 +753,7 @@ export default function UsersPage() {
                           </span>
                           {isSelf(user) && (
                             <Badge variant="outline" className="text-xs mt-1">
-                              You
+                              Anda
                             </Badge>
                           )}
                         </div>
@@ -791,7 +791,7 @@ export default function UsersPage() {
                           onClick={() => openDelete(user)}
                           disabled={isSelf(user)}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" /> Delete
+                          <Trash2 className="h-4 w-4 mr-1" /> Hapus
                         </Button>
                       </div>
                     </td>

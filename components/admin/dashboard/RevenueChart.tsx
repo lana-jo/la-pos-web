@@ -51,7 +51,7 @@ export const RevenueChart = ({ data, preset, formatCurrency }: RevenueChartProps
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary-brand" />
-          Revenue Trend ({getPresetLabel(preset as any)})
+          Tren Pendapatan ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -85,9 +85,9 @@ export const RevenueChart = ({ data, preset, formatCurrency }: RevenueChartProps
               <Tooltip
                 formatter={(value) => [
                   formatCurrency(Number(value)),
-                  "Revenue",
+                  "Pendapatan",
                 ]}
-                labelFormatter={(label) => `Date: ${label}`}
+                labelFormatter={(label) => `Tanggal: ${label}`}
                 contentStyle={{
                   ...getTooltipTheme().contentStyle,
                   fontSize: 12,

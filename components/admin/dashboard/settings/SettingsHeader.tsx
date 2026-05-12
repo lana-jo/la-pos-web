@@ -18,9 +18,9 @@ export function SettingsHeader({ handleExportSettings, handleImportSettings, isL
       <div>
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
           <Settings className="h-8 w-8 text-primary-brand" />
-          SYSTEM SETTINGS
+          PENGATURAN SISTEM
         </h1>
-        <p className="text-muted-foreground mt-2">Manage your POS system configuration and preferences.</p>
+        <p className="text-muted-foreground mt-2">Kelola konfigurasi dan preferensi sistem POS Anda.</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -31,7 +31,7 @@ export function SettingsHeader({ handleExportSettings, handleImportSettings, isL
           className="border-primary-brand text-primary-brand hover:bg-primary-brand/10"
         >
           <Download className="h-4 w-4 mr-2" />
-          Export Settings
+          Ekspor Pengaturan
         </Button>
         <div className="relative">
           <input
@@ -48,7 +48,7 @@ export function SettingsHeader({ handleExportSettings, handleImportSettings, isL
             className="border-primary-brand text-primary-brand hover:bg-primary-brand/10"
           >
             <Upload className="h-4 w-4 mr-2" />
-            Import Settings
+            Impor Pengaturan
           </Button>
         </div>
       </div>

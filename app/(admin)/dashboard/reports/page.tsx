@@ -87,7 +87,6 @@ export default function ReportsPage() {
   const fetchTransactionDetails = useCallback(async (transactionId: string) => {
     try {
       setLoadingDetails(true)
-      // First try to get transaction items without join
       const { data: itemsData, error: itemsError } = await db('transaction_items')
         .select('*')
         .eq('transaction_id', transactionId)
@@ -95,13 +94,11 @@ export default function ReportsPage() {
 
       if (itemsError) throw itemsError
 
-      // Then fetch product and variant details for each item
       const itemsWithProducts = await Promise.all(
         (itemsData || []).map(async (item: any) => {
           let productData = null;
           let variantData = null;
 
-          // Fetch product details if product_id exists
           if (item.product_id) {
             const { data: pData } = await db('products')
               .select('name, barcode')
@@ -111,7 +108,6 @@ export default function ReportsPage() {
             productData = pData || null;
           }
 
-          // Fetch variant details if product_variant_id exists
           if (item.product_variant_id) {
             const { data: vData } = await db('product_variants')
               .select('variant_name, barcode')
@@ -215,7 +211,7 @@ export default function ReportsPage() {
         <div className="min-h-screen pos-terminal flex items-center justify-center">
           <div className="text-center">
             <div className="pos-loading-spinner mx-auto mb-4" />
-            <p className="text-lg font-medium text-primary">Loading reports...</p>
+            <p className="text-lg font-medium text-primary">Memuat laporan...</p>
           </div>
         </div>
     )
@@ -231,7 +227,7 @@ export default function ReportsPage() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <TrendingUp className="h-8 w-8 text-primary-brand" />
-              REPORTS & ANALYTICS
+              LAPORAN & ANALITIK
             </h1>
             <div className="flex items-center gap-4">
               <div className="flex items-center bg-background p-1 rounded-full border border-border">
@@ -241,7 +237,7 @@ export default function ReportsPage() {
                     className="rounded-full"
                     onClick={() => setViewMode('table')}
                 >
-                    Table
+                    Tabel
                 </Button>
                 <Button 
                     variant={viewMode === 'grid' ? 'default' : 'ghost'} 
@@ -258,84 +254,84 @@ export default function ReportsPage() {
 
           {/* ── Stats ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Revenue</CardTitle>
-                <DollarSign className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Pendapatan</CardTitle>
+                <DollarSign className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.totalRevenue)}</div>
-                <p className="text-xs text-muted-foreground mt-1">From {stats.paidTransactions} paid transactions</p>
+                <p className="text-xs text-muted-foreground mt-1">Dari {stats.paidTransactions} transaksi lunas</p>
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Transactions</CardTitle>
-                <ShoppingCart className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Transaksi</CardTitle>
+                <ShoppingCart className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-primary-brand">{stats.totalTransactions}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {stats.paidTransactions} paid, {stats.pendingTransactions} pending
+                  {stats.paidTransactions} lunas, {stats.pendingTransactions} tertunda
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Average Transaction</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Rata-rata Transaksi</CardTitle>
+                <TrendingUp className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.averageTransaction)}</div>
-                <p className="text-xs text-muted-foreground mt-1">Per paid transaction</p>
+                <p className="text-xs text-muted-foreground mt-1">Per transaksi lunas</p>
               </CardContent>
             </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 p-6 cursor-pointer hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out" onClick={() => console.log('Stats card clicked')}>
+            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Success Rate</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary-brand transition-transform duration-300 group-hover:scale-110" />
+                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Tingkat Kesuksesan</CardTitle>
+                <TrendingUp className="h-4 w-4 text-primary-brand" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black text-green-600">{successRate}%</div>
-                <p className="text-xs text-muted-foreground mt-1">Payment success rate</p>
+                <p className="text-xs text-muted-foreground mt-1">Tingkat sukses pembayaran</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* ── Transactions Display ── */}
+          {/* ── Transaksi ── */}
           {transactions.length === 0 ? (
-              <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
+              <Card className="pos-modal-content border-none shadow-xl transition-all duration-300">
                 <CardContent className="text-center py-12">
                   <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-bold text-foreground mb-2">No transactions found</h3>
-                  <p className="text-muted-foreground">No transactions have been recorded yet</p>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Tidak ada transaksi ditemukan</h3>
+                  <p className="text-muted-foreground">Belum ada transaksi yang tercatat</p>
                 </CardContent>
               </Card>
           ) : viewMode === 'table' ? (
-              <Card className="pos-modal-content border-none shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300">
+              <Card className="pos-modal-content border-none shadow-xl transition-all duration-300">
                 <CardHeader>
-                  <CardTitle>Recent Transactions (Table View)</CardTitle>
+                  <CardTitle>Transaksi Terkini (Tabel)</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-muted/50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Tanggal</th>
                         <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Method</th>
+                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Metode</th>
                         <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground">Total</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">Actions</th>
+                        <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">Aksi</th>
                       </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                       {transactions.map((t) => (
                           <tr 
                             key={t.id} 
-                            className="hover:bg-primary-brand/5 transition-all duration-200 cursor-pointer hover:shadow-[inset_0_0_0_1px_rgba(59,130,246,0.2)]"
+                            className="hover:bg-primary-brand/5 transition-all duration-200 cursor-pointer"
                             onClick={() => handleViewDetails(t)}
                           >
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
@@ -343,11 +339,11 @@ export default function ReportsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <Badge variant={statusVariant(t.payment_status)}>
-                                {capitalize(t.payment_status)}
+                                {capitalize(t.payment_status === 'paid' ? 'Lunas' : 'Tertunda')}
                               </Badge>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                              {t.payment_method}
+                              {t.payment_method === 'cash' ? 'Tunai' : t.payment_method === 'qris' ? 'QRIS' : t.payment_method}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-foreground text-right">
                               {formatCurrency(t.total)}
@@ -374,18 +370,18 @@ export default function ReportsPage() {
                   <Card 
                     key={t.id} 
                     onClick={() => handleViewDetails(t)}
-                    className="pos-modal-content border-none shadow-xl cursor-pointer group hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-0.5 transition-all duration-200 ease-in-out p-6"
+                    className="pos-modal-content border-none shadow-xl cursor-pointer group p-6"
                   >
                     <div className="flex justify-between items-start mb-4">
                         <Badge variant={statusVariant(t.payment_status)}>
-                            {capitalize(t.payment_status)}
+                            {capitalize(t.payment_status === 'paid' ? 'Lunas' : 'Tertunda')}
                         </Badge>
                         <span className="text-xs text-muted-foreground font-mono">{t.id.slice(0, 8)}...</span>
                     </div>
                     <div className="space-y-2">
-                        <div className="text-2xl font-black text-primary-brand group-hover:scale-105 transition-transform duration-200 origin-left">{formatCurrency(t.total)}</div>
+                        <div className="text-2xl font-black text-primary-brand">{formatCurrency(t.total)}</div>
                         <div className="text-sm text-foreground">{formatDate(t.created_at)}</div>
-                        <div className="text-sm text-muted-foreground">{t.payment_method}</div>
+                        <div className="text-sm text-muted-foreground">{t.payment_method === 'cash' ? 'Tunai' : 'QRIS'}</div>
                     </div>
                   </Card>
               ))}
@@ -399,7 +395,7 @@ export default function ReportsPage() {
             <DialogHeader>
               <DialogTitle className="pos-modal-title">
                 <ShoppingCart className="h-5 w-5" />
-                TRANSACTION DETAILS
+                DETAIL TRANSAKSI
               </DialogTitle>
             </DialogHeader>
 
@@ -408,17 +404,17 @@ export default function ReportsPage() {
                 {/* Transaction Summary */}
                 <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl">
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Transaction ID</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">ID Transaksi</p>
                     <p className="font-mono text-sm text-foreground">{selectedTransaction.id}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Date</p>
+                    <p className="text-xs font-bold text-muted-foreground uppercase">Tanggal</p>
                     <p className="font-medium text-sm text-foreground">{formatDate(selectedTransaction.created_at)}</p>
                   </div>
                   <div>
                     <p className="text-xs font-bold text-muted-foreground uppercase">Status</p>
                     <Badge variant={statusVariant(selectedTransaction.payment_status)}>
-                      {capitalize(selectedTransaction.payment_status)}
+                      {capitalize(selectedTransaction.payment_status === 'paid' ? 'Lunas' : 'Tertunda')}
                     </Badge>
                   </div>
                   <div>
@@ -429,21 +425,21 @@ export default function ReportsPage() {
 
                 {/* Items */}
                 <div>
-                  <h4 className="font-bold text-sm uppercase text-muted-foreground mb-3">Items Purchased</h4>
+                  <h4 className="font-bold text-sm uppercase text-muted-foreground mb-3">Item Dibeli</h4>
                   {loadingDetails ? (
                     <div className="text-center py-4">
                       <div className="pos-loading-spinner mx-auto" />
                     </div>
                   ) : transactionItems.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">No items found</div>
+                    <div className="text-center py-4 text-muted-foreground">Tidak ada item ditemukan</div>
                   ) : (
                     <div className="border border-border rounded-xl overflow-hidden">
                       <table className="w-full">
                         <thead className="bg-muted/50">
                           <tr>
-                            <th className="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Product</th>
+                            <th className="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Produk</th>
                             <th className="px-4 py-3 text-center text-xs font-bold uppercase text-muted-foreground">Qty</th>
-                            <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Unit Price</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Harga Satuan</th>
                             <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Subtotal</th>
                           </tr>
                         </thead>
@@ -453,7 +449,7 @@ export default function ReportsPage() {
                               <td className="px-4 py-3">
                                 <div>
                                   <p className="font-medium text-sm text-foreground">
-                                    {item.product?.name || 'Unknown Product'}
+                                    {item.product?.name || 'Produk Tidak Dikenal'}
                                     {item.variant && (
                                       <span className="text-xs text-muted-foreground ml-1">
                                         ({item.variant.variant_name})

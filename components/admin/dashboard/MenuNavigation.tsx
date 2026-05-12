@@ -74,12 +74,12 @@ export const MenuNavigation = () => (
   <div className="space-y-6 mb-8">
     <div className="flex items-center gap-2 mb-4 p-4 rounded-lg bg-card border transition-all duration-300 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-0.5">
       <Settings className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors duration-200" />
-      <h2 className="text-lg font-semibold hover:text-primary transition-colors duration-200">Menu Overview</h2>
+      <h2 className="text-lg font-semibold hover:text-primary transition-colors duration-200">Ringkasan Menu</h2>
     </div>
 
     {/* Product Management */}
     <MenuSection
-      title="Product Management"
+      title="Manajemen Produk"
       icon={Package}
       iconColor="text-blue-600"
       items={[
@@ -87,29 +87,29 @@ export const MenuNavigation = () => (
           href: "/dashboard/products",
           icon: Package,
           color: "text-blue-600",
-          title: "Products",
-          description: "Add, edit, and manage product inventory",
+          title: "Produk",
+          description: "Tambah, edit, dan kelola inventaris produk",
         },
         {
           href: "/dashboard/categories",
           icon: Tag,
           color: "text-green-600",
-          title: "Categories",
-          description: "Organize products by categories",
+          title: "Kategori",
+          description: "Atur produk berdasarkan kategori",
         },
         {
           href: "/dashboard/stock",
           icon: Database,
           color: "text-indigo-600",
-          title: "Stock Management",
-          description: "Track inventory levels",
+          title: "Manajemen Stok",
+          description: "Lacak tingkat inventaris",
         },
       ]}
     />
 
     {/* User Management */}
     <MenuSection
-      title="User Management"
+      title="Manajemen Pengguna"
       icon={Users}
       iconColor="text-purple-600"
       items={[
@@ -117,22 +117,22 @@ export const MenuNavigation = () => (
           href: "/dashboard/users",
           icon: UserCheck,
           color: "text-purple-600",
-          title: "All Users",
-          description: "Manage admin, cashier, and customer accounts",
+          title: "Semua Pengguna",
+          description: "Kelola akun admin, kasir, dan pelanggan",
         },
         {
           href: "/dashboard/cashiers",
           icon: Shield,
           color: "text-orange-600",
-          title: "Cashiers",
-          description: "Manage cashier permissions and PINs",
+          title: "Kasir",
+          description: "Kelola izin dan PIN kasir",
         },
         {
           href: "#",
           icon: Settings,
           color: "text-gray-400",
-          title: "Roles & Permissions",
-          description: "Configure user roles (Coming Soon)",
+          title: "Peran & Izin",
+          description: "Konfigurasi peran pengguna (Segera Hadir)",
           disabled: true,
         },
       ]}
@@ -140,7 +140,7 @@ export const MenuNavigation = () => (
 
     {/* Operations */}
     <MenuSection
-      title="Operations"
+      title="Operasional"
       icon={Activity}
       iconColor="text-orange-600"
       items={[
@@ -148,30 +148,30 @@ export const MenuNavigation = () => (
           href: "/pos",
           icon: Store,
           color: "text-red-600",
-          title: "POS Terminal",
-          description: "Open point of sale system",
+          title: "Terminal POS",
+          description: "Buka sistem point of sale",
         },
         {
           href: "/dashboard/reports",
           icon: PieChart,
           color: "text-indigo-600",
-          title: "Reports",
-          description: "Sales analytics and insights",
+          title: "Laporan",
+          description: "Analitik dan wawasan penjualan",
         },
         {
           href: "#",
           icon: CreditCard,
           color: "text-gray-400",
-          title: "Transactions",
-          description: "View all transactions (Coming Soon)",
+          title: "Transaksi",
+          description: "Lihat semua transaksi (Segera Hadir)",
           disabled: true,
         },
         {
           href: "#",
           icon: Receipt,
           color: "text-gray-400",
-          title: "Receipt Settings",
-          description: "Configure receipt templates (Coming Soon)",
+          title: "Pengaturan Resit",
+          description: "Konfigurasi templat resit (Segera Hadir)",
           disabled: true,
         },
       ]}
@@ -179,7 +179,7 @@ export const MenuNavigation = () => (
 
     {/* System Settings */}
     <MenuSection
-      title="System Settings"
+      title="Pengaturan Sistem"
       icon={Settings}
       iconColor="text-gray-600"
       items={[
@@ -187,24 +187,24 @@ export const MenuNavigation = () => (
           href: "#",
           icon: FileText,
           color: "text-gray-400",
-          title: "System Logs",
-          description: "View system activity logs (Coming Soon)",
+          title: "Log Sistem",
+          description: "Lihat log aktivitas sistem (Segera Hadir)",
           disabled: true,
         },
         {
           href: "#",
           icon: AlertCircle,
           color: "text-gray-400",
-          title: "Backup & Restore",
-          description: "Data backup management (Coming Soon)",
+          title: "Cadangkan & Pulihkan",
+          description: "Manajemen cadangan data (Segera Hadir)",
           disabled: true,
         },
         {
           href: "#",
           icon: CheckCircle,
           color: "text-gray-400",
-          title: "System Health",
-          description: "Monitor system status (Coming Soon)",
+          title: "Kesehatan Sistem",
+          description: "Pantau status sistem (Segera Hadir)",
           disabled: true,
         },
       ]}

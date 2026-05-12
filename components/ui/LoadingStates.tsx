@@ -24,7 +24,7 @@ interface LoadingCardProps {
   size?: "sm" | "md" | "lg";
 }
 
-export function LoadingCard({ title = "Loading...", size = "md" }: LoadingCardProps) {
+export function LoadingCard({ title = "Memuat...", size = "md" }: LoadingCardProps) {
   const heightClasses = {
     sm: "h-32",
     md: "h-48",
@@ -122,8 +122,8 @@ export function SearchEmptyState() {
   return (
     <EmptyState
       icon={<Search className="h-12 w-12 text-gray-400" />}
-      title="No results found"
-      description="Try adjusting your search terms or filters"
+      title="Hasil tidak ditemukan"
+      description="Coba sesuaikan kata kunci pencarian atau filter Anda"
     />
   );
 }

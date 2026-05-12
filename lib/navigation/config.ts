@@ -74,8 +74,8 @@ const adminItems: NavigationConfig = [
       },
       {
         href: "/dashboard/stock",
-        label: "Manajemen Stock",
-        description: "Monitor dan kelola inventory",
+        label: "Manajemen Stok",
+        description: "Pantau dan kelola stok",
       },
     ],
   },
@@ -104,12 +104,12 @@ const adminItems: NavigationConfig = [
       {
         href: "/dashboard/shifts",
         label: "Shift",
-        description: "Monitoring shift kasir",
+        description: "Pemantauan shift kasir",
       },
       {
         href: "/dashboard/cashier-actions",
         label: "Aksi Kasir",
-        description: "Log void, refund, discount",
+        description: "Log pembatalan, pengembalian, diskon",
       },
     ],
   },

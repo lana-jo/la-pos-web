@@ -33,9 +33,9 @@ export default function Error({
         
         <CardContent className="space-y-6">
           <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
-            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Error Details:</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Detail Kesalahan:</p>
             <p className="text-sm text-muted-foreground">
-              <strong>Digest ID:</strong> {error.digest || 'unknown'}
+              <strong>ID Digest:</strong> {error.digest || 'tidak diketahui'}
             </p>
             {process.env.NODE_ENV === 'development' && error.message && (
               <div className="mt-3 p-3 bg-destructive/10 rounded-lg text-destructive text-xs font-mono break-all border border-destructive/20">

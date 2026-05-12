@@ -209,7 +209,7 @@ export default function DashboardPage() {
       <div className="page-background flex items-center justify-center">
         <div className="text-center">
           <div className="pos-loading-spinner mx-auto mb-4" />
-          <p className="text-lg font-medium text-primary">Loading dashboard...</p>
+          <p className="text-lg font-medium text-primary">Memuat dasbor...</p>
         </div>
       </div>
     );
@@ -224,10 +224,10 @@ export default function DashboardPage() {
       <div className="space-y-6 sm:space-y-8">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            DASHBOARD
+            DASBOR
           </h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-2">
-            Welcome to Dashboard, {userName || 'User'}
+            Selamat datang di Dasbor, {userName || 'Pengguna'}
           </p>
         </div>
 

@@ -24,7 +24,7 @@ export default function Error({
             <AlertTriangle className="w-8 h-8 text-destructive" />
           </div>
           <CardTitle className="text-2xl font-bold text-destructive">
-            500 - Server Error
+            500 - Kesalahan Server
           </CardTitle>
           <CardDescription className="text-base">
             Terjadi kesalahan internal pada server. Tim kami telah diberitahu dan sedang memperbaikinya.
@@ -34,7 +34,7 @@ export default function Error({
         <CardContent className="space-y-4">
           <div className="bg-muted/50 rounded-lg p-3">
             <p className="text-sm text-muted-foreground">
-              <strong>Error ID:</strong> {error.digest || 'unknown'}
+              <strong>ID Error:</strong> {error.digest || 'tidak diketahui'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Silakan hubungi tim dukungan dengan ID error ini jika masalah berlanjut.

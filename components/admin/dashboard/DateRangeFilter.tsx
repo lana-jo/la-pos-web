@@ -43,14 +43,14 @@ export const DateRangeFilter = ({
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
       <Select value={selectedPreset} onValueChange={handlePresetChange}>
         <SelectTrigger className="w-full sm:w-40 transition-all duration-200 hover:border-primary hover:shadow-sm hover:shadow-primary/20 focus:ring-2 focus:ring-primary/20">
-          <SelectValue placeholder="Select period" />
+          <SelectValue placeholder="Pilih periode" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="7days">Last 7 days</SelectItem>
-          <SelectItem value="30days">Last 30 days</SelectItem>
-          <SelectItem value="90days">Last 90 days</SelectItem>
-          <SelectItem value="thisMonth">This month</SelectItem>
-          <SelectItem value="lastMonth">Last month</SelectItem>
+          <SelectItem value="7days">7 Hari Terakhir</SelectItem>
+          <SelectItem value="30days">30 Hari Terakhir</SelectItem>
+          <SelectItem value="90days">90 Hari Terakhir</SelectItem>
+          <SelectItem value="thisMonth">Bulan Ini</SelectItem>
+          <SelectItem value="lastMonth">Bulan Lalu</SelectItem>
           {/* <SelectItem value="custom">Custom range</SelectItem> */}
         </SelectContent>
       </Select>
@@ -96,7 +96,7 @@ export const AnalyticsOverview = ({ children }: AnalyticsOverviewProps) => (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 p-4 rounded-lg bg-card border transition-all duration-300 hover:shadow-md hover:shadow-primary/5 hover:-translate-y-0.5">
       <div className="flex items-center gap-2">
         <TrendingUpIcon className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors duration-200" />
-        <h2 className="text-lg font-semibold hover:text-primary transition-colors duration-200">Analytics Overview</h2>
+        <h2 className="text-lg font-semibold hover:text-primary transition-colors duration-200">Ringkasan Analitik</h2>
       </div>
       {children}
     </div>

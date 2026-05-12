@@ -51,7 +51,7 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="h-5 w-5 text-primary-brand" />
-          Top Products by Revenue ({getPresetLabel(preset as any)})
+          Produk Teratas Berdasarkan Pendapatan ({getPresetLabel(preset as any)})
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -88,9 +88,9 @@ export const TopProductsChart = ({ data, preset, formatCurrency }: TopProductsCh
             <Tooltip
               formatter={(value) => [
                 formatCurrency(Number(value)),
-                "Revenue",
+                "Pendapatan",
               ]}
-              labelFormatter={(label) => `Product: ${label}`}
+              labelFormatter={(label) => `Produk: ${label}`}
               contentStyle={{
                 ...getTooltipTheme().contentStyle,
                 fontSize: 12,

@@ -139,7 +139,7 @@ export default function CatalogPage() {
       <div className="page-background flex items-center justify-center">
         <div className="text-center">
           <div className="pos-loading-spinner mx-auto mb-4" />
-          <p className="text-lg font-medium text-primary">Loading catalog...</p>
+          <p className="text-lg font-medium text-primary">Memuat katalog...</p>
         </div>
       </div>
     );
@@ -156,9 +156,9 @@ export default function CatalogPage() {
               <div>
                 <h1 className="text-2xl font-bold text-primary-brand flex items-center gap-2">
                   <Store className="h-6 w-6" />
-                  CATALOG
+                  KATALOG
                 </h1>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Product Showcase</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tampilan Produk</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -442,7 +442,7 @@ export default function CatalogPage() {
                 className="w-full pos-button-primary h-12 text-lg shadow-lg"
                 onClick={() => setIsModalOpen(false)}
               >
-                Close Details
+                Tutup Detail
               </Button>
             </div>
           )}

@@ -33,19 +33,19 @@ export function PrinterTab({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Printer className="h-5 w-5" />
-          Printer Configuration
+          Konfigurasi Printer
         </CardTitle>
         <CardDescription>
-          Thermal printer and receipt printer settings
+          Pengaturan printer thermal dan printer struk
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="auto-print">Auto Print Receipt</Label>
+              <Label htmlFor="auto-print">Cetak Struk Otomatis</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Automatically print receipt after successful payment
+                Cetak struk secara otomatis setelah pembayaran berhasil
               </p>
             </div>
             <Switch 
@@ -58,9 +58,9 @@ export function PrinterTab({
           <Separator className="bg-border" />
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="print-logo">Print Logo</Label>
+              <Label htmlFor="print-logo">Cetak Logo</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Print store logo on receipt
+                Cetak logo toko pada struk
               </p>
             </div>
             <Switch 
@@ -73,38 +73,38 @@ export function PrinterTab({
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Printer Details</h4>
+          <h4 className="text-lg font-semibold">Detail Printer</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="printer-type">Printer Type</Label>
+              <Label htmlFor="printer-type">Tipe Printer</Label>
               <ReactSelect
-                value={{ value: formData.printer?.printer_type || 'thermal', label: formData.printer?.printer_type === 'laser' ? 'Laser/Inkjet Printer' : formData.printer?.printer_type === 'network' ? 'Network Printer' : 'Thermal Printer' }}
+                value={{ value: formData.printer?.printer_type || 'thermal', label: formData.printer?.printer_type === 'laser' ? 'Printer Laser/Inkjet' : formData.printer?.printer_type === 'network' ? 'Printer Jaringan' : 'Printer Thermal' }}
                 onChange={(option) => handleInputChange('printer', 'printer_type', option?.value)}
                 options={[
-                  { value: 'thermal', label: 'Thermal Printer' },
-                  { value: 'laser', label: 'Laser/Inkjet Printer' },
-                  { value: 'network', label: 'Network Printer' }
+                  { value: 'thermal', label: 'Printer Thermal' },
+                  { value: 'laser', label: 'Printer Laser/Inkjet' },
+                  { value: 'network', label: 'Printer Jaringan' }
                 ]}
-                placeholder="Select printer type"
+                placeholder="Pilih tipe printer"
                 className="w-full"
                 isDisabled={isLoading}
                 instanceId="printer-type-select"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="printer-port">Port/Connection</Label>
+              <Label htmlFor="printer-port">Port/Koneksi</Label>
               <Input 
                 id="printer-port" 
                 value={formData.printer?.printer_port || ''}
                 onChange={(e) => handleInputChange('printer', 'printer_port', e.target.value)}
-                placeholder="USB001 or IP Address"
+                placeholder="USB001 atau Alamat IP"
                 disabled={isLoading}
                 className="pos-form-input"
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="paper-width">Paper Width</Label>
+            <Label htmlFor="paper-width">Lebar Kertas</Label>
             <ReactSelect
               value={{ value: formData.printer?.paper_width || '58mm', label: formData.printer?.paper_width === '80mm' ? '80mm' : formData.printer?.paper_width === 'a4' ? 'A4' : '58mm' }}
               onChange={(option) => handleInputChange('printer', 'paper_width', option?.value)}
@@ -113,7 +113,7 @@ export function PrinterTab({
                 { value: '80mm', label: '80mm' },
                 { value: 'a4', label: 'A4' }
               ]}
-              placeholder="Select paper width"
+              placeholder="Pilih lebar kertas"
               className="w-full"
               isDisabled={isLoading}
               instanceId="paper-width-select"
@@ -122,15 +122,15 @@ export function PrinterTab({
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Test Printer</h4>
+          <h4 className="text-lg font-semibold">Uji Printer</h4>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleTestPrint} disabled={isLoading} className="border-primary-brand text-primary-brand hover:bg-primary-brand/10">
               <Printer className="h-4 w-4 mr-2" />
-              Test Print
+              Cetak Uji
             </Button>
             <Button variant="outline" onClick={handleTestPrinterConnection} disabled={isLoading} className="border-primary-brand text-primary-brand hover:bg-primary-brand/10">
               <Database className="h-4 w-4 mr-2" />
-              Test Connection
+              Uji Koneksi
             </Button>
           </div>
         </div>
@@ -141,7 +141,7 @@ export function PrinterTab({
             disabled={isSaving || isLoading}
             className="pos-button-primary"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
         </div>
       </CardContent>

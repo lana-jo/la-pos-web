@@ -28,7 +28,7 @@ const TrendBadge = ({ value }: { value: number }) => (
     >
       {Math.abs(value).toFixed(1)}%
     </span>
-    &nbsp;from previous period
+    &nbsp;dari periode sebelumnya
   </div>
 );
 
@@ -54,28 +54,28 @@ interface DashboardStatsCardsProps {
 export const DashboardStatsCards = ({ stats, formatCurrency }: DashboardStatsCardsProps) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
     <StatsCard
-      title="Today's Revenue"
+      title="Pendapatan Hari Ini"
       value={formatCurrency(stats.todayRevenue)}
       icon={DollarSign}
       trend={stats.revenueChange}
     />
     <StatsCard
-      title="Today's Transactions"
+      title="Transaksi Hari Ini"
       value={stats.todayTransactions}
       icon={ShoppingCart}
       trend={stats.transactionChange}
     />
     <StatsCard
-      title="Total Products"
+      title="Total Produk"
       value={stats.totalProducts}
       icon={Package}
-      subtitle="Active products in catalog"
+      subtitle="Produk aktif di katalog"
     />
     <StatsCard
-      title="Total Users"
+      title="Total Pengguna"
       value={stats.totalUsers}
       icon={Users}
-      subtitle="Registered users"
+      subtitle="Pengguna terdaftar"
     />
   </div>
 );

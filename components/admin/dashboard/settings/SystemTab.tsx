@@ -23,20 +23,20 @@ export function SystemTab({ formData, handleInputChange, handleSave, isLoading, 
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          System Settings
+          Pengaturan Sistem
         </CardTitle>
         <CardDescription>
-          Configure system security and backup settings
+          Konfigurasi keamanan sistem dan pengaturan cadangan
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Security Settings</h4>
+          <h4 className="text-lg font-semibold">Pengaturan Keamanan</h4>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="session-timeout">Session Timeout</Label>
+              <Label htmlFor="session-timeout">Batas Waktu Sesi (Timeout)</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Automatically logout after inactivity
+                Otomatis logout setelah tidak ada aktivitas
               </p>
             </div>
             <Switch 
@@ -48,7 +48,7 @@ export function SystemTab({ formData, handleInputChange, handleSave, isLoading, 
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="timeout-duration">Duration (minutes)</Label>
+              <Label htmlFor="timeout-duration">Durasi (menit)</Label>
               <Input 
                 id="timeout-duration" 
                 type="number"
@@ -61,7 +61,7 @@ export function SystemTab({ formData, handleInputChange, handleSave, isLoading, 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="max-login">Max Login Attempts</Label>
+              <Label htmlFor="max-login">Maksimum Percobaan Login</Label>
               <Input 
                 id="max-login" 
                 type="number"
@@ -79,12 +79,12 @@ export function SystemTab({ formData, handleInputChange, handleSave, isLoading, 
         <Separator className="bg-border" />
 
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">Backup Settings</h4>
+          <h4 className="text-lg font-semibold">Pengaturan Cadangan (Backup)</h4>
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label htmlFor="auto-backup">Auto Backup</Label>
+              <Label htmlFor="auto-backup">Backup Otomatis</Label>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Enable automatic database backup
+                Aktifkan pencadangan basis data otomatis
               </p>
             </div>
             <Switch 
@@ -95,16 +95,16 @@ export function SystemTab({ formData, handleInputChange, handleSave, isLoading, 
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="backup-frequency">Backup Frequency</Label>
+            <Label htmlFor="backup-frequency">Frekuensi Cadangan</Label>
             <ReactSelect
-              value={{ value: formData.system?.backup_frequency || 'daily', label: formData.system?.backup_frequency === 'weekly' ? 'Weekly' : formData.system?.backup_frequency === 'monthly' ? 'Monthly' : 'Daily' }}
+              value={{ value: formData.system?.backup_frequency || 'daily', label: formData.system?.backup_frequency === 'weekly' ? 'Mingguan' : formData.system?.backup_frequency === 'monthly' ? 'Bulanan' : 'Harian' }}
               onChange={(option) => handleInputChange('system', 'backup_frequency', option?.value)}
               options={[
-                { value: 'daily', label: 'Daily' },
-                { value: 'weekly', label: 'Weekly' },
-                { value: 'monthly', label: 'Monthly' }
+                { value: 'daily', label: 'Harian' },
+                { value: 'weekly', label: 'Mingguan' },
+                { value: 'monthly', label: 'Bulanan' }
               ]}
-              placeholder="Select backup frequency"
+              placeholder="Pilih frekuensi cadangan"
               className="w-full"
               isDisabled={isLoading}
               instanceId="backup-frequency-select"
@@ -118,7 +118,7 @@ export function SystemTab({ formData, handleInputChange, handleSave, isLoading, 
             disabled={isSaving || isLoading}
             className="pos-button-primary"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </Button>
         </div>
       </CardContent>

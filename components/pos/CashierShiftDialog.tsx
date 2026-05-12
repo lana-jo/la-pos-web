@@ -181,7 +181,7 @@ export function CashierShiftDialog({ open, onOpenChange, type }: CashierShiftDia
               
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
-                <span>Kas Diharapkan: {formatCurrency(expectedCash)}</span>
+                <span>Kas Seharusnya: {formatCurrency(expectedCash)}</span>
               </div>
             </div>
           </div>

@@ -48,7 +48,7 @@ export default function Home() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-lg text-muted-foreground">Loading...</p>
+          <p className="text-lg text-muted-foreground">Memuat...</p>
         </div>
       </div>
     );
@@ -58,8 +58,8 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-        <h1 className="text-2xl font-bold mb-4">POS System</h1>
-        <p className="text-gray-600">Redirecting to your dashboard...</p>
+        <h1 className="text-2xl font-bold mb-4">Sistem POS</h1>
+        <p className="text-gray-600">Mengalihkan ke dasbor Anda...</p>
       </div>
     </div>
   );

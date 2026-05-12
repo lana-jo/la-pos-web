@@ -141,7 +141,7 @@ export default function CashierActionsPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <ClipboardList className="h-12 w-12 mx-auto mb-4 text-blue-600 animate-pulse" />
-          <p className="text-lg">Loading audit log...</p>
+          <p className="text-lg">Memuat log audit...</p>
         </div>
       </div>
     );
