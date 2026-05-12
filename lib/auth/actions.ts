@@ -1,12 +1,13 @@
 'use server'
 
+import { safeAction } from '@/lib/utils/action-wrapper'
 import { supabaseServer } from '@/lib/supabase/server'
 import bcrypt from 'bcryptjs'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export async function logout(): Promise<{ success: boolean; error?: string }> {
-  try {
+export async function logout() {
+  return await safeAction(async () => {
     const cookieStore = await cookies()
 
     // Preserve theme preference during logout
@@ -36,11 +37,8 @@ export async function logout(): Promise<{ success: boolean; error?: string }> {
       cookieStore.set('pos-theme', themeCookie.value)
     }
 
-    return { success: true }
-  } catch (err) {
-    console.error('Logout error:', err)
-    return { success: false, error: 'Gagal logout' }
-  }
+    return true
+  })
 }
 
 export async function loginWithCookie(email: string, password: string) {
