@@ -459,23 +459,8 @@ export default function ProductsPage() {
                 {/* Header */}
                 <div className="flex flex-col gap-4 mb-6">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div className="flex items-center gap-4">
-                            <h2 className="text-3xl font-bold text-foreground">Produk ({filteredProducts.length})</h2>
-                            <CategoryFilter
-                                categories={categories}
-                                selectedCategory={selectedCategory}
-                                onSelectCategory={setSelectedCategory}
-                            />
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="pos-form-input"
-                            >
-                                <option value="all">Semua Status</option>
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Nonaktif</option>
-                            </select>
-                        </div>
+                        <h2 className="text-3xl font-bold text-foreground">Produk ({filteredProducts.length})</h2>
+
                         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 w-full lg:w-auto">
                             {/* Utility Actions Group */}
                             <div className="flex items-center gap-2">
@@ -506,19 +491,39 @@ export default function ProductsPage() {
                             </div>
                             {/* Primary Action */}
                             <Button onClick={() => setModal('add')} className="pos-button-primary shadow-sm h-9 px-4">
-                            <Plus className="h-4 w-4 mr-1" />
-                            <span className="hidden sm:inline">Tambah Produk</span>
-                            </Button>                        </div>
+                                <Plus className="h-4 w-4 mr-1" />
+                                <span className="hidden sm:inline">Tambah Produk</span>
+                            </Button>
+                        </div>
                     </div>
-                    {/* Search Input */}
-                    <div className="max-w-md">
-                        <input
-                            type="text"
-                            placeholder="Cari produk berdasarkan nama atau barcode..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-border bg-background pos-form-input shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
-                        />
+
+                    {/* Filters Row */}
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="flex-1">
+                            <input
+                                type="text"
+                                placeholder="Cari produk berdasarkan nama atau barcode..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full px-4 py-2 rounded-lg border border-border bg-background pos-form-input shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <CategoryFilter
+                                categories={categories}
+                                selectedCategory={selectedCategory}
+                                onSelectCategory={setSelectedCategory}
+                            />
+                            <select
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value as any)}
+                                className="pos-form-input h-[42px] px-3 rounded-lg border border-border"
+                            >
+                                <option value="all">Semua Status</option>
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Nonaktif</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 {/* Content */}
