@@ -16,6 +16,34 @@ export class PrintManager {
         return PrintManager.instance;
     }
 
+    async printTransaction(
+        transaction: Transaction & { items: TransactionItem[] },
+        cashierName: string,
+        options: PrintOptions = {}
+    ): Promise<boolean> {
+        if (this.isPrinting) {
+            console.warn("Print already in progress");
+            return false;
+        }
+
+        this.isPrinting = true;
+
+        try {
+            if (options.printerName) {
+                // Implement ESC/POS logic if printerName is provided
+                return await this.printESCPOS(transaction, cashierName, options.printerName);
+            } else {
+                await this.printBrowser(transaction, cashierName, options.silent);
+                return true;
+            }
+        } catch (error) {
+            console.error("Print transaction failed:", error);
+            return false;
+        } finally {
+            this.isPrinting = false;
+        }
+    }
+
     async printBarcode(
         barcode: string,
         productName: string,
@@ -421,7 +449,7 @@ export class PrintManager {
         const itemsHTML = transaction.items
             .map(
                 (item) => {
-                    const productName = item.product?.name || item.product_name || "Unknown Product";
+                    const productName = item.product?.name || item.product_name || "Produk Tidak Dikenal";
                     const variantName = item.variant?.variant_name || item.variant_name;
                     const variantInfo = variantName ? ` (${variantName})` : "";
                     const barcode = item.variant?.barcode || item.product?.barcode || item.barcode;
@@ -429,8 +457,8 @@ export class PrintManager {
                     
                     const additionalVariantDetails = variantName ? `
           <div class="item-variant-details">
-            Variant: ${variantName}
-            ${barcode ? `Code: ${barcode}` : ''}
+            Varian: ${variantName}
+            ${barcode ? `Barcode: ${barcode}` : ''}
           </div>
         ` : '';
         
@@ -452,45 +480,45 @@ export class PrintManager {
 
         return `
       <div class="header">
-        <h1>POS Store</h1>
+        <h1>POS Toko</h1>
         <p>123 Main St, City, Country</p>
         <p>+62 123 456 789</p>
-        <p>*** RECEIPT ***</p>
+        <p>*** STRUK ***</p>
       </div>
       
       <div class="transaction-info">
-        <div><span>Transaction ID:</span><span>${getTransactionId(transaction.id)}</span></div>
-        <div><span>Date:</span><span>${formatDate(transaction.created_at)}</span></div>
-        <div><span>Cashier:</span><span>${cashierName}</span></div>
-        ${transaction.paid_at ? `<div><span>Paid:</span><span>${formatDate(transaction.paid_at)}</span></div>` : ""}
+        <div><span>ID Transaksi:</span><span>${getTransactionId(transaction.id)}</span></div>
+        <div><span>Tanggal:</span><span>${formatDate(transaction.created_at)}</span></div>
+        <div><span>Kasir:</span><span>${cashierName}</span></div>
+        ${transaction.paid_at ? `<div><span>Dibayar:</span><span>${formatDate(transaction.paid_at)}</span></div>` : ""}
       </div>
       
       <div class="items">
-        <div class="item-name"><span>ITEMS</span><span>AMOUNT</span></div>
+        <div class="item-name"><span>ITEM</span><span>TOTAL</span></div>
         ${itemsHTML}
       </div>
       
       <div class="transaction-details">
-        <div class="section-title">TRANSACTION DETAILS</div>
-        <div class="detail-row"><span>Total Items:</span><span>${transaction.items.reduce((sum, item) => sum + item.qty, 0)}</span></div>
-        <div class="detail-row"><span>Unique Products:</span><span>${transaction.items.length}</span></div>
-        ${transaction.items.some(item => item.variant || item.variant_name) ? `<div class="detail-row"><span>With Variants:</span><span>${transaction.items.filter(item => item.variant || item.variant_name).length}</span></div>` : ''}
+        <div class="section-title">DETAIL TRANSAKSI</div>
+        <div class="detail-row"><span>Total Item:</span><span>${transaction.items.reduce((sum, item) => sum + item.qty, 0)}</span></div>
+        <div class="detail-row"><span>Produk Unik:</span><span>${transaction.items.length}</span></div>
+        ${transaction.items.some(item => item.variant || item.variant_name) ? `<div class="detail-row"><span>Dengan Varian:</span><span>${transaction.items.filter(item => item.variant || item.variant_name).length}</span></div>` : ''}
       </div>
       
       <div class="totals">
         <div class="total"><span>TOTAL:</span><span>${formatCurrency(transaction.total)}</span></div>
-        <div><span>Payment:</span><span>${transaction.payment_method === "cash" ? "Cash" : "QRIS"}</span></div>
-        <div><span>Change:</span><span>Rp 0</span></div>
+        <div><span>Pembayaran:</span><span>${transaction.payment_method === "cash" ? "Tunai" : "QRIS"}</span></div>
+        <div><span>Kembali:</span><span>Rp 0</span></div>
       </div>
       
       <div class="footer">
-        <p>Thank you for your purchase!</p>
+        <p>Terima kasih atas pembelian Anda!</p>
         <div class="qr-code">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`${window.location.origin}/receipt/${transaction.id}`)}" alt="QR Code" />
         </div>
-        <p>Scan for digital receipt</p>
-        <p>This is a computer-generated receipt</p>
-        <p>No signature required</p>
+        <p>Scan untuk struk digital</p>
+        <p>Struk ini dibuat secara otomatis</p>
+        <p>Tidak perlu tanda tangan</p>
       </div>
     `;
     }
@@ -514,14 +542,14 @@ export class PrintManager {
         // Store name (bold, double height)
         commands.push(0x1b, 0x21, 0x08); // ESC ! 8 - Font A, double height
         commands.push(0x1b, 0x45, 0x01); // ESC E 1 - Bold on
-        commands.push(...this.textToBytes("POS Store\n"));
+        commands.push(...this.textToBytes("POS Toko\n"));
         commands.push(0x1b, 0x45, 0x00); // ESC E 0 - Bold off
         commands.push(0x1b, 0x21, 0x00); // ESC ! 0 - Font A, normal size
 
         // Store details
         commands.push(...this.textToBytes("123 Main St, City, Country\n"));
         commands.push(...this.textToBytes("+62 123 456 789\n"));
-        commands.push(...this.textToBytes("*** RECEIPT ***\n\n"));
+        commands.push(...this.textToBytes("*** STRUK ***\n\n"));
 
         // Set alignment to left
         commands.push(0x1b, 0x61, 0x00); // ESC a 0 - Left align
@@ -529,23 +557,23 @@ export class PrintManager {
         // Transaction info
         commands.push(
             ...this.textToBytes(
-                `Transaction ID: ${transaction.id.slice(-8).toUpperCase()}\n`,
+                `ID Transaksi: ${transaction.id.slice(-8).toUpperCase()}\n`,
             ),
         );
         commands.push(
             ...this.textToBytes(
-                `Date: ${new Date(transaction.created_at).toLocaleString("id-ID")}\n`,
+                `Tanggal: ${new Date(transaction.created_at).toLocaleString("id-ID")}\n`,
             ),
         );
-        commands.push(...this.textToBytes(`Cashier: ${cashierName}\n`));
+        commands.push(...this.textToBytes(`Kasir: ${cashierName}\n`));
 
         // Items
         commands.push(0x1b, 0x61, 0x00); // Left align
-        commands.push(...this.textToBytes("\nITEMS              AMOUNT\n"));
+        commands.push(...this.textToBytes("\nITEM               TOTAL\n"));
         commands.push(...this.textToBytes("--------------------------------\n"));
 
         transaction.items.forEach((item) => {
-            const productName = item.product?.name || item.product_name || "Unknown Product";
+            const productName = item.product?.name || item.product_name || "Produk Tidak Dikenal";
             const variantName = item.variant?.variant_name || item.variant_name;
             const variantInfo = variantName ? ` (${variantName})` : "";
             const displayName = (productName + variantInfo).padEnd(16);
@@ -570,22 +598,22 @@ export class PrintManager {
             
             // Additional variant details for ESC/POS
             if (variantName) {
-                const variantDetails = `    Variant: ${variantName}`;
+                const variantDetails = `    Varian: ${variantName}`;
                 commands.push(...this.textToBytes(`${variantDetails}\n`));
                 if (barcode) {
-                    const variantCode = `    Code: ${barcode}`;
+                    const variantCode = `    Barcode: ${barcode}`;
                     commands.push(...this.textToBytes(`${variantCode}\n`));
                 }
             }
         });
         
         // Transaction details for ESC/POS
-        commands.push(...this.textToBytes("\nTRANSACTION DETAILS\n"));
+        commands.push(...this.textToBytes("\nDETAIL TRANSAKSI\n"));
         commands.push(...this.textToBytes("--------------------\n"));
-        commands.push(...this.textToBytes(`Total Items:    ${transaction.items.reduce((sum, item) => sum + item.qty, 0)}\n`));
-        commands.push(...this.textToBytes(`Unique Products: ${transaction.items.length}\n`));
+        commands.push(...this.textToBytes(`Total Item:     ${transaction.items.reduce((sum, item) => sum + item.qty, 0)}\n`));
+        commands.push(...this.textToBytes(`Produk Unik:    ${transaction.items.length}\n`));
         if (transaction.items.some(item => item.variant || item.variant_name)) {
-            commands.push(...this.textToBytes(`With Variants:  ${transaction.items.filter(item => item.variant || item.variant_name).length}\n`));
+            commands.push(...this.textToBytes(`Dengan Varian:  ${transaction.items.filter(item => item.variant || item.variant_name).length}\n`));
         }
 
         // Totals
@@ -603,18 +631,18 @@ export class PrintManager {
 
         commands.push(
             ...this.textToBytes(
-                `Payment:    ${transaction.payment_method === "cash" ? "Cash" : "QRIS"}\n`,
+                `Pembayaran: ${transaction.payment_method === "cash" ? "Tunai" : "QRIS"}\n`,
             ),
         );
-        commands.push(...this.textToBytes(`Change:     Rp 0\n\n`));
+        commands.push(...this.textToBytes(`Kembali:    Rp 0\n\n`));
 
         // Footer
         commands.push(0x1b, 0x61, 0x01); // Center align
-        commands.push(...this.textToBytes("Thank you for your purchase!\n"));
+        commands.push(...this.textToBytes("Terima kasih atas pembelian Anda!\n"));
         commands.push(
-            ...this.textToBytes("This is a computer-generated receipt\n"),
+            ...this.textToBytes("Struk ini dibuat secara otomatis\n"),
         );
-        commands.push(...this.textToBytes("No signature required\n\n"));
+        commands.push(...this.textToBytes("Tidak perlu tanda tangan\n\n"));
 
         // Cut paper
         commands.push(0x1d, 0x56, 0x00); // GS V 0 - Full cut

@@ -83,7 +83,7 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
       }),
     };
 
-    const success = await printManager.printReceipt(transaction, "Kasir", {
+    const success = await printManager.printTransaction(transaction, "Kasir", {
       silent: false,
     });
 
