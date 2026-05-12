@@ -11,19 +11,21 @@ interface CategoryFilterProps {
 
 export function CategoryFilter({ categories, selectedCategory, onSelectCategory }: CategoryFilterProps) {
     return (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
             <Button
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
                 size="sm"
+                className="rounded-full px-4"
                 onClick={() => onSelectCategory('all')}
             >
-                All
+                Semua
             </Button>
             {categories.map((cat) => (
                 <Button
                     key={cat.id}
                     variant={selectedCategory === cat.id ? 'default' : 'outline'}
                     size="sm"
+                    className="rounded-full px-4"
                     onClick={() => onSelectCategory(cat.id)}
                 >
                     {cat.name}
