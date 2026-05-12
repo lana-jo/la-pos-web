@@ -127,7 +127,7 @@ export default function CatalogPage() {
       return { '': filteredProducts }
     }
     return filteredProducts.reduce((acc, product) => {
-      const catName = product.category?.name || 'Uncategorized'
+      const catName = product.category?.name || 'Tanpa Kategori'
       if (!acc[catName]) acc[catName] = []
       acc[catName].push(product)
       return acc

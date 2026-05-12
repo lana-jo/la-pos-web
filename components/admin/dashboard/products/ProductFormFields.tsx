@@ -52,11 +52,12 @@ const validateVariant = (variant: FormVariant): string | null => {
     if (!variant.conversion_qty) return 'Faktor konversi harus diisi'
     
     const price = parseInt(variant.price, 10)
-    const costPrice = parseInt(variant.cost_price, 10)
+    const costPrice = parseInt(variant.cost_price, 10) || 0
     const conversionQty = parseInt(variant.conversion_qty, 10)
     
     if (price > PG_INT_MAX || price < 0) return `Harga maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`
     if (costPrice > PG_INT_MAX || costPrice < 0) return `Harga beli maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`
+    if (price < costPrice) return 'Harga jual tidak boleh lebih rendah dari harga beli'
     if (conversionQty > PG_INT_MAX || conversionQty <= 0) return `Faktor konversi maksimum ${PG_INT_MAX.toLocaleString('id-ID')}`
     
     return null
@@ -179,7 +180,11 @@ export function ProductFormFields({
                         onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                         placeholder="0"
                         disabled={isSubmitting}
+                        className={parseInt(formData.price) < parseInt(formData.cost_price) ? "border-red-500" : ""}
                     />
+                    {parseInt(formData.price) < parseInt(formData.cost_price) && (
+                        <p className="text-xs text-red-500 mt-1 font-medium">⚠️ Harga jual lebih rendah dari harga beli!</p>
+                    )}
                 </div>
             </div>
 
@@ -480,8 +485,11 @@ export function ProductFormFields({
                                             }}
                                             placeholder="0"
                                             disabled={isSubmitting}
-                                            className="h-8"
+                                            className={`h-8 ${parseInt(variant.price) < parseInt(variant.cost_price) ? "border-red-500" : ""}`}
                                         />
+                                        {parseInt(variant.price) < parseInt(variant.cost_price) && (
+                                            <p className="text-[10px] text-red-500 mt-0.5">⚠️ Rendah!</p>
+                                        )}
                                     </div>
                                     <div>
                                         <Label className="text-xs">Faktor Konversi *</Label>

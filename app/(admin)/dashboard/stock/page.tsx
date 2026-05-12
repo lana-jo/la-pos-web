@@ -50,11 +50,11 @@ export default function StockManagementPage() {
   const fetchProducts = async () => {
     try {
       const response = await fetch('/api/products');
-      if (!response.ok) throw new Error('Failed to fetch products');
+      if (!response.ok) throw new Error('Gagal memuat produk');
       const data = await response.json();
       setProducts(data);
     } catch (error) {
-      toast.error('Error loading products');
+      toast.error('Gagal memuat produk');
     } finally {
       setLoading(false);
     }
@@ -63,11 +63,11 @@ export default function StockManagementPage() {
   const fetchMovements = async () => {
     try {
       const response = await fetch('/api/stock/movements');
-      if (!response.ok) throw new Error('Failed to fetch movements');
+      if (!response.ok) throw new Error('Gagal memuat pergerakan');
       const data = await response.json();
       setMovements(data);
     } catch (error) {
-      console.error('Error loading movements:', error);
+      console.error('Gagal memuat pergerakan:', error);
     }
   };
 
@@ -92,7 +92,7 @@ export default function StockManagementPage() {
 
   const handleStockMovement = async () => {
     if (!selectedProduct || !quantity || parseInt(quantity) <= 0) {
-      toast.error('Please fill in all required fields');
+      toast.error('Harap isi semua kolom yang diperlukan');
       return;
     }
 
@@ -109,17 +109,17 @@ export default function StockManagementPage() {
           movement_type: movementTypeMap,
           qty_change: movementType === 'in' ? parseInt(quantity) : -parseInt(quantity),
           unit_cost: 0,
-          notes: notes || `Manual ${movementTypeMap}${selectedVariantId ? ' (Variant)' : ''}`
+          notes: notes || `Manual ${movementTypeMap}${selectedVariantId ? ' (Varian)' : ''}`
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        const errorMessage = errorData.error || 'Failed to record movement';
+        const errorMessage = errorData.error || 'Gagal mencatat pergerakan';
         throw new Error(errorMessage);
       }
       
-      toast.success(`Stock ${movementType === 'in' ? 'added' : 'removed'} successfully`);
+      toast.success(`Stok berhasil ${movementType === 'in' ? 'ditambahkan' : 'dikurangi'}`);
       setShowMovementModal(false);
       setSelectedProduct(null);
       setSelectedVariantId("");
@@ -128,8 +128,8 @@ export default function StockManagementPage() {
       fetchProducts();
       fetchMovements();
     } catch (error) {
-      console.error('Stock movement error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error updating stock';
+      console.error('Error pergerakan stok:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Gagal memperbarui stok';
       toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -142,12 +142,12 @@ export default function StockManagementPage() {
     <div className="min-h-screen pos-terminal p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Stock Management</h1>
-          <p className="text-muted-foreground">Monitor and manage product inventory levels</p>
+          <h1 className="text-3xl font-bold text-foreground">Manajemen Stok</h1>
+          <p className="text-muted-foreground">Monitor dan kelola tingkat inventaris produk</p>
         </div>
         <Button onClick={() => { setShowMovementModal(true); }} className="pos-button-primary shadow-lg">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Update Stock
+          Update Stok
         </Button>
       </div>
 
@@ -155,7 +155,7 @@ export default function StockManagementPage() {
         <Card className="pos-modal-content border-none shadow-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase">Total Products</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase">Total Produk</p>
                 <p className="text-2xl font-black text-foreground mt-1">{products.length}</p>
               </div>
               <Package className="h-8 w-8 text-primary-brand" />
@@ -165,7 +165,7 @@ export default function StockManagementPage() {
         <Card className="pos-modal-content border-none shadow-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase">Low Stock</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase">Stok Rendah</p>
                 <p className="text-2xl font-black text-yellow-600 mt-1">
                   {products.filter(p => {
                     const stock = p.track_stock ? p.cached_stock : p.stock;
@@ -181,7 +181,7 @@ export default function StockManagementPage() {
         <Card className="pos-modal-content border-none shadow-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase">Out of Stock</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase">Stok Habis</p>
                 <p className="text-2xl font-black text-destructive mt-1">
                   {products.filter(p => {
                     const stock = p.track_stock ? p.cached_stock : p.stock;
@@ -196,7 +196,7 @@ export default function StockManagementPage() {
         <Card className="pos-modal-content border-none shadow-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase">Total Stock Value</p>
+                <p className="text-sm font-bold text-muted-foreground uppercase">Total Nilai Stok</p>
                 <p className="text-2xl font-black text-primary-brand mt-1">
                   Rp {products.reduce((sum, p) => {
                     const stock = p.track_stock ? p.cached_stock : p.stock;
@@ -211,14 +211,14 @@ export default function StockManagementPage() {
 
       <Card className="pos-modal-content border-none shadow-xl">
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>Filter</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search products..."
+                placeholder="Cari produk..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pos-form-input"
@@ -227,10 +227,10 @@ export default function StockManagementPage() {
             
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="pos-form-input">
-                <SelectValue placeholder="All Categories" />
+                <SelectValue placeholder="Semua Kategori" />
               </SelectTrigger>
               <SelectContent className="pos-modal-content">
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">Semua Kategori</SelectItem>
                 {categories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
@@ -239,13 +239,13 @@ export default function StockManagementPage() {
             
             <Select value={stockFilter} onValueChange={setStockFilter}>
               <SelectTrigger className="pos-form-input">
-                <SelectValue placeholder="Stock Status" />
+                <SelectValue placeholder="Status Stok" />
               </SelectTrigger>
               <SelectContent className="pos-modal-content">
-                <SelectItem value="all">All Stock Levels</SelectItem>
-                <SelectItem value="available">In Stock</SelectItem>
-                <SelectItem value="low">Low Stock (≤10)</SelectItem>
-                <SelectItem value="out">Out of Stock</SelectItem>
+                <SelectItem value="all">Semua Stok</SelectItem>
+                <SelectItem value="available">Tersedia</SelectItem>
+                <SelectItem value="low">Stok Rendah (≤10)</SelectItem>
+                <SelectItem value="out">Stok Habis</SelectItem>
               </SelectContent>
             </Select>
             
@@ -254,7 +254,7 @@ export default function StockManagementPage() {
               setSelectedCategory("all");
               setStockFilter("all");
             }} className="border-primary-brand text-primary-brand">
-              Clear Filters
+              Hapus Filter
             </Button>
           </div>
         </CardContent>
@@ -262,7 +262,7 @@ export default function StockManagementPage() {
 
       <Card className="pos-modal-content border-none shadow-xl">
         <CardHeader>
-          <CardTitle>Product Inventory</CardTitle>
+          <CardTitle>Inventaris Produk</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -301,7 +301,7 @@ export default function StockManagementPage() {
 
       <Card className="pos-modal-content border-none shadow-xl">
         <CardHeader>
-          <CardTitle>Recent Stock Movements</CardTitle>
+          <CardTitle>Pergerakan Stok Terbaru</CardTitle>
         </CardHeader>
         <CardContent>
           <RecentActivityList movements={movements} />

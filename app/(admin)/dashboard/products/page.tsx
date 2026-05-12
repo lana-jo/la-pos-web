@@ -277,6 +277,10 @@ export default function ProductsPage() {
             toast.error(`Harga beli tidak valid: maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`)
             return null
         }
+        if (price < costPrice) {
+            toast.error('Harga jual tidak boleh lebih rendah dari harga beli')
+            return null
+        }
         if (stock > PG_INT_MAX || stock < 0) {
             toast.error(`Stok tidak valid: maksimum ${PG_INT_MAX.toLocaleString('id-ID')}`)
             return null

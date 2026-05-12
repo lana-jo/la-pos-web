@@ -5,9 +5,35 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Package, Edit, Trash2, Layers, ChevronDown, ChevronUp, Barcode, Printer } from 'lucide-react'
 import { Category, Product } from '@/types'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { PrintManager } from '@/lib/printer/printManager'
 import { toast } from 'sonner'
+import JsBarcode from 'jsbarcode'
+
+// Barcode Renderer Component
+const BarcodeCell = ({ value }: { value: string }) => {
+    const svgRef = useRef<SVGSVGElement>(null)
+
+    useEffect(() => {
+        if (svgRef.current && value) {
+            JsBarcode(svgRef.current, value, {
+                format: "CODE128",
+                width: 1.5,
+                height: 25,
+                displayValue: false,
+                margin: 0,
+            })
+        }
+    }, [value])
+
+    if (!value) return <span className="text-xs text-muted-foreground italic">-</span>
+    return (
+        <div className="flex flex-col items-start gap-1">
+            <svg ref={svgRef} />
+            <code className="text-[10px] bg-muted px-1 rounded block">{value}</code>
+        </div>
+    )
+}
 
 type ProductWithCategory = Product & {
     categories: Pick<Category, 'name'> | null
@@ -66,7 +92,6 @@ export function ProductTable({
                 <TableBody>
                     {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
-                            {/* ... existing Image cell ... */}
                             <TableCell className="w-16">
                                 <div className="w-10 h-10 bg-muted rounded-md flex items-center justify-center border">
                                     {product.image_url ? (
@@ -80,7 +105,6 @@ export function ProductTable({
                                     )}
                                 </div>
                             </TableCell>
-                            {/* ... existing Name cell ... */}
                             <TableCell className="w-64 font-medium">
                                 <div className="max-w-none">
                                     <p className="truncate" title={product.name}>
@@ -106,9 +130,7 @@ export function ProductTable({
                                 </div>
                             </TableCell>
                             <TableCell className="w-32">
-                                <code className="text-xs bg-muted px-2 py-1 rounded border break-all">
-                                    {product.barcode}
-                                </code>
+                                <BarcodeCell value={product.barcode} />
                             </TableCell>
                             <TableCell className="w-40 hidden lg:table-cell">
                                 {product.categories?.name || (
@@ -180,7 +202,6 @@ export function ProductTable({
                 </TableBody>
             </Table>
             
-            {/* Variants dropdown section */}
             <div className="border-t-0">
                 {filteredProducts.map((product) => (
                     product.variants && product.variants.length > 0 && expandedRows.has(product.id) && (
@@ -191,12 +212,7 @@ export function ProductTable({
                                     {product.variants.map((variant) => (
                                         <div key={variant.id} className="flex items-center justify-between p-3 bg-background rounded-lg border">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Barcode className="h-4 w-4 text-muted-foreground" />
-                                                    <code className="text-xs bg-muted px-2 py-1 rounded border">
-                                                        {variant.barcode || 'Tanpa barcode'}
-                                                    </code>
-                                                </div>
+                                                <BarcodeCell value={variant.barcode || ''} />
                                                 <div>
                                                     <p className="font-medium text-sm">{variant.variant_name}</p>
                                                     {variant.is_default && (

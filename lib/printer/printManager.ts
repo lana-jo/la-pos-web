@@ -1,4 +1,5 @@
-import {Transaction, TransactionItem} from "@/types";
+import { Transaction, TransactionItem } from "@/types";
+import JsBarcode from 'jsbarcode';
 
 export interface PrintOptions {
     silent?: boolean;
@@ -30,7 +31,6 @@ export class PrintManager {
 
         try {
             if (options.printerName) {
-                // Implement ESC/POS logic if printerName is provided
                 return await this.printESCPOS(transaction, cashierName, options.printerName);
             } else {
                 await this.printBrowser(transaction, cashierName, options.silent);
@@ -58,7 +58,6 @@ export class PrintManager {
         this.isPrinting = true;
 
         try {
-            // Using browser print API for barcode labels as it's more flexible
             await this.printBarcodeBrowser(barcode, productName, barcodeType);
             return true;
         } catch (error) {
@@ -69,17 +68,6 @@ export class PrintManager {
         }
     }
 
-import {Transaction, TransactionItem} from "@/types";
-import JsBarcode from 'jsbarcode';
-
-export interface PrintOptions {
-    silent?: boolean;
-    printerName?: string;
-}
-
-export class PrintManager {
-    // ... (rest of the class)
-
     private async printBarcodeBrowser(
         barcode: string,
         productName: string,
@@ -87,7 +75,6 @@ export class PrintManager {
     ): Promise<void> {
         console.log(`[printBarcodeBrowser] Printing ${barcodeType} barcode...`);
 
-        // Create a temporary canvas or SVG element to generate the barcode
         const svg = document.createElement("svg");
         JsBarcode(svg, barcode, {
             format: barcodeType === 'ean13' ? "EAN13" : "CODE128",
@@ -158,8 +145,6 @@ export class PrintManager {
         printWindow.document.write(barcodeHTML);
         printWindow.document.close();
     }
-    // ... (rest of the class)
-}
 
     private async printBrowser(
         transaction: Transaction & { items: TransactionItem[] },
@@ -168,22 +153,18 @@ export class PrintManager {
     ): Promise<void> {
         console.log("[printBrowser] Starting print...");
 
-        // Create a new window for printing
         const printWindow = window.open("", "_blank", "width=800,height=600");
         if (!printWindow) {
             console.error(
                 "[printBrowser] Failed to open print window - popup blocker?",
             );
-            // Fallback: show user-friendly message and try alternative approach
             if (!silent) {
-                // Create a temporary element and print it directly
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = this.generateReceiptHTML(transaction, cashierName);
                 tempDiv.style.position = 'absolute';
                 tempDiv.style.left = '-9999px';
                 document.body.appendChild(tempDiv);
                 
-                // Wait a bit for rendering, then print
                 setTimeout(() => {
                     window.print();
                     if (tempDiv.parentNode === document.body) {
@@ -196,7 +177,6 @@ export class PrintManager {
         }
         console.log("[printBrowser] Print window opened");
 
-        // Generate receipt HTML
         const receiptHTML = this.generateReceiptHTML(transaction, cashierName);
         console.log(
             "[printBrowser] Receipt HTML generated, length:",
@@ -394,7 +374,6 @@ export class PrintManager {
         console.log("[printBrowser] Document written and closed");
 
         if (!silent) {
-            // Wait for print dialog to close (with 30s timeout so it never hangs)
             return new Promise<void>((resolve) => {
                 const checkClosed = setInterval(() => {
                     if (printWindow.closed) {
@@ -416,10 +395,9 @@ export class PrintManager {
         printerName: string,
     ): Promise<boolean> {
         try {
-            // WebUSB API for direct thermal printer communication
             const nav = navigator as Navigator & { usb: any };
             const device = await nav.usb.requestDevice({
-                filters: [{vendorId: 0x04b8}], // Epson vendor ID example
+                filters: [{vendorId: 0x04b8}],
             });
 
             await device.open();
@@ -427,7 +405,6 @@ export class PrintManager {
 
             const commands = this.generateESCPOSCommands(transaction, cashierName);
 
-            // Send commands to printer
             await device.transferOut(1, commands);
 
             await device.close();
@@ -442,12 +419,6 @@ export class PrintManager {
         transaction: Transaction & { items: TransactionItem[] },
         cashierName: string,
     ): string {
-        console.log(
-            "[generateReceiptHTML] Items count:",
-            transaction.items?.length || 0,
-        );
-        console.log("[generateReceiptHTML] Items:", transaction.items);
-
         const formatCurrency = (amount: number) => {
             return new Intl.NumberFormat("id-ID", {
                 style: "currency",
@@ -551,48 +522,24 @@ export class PrintManager {
         transaction: Transaction & { items: TransactionItem[] },
         cashierName: string,
     ): Uint8Array {
-        // ESC/POS command sequence for thermal printers
         const commands: number[] = [];
 
-        // Initialize printer
-        commands.push(0x1b, 0x40); // ESC @ - Initialize
-
-        // Set font to built-in Font A for 58mm printers
-        commands.push(0x1b, 0x21, 0x00); // ESC ! 0 - Font A, normal size
-
-        // Set text alignment to center
-        commands.push(0x1b, 0x61, 0x01); // ESC a 1 - Center align
-
-        // Store name (bold, double height)
-        commands.push(0x1b, 0x21, 0x08); // ESC ! 8 - Font A, double height
-        commands.push(0x1b, 0x45, 0x01); // ESC E 1 - Bold on
+        commands.push(0x1b, 0x40);
+        commands.push(0x1b, 0x21, 0x00);
+        commands.push(0x1b, 0x61, 0x01);
+        commands.push(0x1b, 0x21, 0x08);
+        commands.push(0x1b, 0x45, 0x01);
         commands.push(...this.textToBytes("POS Toko\n"));
-        commands.push(0x1b, 0x45, 0x00); // ESC E 0 - Bold off
-        commands.push(0x1b, 0x21, 0x00); // ESC ! 0 - Font A, normal size
-
-        // Store details
+        commands.push(0x1b, 0x45, 0x00);
+        commands.push(0x1b, 0x21, 0x00);
         commands.push(...this.textToBytes("123 Main St, City, Country\n"));
         commands.push(...this.textToBytes("+62 123 456 789\n"));
         commands.push(...this.textToBytes("*** STRUK ***\n\n"));
-
-        // Set alignment to left
-        commands.push(0x1b, 0x61, 0x00); // ESC a 0 - Left align
-
-        // Transaction info
-        commands.push(
-            ...this.textToBytes(
-                `ID Transaksi: ${transaction.id.slice(-8).toUpperCase()}\n`,
-            ),
-        );
-        commands.push(
-            ...this.textToBytes(
-                `Tanggal: ${new Date(transaction.created_at).toLocaleString("id-ID")}\n`,
-            ),
-        );
+        commands.push(0x1b, 0x61, 0x00);
+        commands.push(...this.textToBytes(`ID Transaksi: ${transaction.id.slice(-8).toUpperCase()}\n`));
+        commands.push(...this.textToBytes(`Tanggal: ${new Date(transaction.created_at).toLocaleString("id-ID")}\n`));
         commands.push(...this.textToBytes(`Kasir: ${cashierName}\n`));
-
-        // Items
-        commands.push(0x1b, 0x61, 0x00); // Left align
+        commands.push(0x1b, 0x61, 0x00);
         commands.push(...this.textToBytes("\nITEM               TOTAL\n"));
         commands.push(...this.textToBytes("--------------------------------\n"));
 
@@ -620,7 +567,6 @@ export class PrintManager {
             const barcodeInfo = barcode ? ` • ${barcode}` : "";
             commands.push(...this.textToBytes(`${details}${barcodeInfo}\n`));
             
-            // Additional variant details for ESC/POS
             if (variantName) {
                 const variantDetails = `    Varian: ${variantName}`;
                 commands.push(...this.textToBytes(`${variantDetails}\n`));
@@ -631,7 +577,6 @@ export class PrintManager {
             }
         });
         
-        // Transaction details for ESC/POS
         commands.push(...this.textToBytes("\nDETAIL TRANSAKSI\n"));
         commands.push(...this.textToBytes("--------------------\n"));
         commands.push(...this.textToBytes(`Total Item:     ${transaction.items.reduce((sum, item) => sum + item.qty, 0)}\n`));
@@ -640,36 +585,26 @@ export class PrintManager {
             commands.push(...this.textToBytes(`Dengan Varian:  ${transaction.items.filter(item => item.variant || item.variant_name).length}\n`));
         }
 
-        // Totals
         commands.push(...this.textToBytes("--------------------------------\n"));
-        commands.push(0x1b, 0x21, 0x08); // ESC ! 8 - Font A, double height
-        commands.push(0x1b, 0x45, 0x01); // Bold on
+        commands.push(0x1b, 0x21, 0x08);
+        commands.push(0x1b, 0x45, 0x01);
         const total = new Intl.NumberFormat("id-ID", {
             style: "currency",
             currency: "IDR",
             minimumFractionDigits: 0,
         }).format(transaction.total);
         commands.push(...this.textToBytes(`TOTAL:      ${total}\n`));
-        commands.push(0x1b, 0x45, 0x00); // Bold off
-        commands.push(0x1b, 0x21, 0x00); // ESC ! 0 - Font A, normal size
+        commands.push(0x1b, 0x45, 0x00);
+        commands.push(0x1b, 0x21, 0x00);
 
-        commands.push(
-            ...this.textToBytes(
-                `Pembayaran: ${transaction.payment_method === "cash" ? "Tunai" : "QRIS"}\n`,
-            ),
-        );
+        commands.push(...this.textToBytes(`Pembayaran: ${transaction.payment_method === "cash" ? "Tunai" : "QRIS"}\n`));
         commands.push(...this.textToBytes(`Kembali:    Rp 0\n\n`));
 
-        // Footer
-        commands.push(0x1b, 0x61, 0x01); // Center align
+        commands.push(0x1b, 0x61, 0x01);
         commands.push(...this.textToBytes("Terima kasih atas pembelian Anda!\n"));
-        commands.push(
-            ...this.textToBytes("Struk ini dibuat secara otomatis\n"),
-        );
+        commands.push(...this.textToBytes("Struk ini dibuat secara otomatis\n"));
         commands.push(...this.textToBytes("Tidak perlu tanda tangan\n\n"));
-
-        // Cut paper
-        commands.push(0x1d, 0x56, 0x00); // GS V 0 - Full cut
+        commands.push(0x1d, 0x56, 0x00);
 
         return new Uint8Array(commands);
     }

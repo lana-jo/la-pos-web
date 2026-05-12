@@ -1,6 +1,33 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, AlertTriangle } from "lucide-react";
+import { useEffect, useRef } from "react";
+import JsBarcode from "jsbarcode";
+
+// Barcode Renderer Component
+const BarcodeCell = ({ value }: { value: string }) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    if (svgRef.current && value) {
+      JsBarcode(svgRef.current, value, {
+        format: "CODE128",
+        width: 1.5,
+        height: 25,
+        displayValue: false,
+        margin: 0,
+      });
+    }
+  }, [value]);
+
+  if (!value) return <span className="text-xs text-muted-foreground italic">-</span>;
+  return (
+    <div className="flex flex-col items-start gap-1">
+      <svg ref={svgRef} />
+      <code className="text-[10px] bg-muted px-1 rounded block">{value}</code>
+    </div>
+  );
+};
 
 interface InventoryTableProps {
   products: any[];
@@ -22,20 +49,20 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border text-left">
-            <th className="p-4 font-bold text-muted-foreground uppercase">Product</th>
-            <th className="p-4 font-bold text-muted-foreground uppercase">Category</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Produk</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase">Kategori</th>
             <th className="p-4 font-bold text-muted-foreground uppercase">Barcode</th>
-            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Stock</th>
-            <th className="p-4 font-bold text-muted-foreground uppercase text-right">Price</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Stok</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-right">Harga</th>
             <th className="p-4 font-bold text-muted-foreground uppercase text-center">Status</th>
-            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Actions</th>
+            <th className="p-4 font-bold text-muted-foreground uppercase text-center">Aksi</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border/50">
           {products.length === 0 ? (
             <tr>
               <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                No products found matching your criteria.
+                Tidak ada produk ditemukan sesuai kriteria Anda.
               </td>
             </tr>
           ) : (
@@ -55,16 +82,16 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                       {product.name}
                       {hasVariants && (
                         <Badge variant="secondary" className="ml-2 text-[10px] h-4 px-1">
-                          {product.variants.length} Variants
+                          {product.variants.length} Varian
                         </Badge>
                       )}
                     </div>
                     {!product.track_stock && (
-                      <div className="text-xs text-orange-500 font-medium">Tracking Disabled</div>
+                      <div className="text-xs text-orange-500 font-medium">Pelacakan Dinonaktifkan</div>
                     )}
                   </td>
                   <td className="p-4 text-muted-foreground">{product.category_name}</td>
-                  <td className="p-4 font-mono text-muted-foreground">{product.barcode}</td>
+                  <td className="p-4"><BarcodeCell value={product.barcode} /></td>
                   <td className="p-4 text-center font-bold text-foreground">
                     {totalStock}
                   </td>
@@ -74,7 +101,7 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                   <td className="p-4 text-center">
                     <Badge variant="outline" className={`${status.color} text-white border-none`}>
                       <StatusIcon className="h-3 w-3 mr-1" />
-                      {status.text}
+                      {status.text === "Out of Stock" ? "Stok Habis" : status.text === "Low Stock" ? "Stok Rendah" : "Tersedia"}
                     </Badge>
                   </td>
                   <td className="p-4 text-center">
@@ -92,9 +119,9 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                 </tr>
               );
             })
-                  )}
-                  </tbody>
-                  </table>
-                  </div>
-                  );
-                  }
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
