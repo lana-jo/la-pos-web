@@ -494,9 +494,9 @@ export default function ProductsPage() {
                         </div>
                     </div>
 
-                    {/* Filters Row */}
-                    <div className="flex flex-col md:flex-row gap-4 p-4 rounded-xl bg-card border border-border shadow-sm">
-                        <div className="flex-1">
+                    {/* Search Input & Filter Pill Row */}
+                    <div className="space-y-4">
+                        <div className="w-full">
                             <input
                                 type="text"
                                 placeholder="Cari produk berdasarkan nama atau barcode..."
@@ -505,18 +505,16 @@ export default function ProductsPage() {
                                 className="w-full h-10 px-4 rounded-lg border border-border bg-background shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
                             />
                         </div>
-                        <div className="flex gap-3">
-                            <div className="min-w-[160px]">
-                                <CategoryFilter
-                                    categories={categories}
-                                    selectedCategory={selectedCategory}
-                                    onSelectCategory={setSelectedCategory}
-                                />
-                            </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <CategoryFilter
+                                categories={categories}
+                                selectedCategory={selectedCategory}
+                                onSelectCategory={setSelectedCategory}
+                            />
                             <select
                                 value={selectedStatus}
                                 onChange={(e) => setSelectedStatus(e.target.value as any)}
-                                className="h-10 px-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary-brand"
+                                className="h-9 px-3 rounded-full border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary-brand"
                             >
                                 <option value="all">Semua Status</option>
                                 <option value="active">Aktif</option>
