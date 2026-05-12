@@ -76,6 +76,8 @@
 
     "jquery": "^4.0.0",
 
+    "jsbarcode": "^3.12.3",
+
     "lucide-react": "^1.8.0",
 
     "midtrans-client": "^1.4.3",

@@ -69,6 +69,17 @@ export class PrintManager {
         }
     }
 
+import {Transaction, TransactionItem} from "@/types";
+import JsBarcode from 'jsbarcode';
+
+export interface PrintOptions {
+    silent?: boolean;
+    printerName?: string;
+}
+
+export class PrintManager {
+    // ... (rest of the class)
+
     private async printBarcodeBrowser(
         barcode: string,
         productName: string,
@@ -76,9 +87,21 @@ export class PrintManager {
     ): Promise<void> {
         console.log(`[printBarcodeBrowser] Printing ${barcodeType} barcode...`);
 
+        // Create a temporary canvas or SVG element to generate the barcode
+        const svg = document.createElement("svg");
+        JsBarcode(svg, barcode, {
+            format: barcodeType === 'ean13' ? "EAN13" : "CODE128",
+            lineColor: "#000",
+            width: 2,
+            height: 50,
+            displayValue: true,
+            fontSize: 14,
+            margin: 10
+        });
+
         const printWindow = window.open("", "_blank", "width=400,height=300");
         if (!printWindow) {
-            throw new Error("Failed to open print window");
+            throw new Error("Gagal membuka jendela cetak");
         }
 
         const barcodeHTML = `
@@ -96,7 +119,7 @@ export class PrintManager {
                         font-family: Arial, sans-serif;
                     }
                     .label {
-                        width: 50mm;
+                        width: 60mm;
                         text-align: center;
                         border: 1px solid #ccc;
                         padding: 10px;
@@ -106,21 +129,13 @@ export class PrintManager {
                         font-size: 14px;
                         font-weight: bold;
                         margin-bottom: 8px;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
                     }
-                    .barcode {
-                        font-size: ${barcodeType === 'ean13' ? '28px' : '24px'};
-                        margin: 10px 0;
-                        font-family: '${barcodeType === 'ean13' ? 'Libre Barcode EAN13' : 'Code128'}', cursive;
-                    }
-                    .barcode-text {
-                        font-size: 12px;
-                        font-weight: bold;
-                        letter-spacing: 2px;
+                    svg {
+                        max-width: 100%;
+                        height: auto;
                     }
                     @media print {
-                        @page { size: 50mm 30mm; margin: 0; }
+                        @page { size: 60mm 40mm; margin: 0; }
                         .label { border: none; }
                     }
                 </style>
@@ -128,8 +143,7 @@ export class PrintManager {
             <body>
                 <div class="label">
                     <div class="product-name">${productName}</div>
-                    <div class="barcode">${barcode}</div>
-                    <div class="barcode-text">${barcode}</div>
+                    ${svg.outerHTML}
                 </div>
                 <script>
                     window.onload = function() {
@@ -144,6 +158,8 @@ export class PrintManager {
         printWindow.document.write(barcodeHTML);
         printWindow.document.close();
     }
+    // ... (rest of the class)
+}
 
     private async printBrowser(
         transaction: Transaction & { items: TransactionItem[] },
