@@ -952,6 +952,28 @@ BEGIN
       (r.product_id, r.product_variant_id, 'sale', NEW.id, 'transaction',
        v_stock_before, -v_deduct_qty, v_stock_before - v_deduct_qty,
        'Penjualan transaksi ' || NEW.id::TEXT, NEW.cashier_id);
+
+    INSERT INTO public.inventory_movements (
+      product_id,
+      product_variant_id,
+      movement_type,
+      reference_type,
+      reference_id,
+      qty_change,
+      unit_cost,
+      notes,
+      created_by
+    ) VALUES (
+      r.product_id,
+      r.product_variant_id,
+      'sale',
+      'transaction',
+      NEW.id,
+      -v_deduct_qty,
+      r.cost_price,
+      'Penjualan transaksi ' || NEW.id::TEXT,
+      NEW.cashier_id
+    );
   END LOOP;
 
   RETURN NEW;
