@@ -953,6 +953,7 @@ BEGIN
        v_stock_before, -v_deduct_qty, v_stock_before - v_deduct_qty,
        'Penjualan transaksi ' || NEW.id::TEXT, NEW.cashier_id);
 
+    -- Penjualan transaksi log ke inventory_movements
     INSERT INTO public.inventory_movements (
       product_id,
       product_variant_id,
@@ -966,8 +967,8 @@ BEGIN
     ) VALUES (
       r.product_id,
       r.product_variant_id,
-      'sale',
-      'transaction',
+      'sale'::public.movement_type,
+      'transaction'::public.reference_type,
       NEW.id,
       -v_deduct_qty,
       r.cost_price,
