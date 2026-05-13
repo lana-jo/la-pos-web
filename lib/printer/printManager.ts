@@ -4,6 +4,12 @@ import JsBarcode from 'jsbarcode';
 export interface PrintOptions {
     silent?: boolean;
     printerName?: string;
+    storeSettings?: {
+        store_name?: string;
+        store_address?: string;
+        store_phone?: string;
+        store_email?: string;
+    };
 }
 
 export class PrintManager {
@@ -31,9 +37,9 @@ export class PrintManager {
 
         try {
             if (options.printerName) {
-                return await this.printESCPOS(transaction, cashierName, options.printerName);
+                return await this.printESCPOS(transaction, cashierName, options.printerName, options.storeSettings);
             } else {
-                await this.printBrowser(transaction, cashierName, options.silent);
+                await this.printBrowser(transaction, cashierName, options.silent, options.storeSettings);
                 return true;
             }
         } catch (error) {
@@ -150,6 +156,7 @@ export class PrintManager {
         transaction: Transaction & { items: TransactionItem[] },
         cashierName: string,
         silent?: boolean,
+        storeSettings?: PrintOptions['storeSettings']
     ): Promise<void> {
         console.log("[printBrowser] Starting print...");
 
@@ -160,7 +167,7 @@ export class PrintManager {
             );
             if (!silent) {
                 const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = this.generateReceiptHTML(transaction, cashierName);
+                tempDiv.innerHTML = this.generateReceiptHTML(transaction, cashierName, storeSettings);
                 tempDiv.style.position = 'absolute';
                 tempDiv.style.left = '-9999px';
                 document.body.appendChild(tempDiv);
@@ -177,7 +184,7 @@ export class PrintManager {
         }
         console.log("[printBrowser] Print window opened");
 
-        const receiptHTML = this.generateReceiptHTML(transaction, cashierName);
+        const receiptHTML = this.generateReceiptHTML(transaction, cashierName, storeSettings);
         console.log(
             "[printBrowser] Receipt HTML generated, length:",
             receiptHTML.length,
@@ -393,6 +400,7 @@ export class PrintManager {
         transaction: Transaction & { items: TransactionItem[] },
         cashierName: string,
         printerName: string,
+        storeSettings?: PrintOptions['storeSettings']
     ): Promise<boolean> {
         try {
             const nav = navigator as Navigator & { usb: any };
@@ -403,7 +411,7 @@ export class PrintManager {
             await device.open();
             await device.claimInterface(0);
 
-            const commands = this.generateESCPOSCommands(transaction, cashierName);
+            const commands = this.generateESCPOSCommands(transaction, cashierName, storeSettings);
 
             await device.transferOut(1, commands);
 
@@ -418,7 +426,13 @@ export class PrintManager {
     private generateReceiptHTML(
         transaction: Transaction & { items: TransactionItem[] },
         cashierName: string,
+        storeSettings?: PrintOptions['storeSettings']
     ): string {
+        const storeName = storeSettings?.store_name || "POS Toko";
+        const storeAddress = storeSettings?.store_address || "";
+        const storePhone = storeSettings?.store_phone || "";
+        const storeEmail = storeSettings?.store_email || "";
+
         const formatCurrency = (amount: number) => {
             return new Intl.NumberFormat("id-ID", {
                 style: "currency",
@@ -475,9 +489,10 @@ export class PrintManager {
 
         return `
       <div class="header">
-        <h1>POS Toko</h1>
-        <p>123 Main St, City, Country</p>
-        <p>+62 123 456 789</p>
+        <h1>${storeName}</h1>
+        ${storeAddress ? `<p>${storeAddress}</p>` : ''}
+        ${storePhone ? `<p>${storePhone}</p>` : ''}
+        ${storeEmail ? `<p>${storeEmail}</p>` : ''}
         <p>*** STRUK ***</p>
       </div>
       
@@ -521,7 +536,13 @@ export class PrintManager {
     private generateESCPOSCommands(
         transaction: Transaction & { items: TransactionItem[] },
         cashierName: string,
+        storeSettings?: PrintOptions['storeSettings']
     ): Uint8Array {
+        const storeName = storeSettings?.store_name || "POS Toko";
+        const storeAddress = storeSettings?.store_address || "";
+        const storePhone = storeSettings?.store_phone || "";
+        const storeEmail = storeSettings?.store_email || "";
+
         const commands: number[] = [];
 
         commands.push(0x1b, 0x40);
@@ -529,11 +550,12 @@ export class PrintManager {
         commands.push(0x1b, 0x61, 0x01);
         commands.push(0x1b, 0x21, 0x08);
         commands.push(0x1b, 0x45, 0x01);
-        commands.push(...this.textToBytes("POS Toko\n"));
+        commands.push(...this.textToBytes(`${storeName}\n`));
         commands.push(0x1b, 0x45, 0x00);
         commands.push(0x1b, 0x21, 0x00);
-        commands.push(...this.textToBytes("123 Main St, City, Country\n"));
-        commands.push(...this.textToBytes("+62 123 456 789\n"));
+        if (storeAddress) commands.push(...this.textToBytes(`${storeAddress}\n`));
+        if (storePhone) commands.push(...this.textToBytes(`${storePhone}\n`));
+        if (storeEmail) commands.push(...this.textToBytes(`${storeEmail}\n`));
         commands.push(...this.textToBytes("*** STRUK ***\n\n"));
         commands.push(0x1b, 0x61, 0x00);
         commands.push(...this.textToBytes(`ID Transaksi: ${transaction.id.slice(-8).toUpperCase()}\n`));

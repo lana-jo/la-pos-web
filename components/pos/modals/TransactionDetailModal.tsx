@@ -13,8 +13,9 @@ import {
 import { Receipt, X, Printer, Package, User, Calendar, CreditCard, Loader2 } from "lucide-react";
 import type { Transaction, TransactionItem } from "@/types";
 import { PrintManager } from "@/lib/printer/printManager";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { getSettings } from "@/lib/settings/actions";
 
 interface TransactionDetailModalProps {
   isOpen: boolean;
@@ -27,6 +28,20 @@ export function TransactionDetailModal({
   onClose,
   transaction,
 }: TransactionDetailModalProps) {
+  const [storeSettings, setStoreSettings] = useState<any>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const fetchSettings = async () => {
+        const result = await getSettings('general');
+        if (result.success) {
+          setStoreSettings(result.data);
+        }
+      };
+      fetchSettings();
+    }
+  }, [isOpen]);
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -66,7 +81,15 @@ export function TransactionDetailModal({
       const success = await printManager.printTransaction(
         transaction as Transaction & { items: TransactionItem[] },
         cashierName,
-        { silent: false }
+        { 
+          silent: false,
+          storeSettings: {
+            store_name: storeSettings?.store_name,
+            store_address: storeSettings?.store_address,
+            store_phone: storeSettings?.store_phone,
+            store_email: storeSettings?.store_email,
+          }
+        }
       );
       if (success) {
         toast.success('Struk berhasil dicetak');

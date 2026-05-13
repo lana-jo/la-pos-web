@@ -10,14 +10,16 @@ interface ReceiptProps {
   storeName?: string
   storeAddress?: string
   storePhone?: string
+  storeEmail?: string
 }
 
 export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({
   transaction,
   cashierName,
-  storeName = 'POS Store',
-  storeAddress = '123 Main St, City, Country',
-  storePhone = '+62 123 456 789',
+  storeName = 'POS Toko',
+  storeAddress = '',
+  storePhone = '',
+  storeEmail = '',
 }, ref) => {
   const receiptRef = useRef<HTMLDivElement>(null)
 
@@ -59,8 +61,9 @@ export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({
       {/* Header */}
       <div className="text-center mb-4">
         <h1 className="text-lg font-bold">{storeName}</h1>
-        <p className="text-xs">{storeAddress}</p>
-        <p className="text-xs">{storePhone}</p>
+        {storeAddress && <p className="text-xs">{storeAddress}</p>}
+        {storePhone && <p className="text-xs">{storePhone}</p>}
+        {storeEmail && <p className="text-xs">{storeEmail}</p>}
         <div className="border-t border-b border-foreground py-1 mt-2">
           <p className="text-xs font-bold">*** RECEIPT ***</p>
         </div>

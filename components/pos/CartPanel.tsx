@@ -12,6 +12,8 @@ import { InteractiveButton } from "@/components/ui/interactive-button";
 import { Banknote } from "lucide-react";
 import { PrintManager } from "@/lib/printer/printManager";
 import { Transaction, TransactionItem, ProductVariant } from "@/types";
+import { getSettings } from "@/lib/settings/actions";
+import { useEffect } from "react";
 
 interface CartPanelProps {
   onAddItem?: () => void;
@@ -25,6 +27,17 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
   const getTotal = useCartStore((state) => state.getTotal);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [storeSettings, setStoreSettings] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      const result = await getSettings('general');
+      if (result.success) {
+        setStoreSettings(result.data);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -85,6 +98,12 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
 
     const success = await printManager.printTransaction(transaction, "Kasir", {
       silent: false,
+      storeSettings: {
+        store_name: storeSettings?.store_name,
+        store_address: storeSettings?.store_address,
+        store_phone: storeSettings?.store_phone,
+        store_email: storeSettings?.store_email,
+      }
     });
 
     if (success) {
