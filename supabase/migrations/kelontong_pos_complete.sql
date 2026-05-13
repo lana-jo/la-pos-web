@@ -913,6 +913,9 @@ DECLARE
   r              RECORD;
   v_stock_before INTEGER;
   v_deduct_qty   INTEGER;
+  v_pid          UUID;
+  v_vid          UUID;
+  v_cost         NUMERIC;
 BEGIN
   IF OLD.payment_status IS NOT DISTINCT FROM NEW.payment_status THEN RETURN NEW; END IF;
   IF NEW.payment_status != 'paid' THEN RETURN NEW; END IF;
@@ -923,37 +926,37 @@ BEGIN
       ti.product_variant_id,
       ti.qty,
       ti.cost_price,
-      -- [FIX-2] LEFT JOIN untuk dapat conversion_qty, default 1 jika tidak ada varian
       COALESCE(pv.conversion_qty, 1) AS conversion_qty
     FROM public.transaction_items ti
     LEFT JOIN public.product_variants pv ON pv.id = ti.product_variant_id
     WHERE ti.transaction_id = NEW.id
   LOOP
-    SELECT stock INTO v_stock_before
-    FROM public.products WHERE id = r.product_id;
-
-    -- Total unit stok yang harus dikurangi
+    v_pid := r.product_id;
+    v_vid := r.product_variant_id;
+    v_cost := r.cost_price;
     v_deduct_qty := r.qty * r.conversion_qty;
+
+    SELECT stock INTO v_stock_before
+    FROM public.products WHERE id = v_pid;
 
     IF v_stock_before - v_deduct_qty < 0 THEN
       RAISE EXCEPTION
         'Stok tidak cukup untuk produk ID: %. Stok tersedia: %, dibutuhkan: %',
-        r.product_id, v_stock_before, v_deduct_qty;
+        v_pid, v_stock_before, v_deduct_qty;
     END IF;
 
     UPDATE public.products
     SET stock = stock - v_deduct_qty
-    WHERE id = r.product_id;
+    WHERE id = v_pid;
 
     INSERT INTO public.stock_movements
       (product_id, product_variant_id, movement_type, reference_id,
        reference_type, qty_before, qty_change, qty_after, notes, created_by)
     VALUES
-      (r.product_id, r.product_variant_id, 'sale', NEW.id, 'transaction',
+      (v_pid, v_vid, 'sale', NEW.id, 'transaction',
        v_stock_before, -v_deduct_qty, v_stock_before - v_deduct_qty,
        'Penjualan transaksi ' || NEW.id::TEXT, NEW.cashier_id);
 
-    -- Gunakan variabel lokal untuk menghindari scope record 'r' yang ambigu
     INSERT INTO public.inventory_movements (
       product_id,
       product_variant_id,
@@ -965,13 +968,13 @@ BEGIN
       notes,
       created_by
     ) VALUES (
-      r.product_id,
-      r.product_variant_id,
+      v_pid,
+      v_vid,
       'sale'::public.movement_type,
       'transaction'::public.reference_type,
       NEW.id,
       -v_deduct_qty,
-      r.cost_price,
+      v_cost,
       'Penjualan transaksi ' || NEW.id::TEXT,
       NEW.cashier_id
     );
