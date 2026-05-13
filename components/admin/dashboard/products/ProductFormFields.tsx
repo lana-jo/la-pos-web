@@ -205,44 +205,12 @@ export function ProductFormFields({
                     </span>
                 </div>
 
+                {/* Stock is now managed via Stock Management */}
                 {formData.track_stock && (
-                    <div className="grid grid-cols-3 gap-4 pl-6 border-l-2 border-blue-200">
-                        <div>
-                            <Label htmlFor={field('stock')}>Stok Awal *</Label>
-                            <Input
-                                id={field('stock')}
-                                type="number"
-                                min={0}
-                                value={formData.stock}
-                                onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                                placeholder="0"
-                                disabled={isSubmitting}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor={field('min_stock')}>Stok Minimum</Label>
-                            <Input
-                                id={field('min_stock')}
-                                type="number"
-                                min={0}
-                                value={formData.min_stock}
-                                onChange={(e) => setFormData({ ...formData, min_stock: e.target.value })}
-                                placeholder="0"
-                                disabled={isSubmitting}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor={field('max_stock')}>Stok Maksimum</Label>
-                            <Input
-                                id={field('max_stock')}
-                                type="number"
-                                min={0}
-                                value={formData.max_stock}
-                                onChange={(e) => setFormData({ ...formData, max_stock: e.target.value })}
-                                placeholder="Kosongkan jika tidak ada batas"
-                                disabled={isSubmitting}
-                            />
-                        </div>
+                    <div className="pl-6 border-l-2 border-blue-200">
+                        <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                            ⚠️ Stok dikelola melalui <strong>Manajemen Stok</strong>.
+                        </p>
                     </div>
                 )}
 
