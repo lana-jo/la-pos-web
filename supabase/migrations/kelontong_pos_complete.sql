@@ -939,11 +939,9 @@ BEGIN
     SELECT stock INTO v_stock_before
     FROM public.products WHERE id = v_pid;
 
-    IF v_stock_before - v_deduct_qty < 0 THEN
-      RAISE EXCEPTION
-        'Stok tidak cukup untuk produk ID: %. Stok tersedia: %, dibutuhkan: %',
-        v_pid, v_stock_before, v_deduct_qty;
-    END IF;
+    -- KITA HAPUS PENGECEKAN STOK MANUAL DI SINI.
+    -- Mengapa? Karena fungsi fn_process_inventory_movement (Trigger tabel mutasi) 
+    -- sudah memiliki validasi "Insufficient stock" dan Row-Locking! Biarkan Ledger yang bekerja.
 
     UPDATE public.products
     SET stock = stock - v_deduct_qty
