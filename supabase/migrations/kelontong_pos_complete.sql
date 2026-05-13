@@ -982,7 +982,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_transactions_deduct_stock ON public.transactions;
 CREATE TRIGGER trg_transactions_deduct_stock
