@@ -953,7 +953,7 @@ BEGIN
        v_stock_before, -v_deduct_qty, v_stock_before - v_deduct_qty,
        'Penjualan transaksi ' || NEW.id::TEXT, NEW.cashier_id);
 
-    -- Penjualan transaksi log ke inventory_movements
+    -- Gunakan variabel lokal untuk menghindari scope record 'r' yang ambigu
     INSERT INTO public.inventory_movements (
       product_id,
       product_variant_id,
