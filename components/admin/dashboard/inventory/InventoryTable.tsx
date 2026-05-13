@@ -14,7 +14,8 @@ const BarcodeCell = ({ value }: { value: string }) => {
         format: "CODE128",
         width: 1.5,
         height: 25,
-        displayValue: false,
+        displayValue: true,
+        fontSize: 12,
         margin: 0,
       });
     }
@@ -24,7 +25,6 @@ const BarcodeCell = ({ value }: { value: string }) => {
   return (
     <div className="flex flex-col items-start gap-1">
       <svg ref={svgRef} />
-      <code className="text-[10px] bg-muted px-1 rounded block">{value}</code>
     </div>
   );
 };
