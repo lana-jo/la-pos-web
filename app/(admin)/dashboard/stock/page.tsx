@@ -211,7 +211,7 @@ export default function StockManagementPage() {
 
       <Card className="pos-modal-content border-none shadow-xl">
         <CardHeader>
-          <CardTitle>Filter</CardTitle>
+          <CardTitle>Penapis Produk</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

@@ -80,10 +80,10 @@ export function ProductTable({
                 <TableHeader className="bg-muted/50">
                     <TableRow>
                         <TableHead className="w-16 font-semibold">Gambar</TableHead>
-                        <TableHead className="w-64 font-semibold">Nama Produk</TableHead>
+                        <TableHead className="w-64 font-semibold">Produk</TableHead>
                         <TableHead className="w-32 font-semibold">Barcode</TableHead>
                         <TableHead className="w-40 font-semibold hidden lg:table-cell">Kategori</TableHead>
-                        <TableHead className="w-32 text-right font-semibold">Harga (Dasar)</TableHead>
+                        <TableHead className="w-32 text-right font-semibold">Harga</TableHead>
                         <TableHead className="w-28 text-center font-semibold">Stok</TableHead>
                         <TableHead className="w-28 text-center font-semibold hidden md:table-cell">Status</TableHead>
                         <TableHead className="w-24 text-center font-semibold">Aksi</TableHead>
@@ -134,7 +134,7 @@ export function ProductTable({
                             </TableCell>
                             <TableCell className="w-40 hidden lg:table-cell">
                                 {product.categories?.name || (
-                                    <Badge variant="secondary">Tanpa Kategori</Badge>
+                                    <Badge variant="secondary">Belum Dikategorikan</Badge>
                                 )}
                             </TableCell>
                             <TableCell className="w-32 text-right font-medium text-primary-brand">

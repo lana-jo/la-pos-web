@@ -39,9 +39,9 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
     const currentStock = product.track_stock ? product.cached_stock : product.stock;
     const threshold = product.low_stock_threshold || 5;
     
-    if (currentStock === 0) return { color: "bg-destructive", text: "Out of Stock", icon: AlertTriangle };
-    if (currentStock <= threshold) return { color: "bg-yellow-500", text: "Low Stock", icon: AlertTriangle };
-    return { color: "bg-primary-brand", text: "In Stock", icon: Package };
+    if (currentStock === 0) return { color: "bg-destructive", text: "Stok Habis", icon: AlertTriangle };
+    if (currentStock <= threshold) return { color: "bg-yellow-500", text: "Stok Rendah", icon: AlertTriangle };
+    return { color: "bg-primary-brand", text: "Tersedia", icon: Package };
   };
 
   return (
@@ -90,7 +90,7 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                       <div className="text-xs text-orange-500 font-medium">Pelacakan Dinonaktifkan</div>
                     )}
                   </td>
-                  <td className="p-4 text-muted-foreground">{product.category_name}</td>
+                  <td className="p-4 text-muted-foreground">{product.category_name === 'UNCATEGORIZED' ? 'BELUM DI KATEGORIKAN' : product.category_name}</td>
                   <td className="p-4"><BarcodeCell value={product.barcode} /></td>
                   <td className="p-4 text-center font-bold text-foreground">
                     {totalStock}
@@ -101,7 +101,7 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                   <td className="p-4 text-center">
                     <Badge variant="outline" className={`${status.color} text-white border-none`}>
                       <StatusIcon className="h-3 w-3 mr-1" />
-                      {status.text === "Out of Stock" ? "Stok Habis" : status.text === "Low Stock" ? "Stok Rendah" : "Tersedia"}
+                      {status.text}
                     </Badge>
                   </td>
                   <td className="p-4 text-center">
