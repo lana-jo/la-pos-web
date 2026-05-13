@@ -906,16 +906,15 @@ CREATE TRIGGER trg_transactions_log_void
 -- 5.11 STOCK — Kurangi stok saat transaksi paid
 -- [FIX-2] JOIN ke product_variants untuk ambil conversion_qty dengan benar
 -- -------------------------------------------------------------------
+-- =====================================================================
+-- FIX: DEDUCT STOCK KE INVENTORY MOVEMENTS
+-- =====================================================================
 CREATE OR REPLACE FUNCTION public.fn_deduct_stock_on_payment()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   r              RECORD;
-  v_stock_before INTEGER;
   v_deduct_qty   INTEGER;
-  v_pid          UUID;
-  v_vid          UUID;
-  v_cost         NUMERIC;
 BEGIN
   IF OLD.payment_status IS NOT DISTINCT FROM NEW.payment_status THEN RETURN NEW; END IF;
   IF NEW.payment_status != 'paid' THEN RETURN NEW; END IF;
@@ -926,61 +925,34 @@ BEGIN
       ti.product_variant_id,
       ti.qty,
       ti.cost_price,
+      -- LEFT JOIN untuk dapat conversion_qty
       COALESCE(pv.conversion_qty, 1) AS conversion_qty
     FROM public.transaction_items ti
     LEFT JOIN public.product_variants pv ON pv.id = ti.product_variant_id
     WHERE ti.transaction_id = NEW.id
   LOOP
-    v_pid := r.product_id;
-    v_vid := r.product_variant_id;
-    v_cost := r.cost_price;
+    -- Total unit stok yang harus dikurangi
     v_deduct_qty := r.qty * r.conversion_qty;
-
-    SELECT stock INTO v_stock_before
-    FROM public.products WHERE id = v_pid;
 
     -- KITA HAPUS PENGECEKAN STOK MANUAL DI SINI.
     -- Mengapa? Karena fungsi fn_process_inventory_movement (Trigger tabel mutasi) 
     -- sudah memiliki validasi "Insufficient stock" dan Row-Locking! Biarkan Ledger yang bekerja.
 
-    UPDATE public.products
-    SET stock = stock - v_deduct_qty
-    WHERE id = v_pid;
-
-    INSERT INTO public.stock_movements
+    -- INSERT KE SISTEM LEDGER BARU (inventory_movements)
+    INSERT INTO public.inventory_movements
       (product_id, product_variant_id, movement_type, reference_id,
-       reference_type, qty_before, qty_change, qty_after, notes, created_by)
+       reference_type, qty_change, unit_cost, notes, created_by)
     VALUES
-      (v_pid, v_vid, 'sale', NEW.id, 'transaction',
-       v_stock_before, -v_deduct_qty, v_stock_before - v_deduct_qty,
-       'Penjualan transaksi ' || NEW.id::TEXT, NEW.cashier_id);
+      (r.product_id, r.product_variant_id, 'sale', NEW.id, 'transaction',
+       -v_deduct_qty, r.cost_price, 'Penjualan transaksi ' || NEW.id::TEXT, NEW.cashier_id);
 
-    INSERT INTO public.inventory_movements (
-      product_id,
-      product_variant_id,
-      movement_type,
-      reference_type,
-      reference_id,
-      qty_change,
-      unit_cost,
-      notes,
-      created_by
-    ) VALUES (
-      v_pid,
-      v_vid,
-      'sale'::public.movement_type,
-      'transaction'::public.reference_type,
-      NEW.id,
-      -v_deduct_qty,
-      v_cost,
-      'Penjualan transaksi ' || NEW.id::TEXT,
-      NEW.cashier_id
-    );
+    -- OPSIONAL: Tetap update tabel lama (stock) agar tidak error jika ada UI yang masih baca kolom ini
+    UPDATE public.products SET stock = stock - v_deduct_qty WHERE id = r.product_id;
   END LOOP;
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 DROP TRIGGER IF EXISTS trg_transactions_deduct_stock ON public.transactions;
 CREATE TRIGGER trg_transactions_deduct_stock
