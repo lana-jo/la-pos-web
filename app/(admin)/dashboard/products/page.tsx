@@ -476,7 +476,7 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                             <Select
                                 value={selectedStatus}
-                                onValueChange={(value) => setSelectedStatus(value)}
+                                onValueChange={(value) => setSelectedStatus(value as 'all' | 'active' | 'inactive')}
                             >
                                 <SelectTrigger className="h-9 px-4 rounded-full border border-primary-brand/30 bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary-brand shadow-sm dark:bg-card dark:border-primary-brand/30 dark:text-foreground cursor-pointer hover:border-primary-brand/60 transition-colors w-full sm:w-auto">
                                     <SelectValue placeholder="Pilih Status" />
