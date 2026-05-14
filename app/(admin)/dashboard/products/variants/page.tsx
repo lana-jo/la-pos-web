@@ -34,6 +34,7 @@ export default function ProductVariantsPage() {
     cost_price: '',
     conversion_qty: '1',
     min_qty: '1',
+    inherit_cost_price: false,
     is_active: true,
     is_default: false
   })
@@ -111,6 +112,7 @@ export default function ProductVariantsPage() {
       cost_price: '',
       conversion_qty: '1',
       min_qty: '1',
+      inherit_cost_price: false,
       is_active: true,
       is_default: false
     })
