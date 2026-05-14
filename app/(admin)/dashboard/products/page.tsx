@@ -113,41 +113,6 @@ export default function ProductsPage() {
             return false
         }
     }, [router])
-
-    // ── Data fetching ──────────────────────────────────────────────────────────
-    const fetchData = useCallback(async () => {
-        try {
-            // Fetch categories (client-side - RLS allows)
-            const { data: categoriesData, error: categoriesError } = await db('categories')
-                .select('*')
-                .eq('is_active', true)
-                .order('name')
-
-            if (categoriesError) throw categoriesError
-            setCategories(categoriesData ?? [])
-
-            // Fetch products with variants (server action - bypasses RLS)
-            const result = await fetchProductsWithVariants()
-            if (!result.success) {
-                throw new Error(result.error)
-            }
-            setProducts(result.data ?? [])
-
-            // Fetch units from database
-            const unitsResult = await fetchUnits()
-            if (unitsResult.success) {
-                setUnits(unitsResult.data ?? [])
-            } else {
-                console.error('Error fetching units:', unitsResult.error)
-            }
-
-            // Fetch suppliers from database
-            const suppliersResult = await fetchSuppliers()
-            if (suppliersResult.success) {
-                setSuppliers(suppliersResult.data ?? [])
-            } else {
-                console.error('Error fetching suppliers:', suppliersResult.error)
-            }
         } catch (error) {
             console.error('Error fetching products:', error)
             toast.error('Gagal mengambil data produk')

@@ -13,9 +13,9 @@ import {
   fetchUnits,
   fetchProductsWithVariants
 } from '@/lib/products/actions'
-import { VariantsTable } from './variants/VariantsTable'
-import { VariantForm } from './variants/VariantForm'
-import { VariantModal } from './variants/VariantModal'
+import { VariantsTable } from '@/components/admin/dashboard/products/variants/VariantsTable'
+import { VariantForm } from '@/components/admin/dashboard/products/variants/VariantForm'
+import { VariantModal } from '@/components/admin/dashboard/products/variants/VariantModal'
 
 export default function ProductVariantsPage() {
   const [variants, setVariants] = useState<(ProductVariant & { product_name: string; unit_name?: string })[]>([])
