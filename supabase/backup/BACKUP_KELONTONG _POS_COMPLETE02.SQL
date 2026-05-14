@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     barcode             TEXT        NOT NULL UNIQUE,
     description         TEXT,
     cost_price          INTEGER     NOT NULL DEFAULT 0 CHECK (cost_price >= 0),
+    inherit_cost_price BOOLEAN DEFAULT false,
     price               INTEGER     NOT NULL CHECK (price >= 0),
     stock               INTEGER     NOT NULL DEFAULT 0 CHECK (stock >= 0),
     min_stock           INTEGER     NOT NULL DEFAULT 0 CHECK (min_stock >= 0),
@@ -119,6 +120,8 @@ CREATE TABLE IF NOT EXISTS public.products (
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+COMMENT ON COLUMN public.product_variants.inherit_cost_price IS
+'Jika true, harga beli varian akan dihitung otomatis dari (harga beli produk * conversion_qty)';
 
 CREATE TABLE IF NOT EXISTS public.product_variants (
                                                        id             UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -350,6 +353,24 @@ CREATE TABLE IF NOT EXISTS public.daily_reports (
 -- =====================================================================
 -- 4. FUNCTIONS & TRIGGERS
 -- =====================================================================
+
+-- 5.10 BLOCK DIRECT STOCK UPDATE
+CREATE OR REPLACE FUNCTION public.fn_block_direct_stock_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NEW.stock IS DISTINCT FROM OLD.stock THEN
+    RAISE EXCEPTION 'Manipulasi stok dilarang! Stok hanya bisa diubah melalui mutasi (pembelian/penjualan/adjustment).';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_block_direct_stock_update ON public.products;
+CREATE TRIGGER trg_block_direct_stock_update
+  BEFORE UPDATE ON public.products
+  FOR EACH ROW
+  EXECUTE FUNCTION public.fn_block_direct_stock_update();
 
 -- 5.11 INVENTORY MOVEMENTS — Process atomic stock movement (INTI LEDGER)
 CREATE OR REPLACE FUNCTION public.fn_process_inventory_movement()
