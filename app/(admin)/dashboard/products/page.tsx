@@ -39,44 +39,20 @@ type ProductWithCategory = Product & {
     categories: Pick<Category, 'name'> | null
 }
 
-const EMPTY_FORM: FormData = {
-    name: '',
-    barcode: '',
-    description: '',
-    cost_price: '',
-    price: '',
-    stock: '',
-    min_stock: '',
-    max_stock: '',
-    track_stock: true,
-    low_stock_threshold: '5',
-    category_id: '',
-    unit_id: '',
-    supplier_id: '',
-    image_url: '',
-    is_active: true,
-    is_consignment: false,
-    variants: [],
-}
+import { useProductData } from '@/components/admin/dashboard/products/hooks/useProductData'
+import { useProductForm, EMPTY_FORM } from '@/components/admin/dashboard/products/hooks/useProductForm'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = (table: string) => supabase.from(table) as any
-
-const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
+// ... (keep helper functions)
 
 export default function ProductsPage() {
     const router = useRouter()
 
-    const [products, setProducts] = useState<ProductWithCategory[]>([])
-    const [categories, setCategories] = useState<Category[]>([])
-    const [units, setUnits] = useState<Unit[]>([])
-    const [suppliers, setSuppliers] = useState<Supplier[]>([])
-    const [loading, setLoading] = useState(true)
+    const { products, categories, units, suppliers, loading, fetchData } = useProductData()
+    const { formData, setFormData, resetForm } = useProductForm()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [modal, setModal] = useState<'add' | 'edit' | 'delete' | null>(null)
     const [selectedProduct, setSelectedProduct] = useState<ProductWithCategory | null>(null)
-    const [formData, setFormData] = useState<FormData>(EMPTY_FORM)
+    // ... (rest of state variables)
     const [selectedCategory, setSelectedCategory] = useState<string>('all')
     const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'inactive'>('active')
     const [searchTerm, setSearchTerm] = useState('')
