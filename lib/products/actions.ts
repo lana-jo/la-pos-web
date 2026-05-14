@@ -373,27 +373,16 @@ import { safeAction } from '@/lib/utils/action-wrapper'
 
 export async function fetchProductsWithVariants() {
   return await safeAction(async () => {
-    // Fetch products with categories
-    const { data: products, error: productsError } = await supabaseUntyped
+    // Fetch products with categories and variants in a single query
+    const { data, error } = await supabaseUntyped
       .from('products')
-      .select('*, categories(name)')
+      .select('*, categories(name), product_variants(*)')
+      .eq('product_variants.is_active', true) // Filter nested relation
       .order('name')
 
-    if (productsError) throw productsError
+    if (error) throw error
 
-    // Fetch all active variants
-    const { data: variants, error: variantsError } = await supabaseUntyped
-      .from('product_variants')
-      .select('*')
-      .eq('is_active', true)
-
-    if (variantsError) throw variantsError
-
-    // Attach variants to products
-    return (products ?? []).map((p: any) => ({
-      ...p,
-      variants: (variants ?? []).filter((v: any) => v.product_id === p.id)
-    }))
+    return data
   })
 }
 
