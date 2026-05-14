@@ -18,6 +18,7 @@ export type FormVariant = {
     barcode: string
     price: string
     cost_price: string
+    inherit_cost_price: boolean
     conversion_qty: string
     is_active: boolean
     is_default: boolean
@@ -70,6 +71,7 @@ interface ProductFormFieldsProps {
     suppliers: Supplier[]
     units: Unit[]
     isSubmitting: boolean
+    isEdit?: boolean
     idPrefix?: string
 }
 
@@ -80,6 +82,7 @@ export function ProductFormFields({
     suppliers,
     units,
     isSubmitting,
+    isEdit = false,
     idPrefix = '',
 }: ProductFormFieldsProps) {
     const field = (key: string) => `${idPrefix}${key}`
@@ -165,7 +168,19 @@ export function ProductFormFields({
                         type="number"
                         min={0}
                         value={formData.cost_price}
-                        onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+                        onChange={(e) => {
+                            const newCostPrice = e.target.value;
+                            const updatedVariants = formData.variants.map(v => {
+                                if (v.inherit_cost_price) {
+                                    return {
+                                        ...v,
+                                        cost_price: (parseInt(newCostPrice || '0') * parseInt(v.conversion_qty || '1')).toString()
+                                    }
+                                }
+                                return v;
+                            });
+                            setFormData({ ...formData, cost_price: newCostPrice, variants: updatedVariants });
+                        }}
                         placeholder="0"
                         disabled={isSubmitting}
                     />
@@ -329,7 +344,8 @@ export function ProductFormFields({
                                 variant_name: '',
                                 barcode: '',
                                 price: '',
-                                cost_price: '',
+                                cost_price: formData.cost_price || '0',
+                                inherit_cost_price: true,
                                 conversion_qty: '1',
                                 is_active: true,
                                 is_default: formData.variants.length === 0, // First variant is default
@@ -349,168 +365,199 @@ export function ProductFormFields({
                     </p>
                 ) : (
                     <div className="space-y-3">
-                        {formData.variants.map((variant, index) => (
-                            <div
-                                key={variant.id || `new-${index}`}
-                                className={`border rounded-lg p-3 space-y-3 ${variant.is_default ? 'border-blue-300 bg-blue-50/50' : 'border-gray-200'}`}
-                            >
-                                {/* Variant Header */}
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium text-muted-foreground">
-                                            #{index + 1}
-                                        </span>
-                                        {variant.is_default && (
-                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                <Check className="h-3 w-3" />
-                                                Default
+                        {formData.variants.map((variant, index) => {
+                            // Calculate inherited cost price if enabled
+                            const calculatedCostPrice = variant.inherit_cost_price
+                                ? (parseInt(formData.cost_price || '0') * parseInt(variant.conversion_qty || '1')).toString()
+                                : variant.cost_price;
+
+                            return (
+                                <div
+                                    key={variant.id || `new-${index}`}
+                                    className={`border rounded-lg p-3 space-y-3 ${variant.is_default ? 'border-blue-300 bg-blue-50/50' : 'border-gray-200'}`}
+                                >
+                                    {/* Variant Header */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-medium text-muted-foreground">
+                                                #{index + 1}
                                             </span>
-                                        )}
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        {/* Set Default Button */}
-                                        {!variant.is_default && (
+                                            {variant.is_default && (
+                                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                    <Check className="h-3 w-3" />
+                                                    Default
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            {/* Set Default Button */}
+                                            {!variant.is_default && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-7 text-xs"
+                                                    onClick={() => {
+                                                        const updated = formData.variants.map((v, i) => ({
+                                                            ...v,
+                                                            is_default: i === index,
+                                                        }))
+                                                        setFormData({ ...formData, variants: updated })
+                                                    }}
+                                                    disabled={isSubmitting}
+                                                >
+                                                    Jadikan Default
+                                                </Button>
+                                            )}
+                                            {/* Delete Button */}
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-7 text-xs"
+                                                className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
                                                 onClick={() => {
-                                                    const updated = formData.variants.map((v, i) => ({
-                                                        ...v,
-                                                        is_default: i === index,
-                                                    }))
+                                                    const updated = formData.variants.filter((_, i) => i !== index)
+                                                    // If we removed the default, set first remaining as default
+                                                    if (variant.is_default && updated.length > 0) {
+                                                        updated[0].is_default = true
+                                                    }
                                                     setFormData({ ...formData, variants: updated })
                                                 }}
                                                 disabled={isSubmitting}
                                             >
-                                                Jadikan Default
-                                            </Button>
-                                        )}
-                                        {/* Delete Button */}
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
-                                            onClick={() => {
-                                                const updated = formData.variants.filter((_, i) => i !== index)
-                                                // If we removed the default, set first remaining as default
-                                                if (variant.is_default && updated.length > 0) {
-                                                    updated[0].is_default = true
-                                                }
-                                                setFormData({ ...formData, variants: updated })
-                                            }}
-                                            disabled={isSubmitting}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                {/* Variant Fields */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="col-span-2">
-                                        <Label className="text-xs">Nama Satuan *</Label>
-                                        <Input
-                                            value={variant.variant_name}
-                                            onChange={(e) => {
-                                                const updated = [...formData.variants]
-                                                updated[index].variant_name = e.target.value
-                                                setFormData({ ...formData, variants: updated })
-                                            }}
-                                            placeholder="Eceran, Grosir, Box, Dus..."
-                                            disabled={isSubmitting}
-                                            className="h-8"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs">Harga Beli (IDR)</Label>
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            value={variant.cost_price}
-                                            onChange={(e) => {
-                                                const updated = [...formData.variants]
-                                                updated[index].cost_price = e.target.value
-                                                setFormData({ ...formData, variants: updated })
-                                            }}
-                                            placeholder="0"
-                                            disabled={isSubmitting}
-                                            className="h-8"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs">Harga Jual (IDR) *</Label>
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            value={variant.price}
-                                            onChange={(e) => {
-                                                const updated = [...formData.variants]
-                                                updated[index].price = e.target.value
-                                                setFormData({ ...formData, variants: updated })
-                                            }}
-                                            placeholder="0"
-                                            disabled={isSubmitting}
-                                            className={`h-8 ${parseInt(variant.price) < parseInt(variant.cost_price) ? "border-red-500" : ""}`}
-                                        />
-                                        {parseInt(variant.price) < parseInt(variant.cost_price) && (
-                                            <p className="text-[10px] text-red-500 mt-0.5">⚠️ Rendah!</p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <Label className="text-xs">Faktor Konversi *</Label>
-                                        <Input
-                                            type="number"
-                                            min={1}
-                                            value={variant.conversion_qty}
-                                            onChange={(e) => {
-                                                const updated = [...formData.variants]
-                                                updated[index].conversion_qty = e.target.value
-                                                setFormData({ ...formData, variants: updated })
-                                            }}
-                                            placeholder="1"
-                                            disabled={isSubmitting}
-                                            className="h-8"
-                                        />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <Label className="text-xs">Barcode (Opsional)</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                value={variant.barcode}
-                                                onChange={(e) => {
-                                                    const updated = [...formData.variants]
-                                                    updated[index].barcode = e.target.value
-                                                    setFormData({ ...formData, variants: updated })
-                                                }}
-                                                placeholder="Barcode khusus untuk varian ini"
-                                                disabled={isSubmitting}
-                                                className="h-8"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="icon"
-                                                onClick={() => {
-                                                    const newBarcode = generateBarcode()
-                                                    const updated = [...formData.variants]
-                                                    updated[index].barcode = newBarcode
-                                                    setFormData({ ...formData, variants: updated })
-                                                    toast.success(`Barcode varian digenerate: ${newBarcode}`)
-                                                }}
-                                                disabled={isSubmitting}
-                                                className="h-8 w-8"
-                                                title="Generate Barcode"
-                                            >
-                                                <RefreshCw className="h-3 w-3" />
+                                                <Trash2 className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </div>
+
+                                    {/* Variant Fields */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="col-span-2">
+                                            <Label className="text-xs">Nama Satuan *</Label>
+                                            <Input
+                                                value={variant.variant_name}
+                                                onChange={(e) => {
+                                                    const updated = [...formData.variants]
+                                                    updated[index].variant_name = e.target.value
+                                                    setFormData({ ...formData, variants: updated })
+                                                }}
+                                                placeholder="Eceran, Grosir, Box, Dus..."
+                                                disabled={isSubmitting}
+                                                className="h-8"
+                                            />
+                                        </div>
+
+                                        <div className="col-span-2 flex items-center gap-2 py-1">
+                                            <input
+                                                type="checkbox"
+                                                id={`inherit-cost-${index}`}
+                                                checked={variant.inherit_cost_price}
+                                                onChange={(e) => {
+                                                    const updated = [...formData.variants]
+                                                    updated[index].inherit_cost_price = e.target.checked
+                                                    if (e.target.checked) {
+                                                        updated[index].cost_price = (parseInt(formData.cost_price || '0') * parseInt(variant.conversion_qty || '1')).toString()
+                                                    }
+                                                    setFormData({ ...formData, variants: updated })
+                                                }}
+                                                disabled={isSubmitting}
+                                                className="h-3 w-3"
+                                            />
+                                            <Label htmlFor={`inherit-cost-${index}`} className="text-[10px] font-medium cursor-pointer">
+                                                Gunakan Harga Beli Produk (Otomatis)
+                                            </Label>
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-xs">Harga Beli (IDR)</Label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                value={variant.inherit_cost_price ? calculatedCostPrice : variant.cost_price}
+                                                onChange={(e) => {
+                                                    const updated = [...formData.variants]
+                                                    updated[index].cost_price = e.target.value
+                                                    setFormData({ ...formData, variants: updated })
+                                                }}
+                                                placeholder="0"
+                                                disabled={isSubmitting || variant.inherit_cost_price}
+                                                className={`h-8 ${variant.inherit_cost_price ? 'bg-muted border-dashed' : ''}`}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Harga Jual (IDR) *</Label>
+                                            <Input
+                                                type="number"
+                                                min={0}
+                                                value={variant.price}
+                                                onChange={(e) => {
+                                                    const updated = [...formData.variants]
+                                                    updated[index].price = e.target.value
+                                                    setFormData({ ...formData, variants: updated })
+                                                }}
+                                                placeholder="0"
+                                                disabled={isSubmitting}
+                                                className={`h-8 ${parseInt(variant.price) < parseInt(variant.inherit_cost_price ? calculatedCostPrice : variant.cost_price) ? "border-red-500" : ""}`}
+                                            />
+                                            {parseInt(variant.price) < parseInt(variant.inherit_cost_price ? calculatedCostPrice : variant.cost_price) && (
+                                                <p className="text-[10px] text-red-500 mt-0.5">⚠️ Rendah!</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs">Faktor Konversi *</Label>
+                                            <Input
+                                                type="number"
+                                                min={1}
+                                                value={variant.conversion_qty}
+                                                onChange={(e) => {
+                                                    const updated = [...formData.variants]
+                                                    updated[index].conversion_qty = e.target.value
+                                                    if (updated[index].inherit_cost_price) {
+                                                        updated[index].cost_price = (parseInt(formData.cost_price || '0') * parseInt(e.target.value || '1')).toString()
+                                                    }
+                                                    setFormData({ ...formData, variants: updated })
+                                                }}
+                                                placeholder="1"
+                                                disabled={isSubmitting}
+                                                className="h-8"
+                                            />
+                                        </div>
+                                        <div className="col-span-1">
+                                            <Label className="text-xs">Barcode (Opsional)</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    value={variant.barcode}
+                                                    onChange={(e) => {
+                                                        const updated = [...formData.variants]
+                                                        updated[index].barcode = e.target.value
+                                                        setFormData({ ...formData, variants: updated })
+                                                    }}
+                                                    placeholder="Barcode"
+                                                    disabled={isSubmitting}
+                                                    className="h-8 text-[10px]"
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        const newBarcode = generateBarcode()
+                                                        const updated = [...formData.variants]
+                                                        updated[index].barcode = newBarcode
+                                                        setFormData({ ...formData, variants: updated })
+                                                        toast.success(`Generated: ${newBarcode}`)
+                                                    }}
+                                                    disabled={isSubmitting}
+                                                    className="h-8 w-8"
+                                                >
+                                                    <RefreshCw className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
