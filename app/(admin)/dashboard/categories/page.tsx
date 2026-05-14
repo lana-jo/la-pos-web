@@ -247,9 +247,8 @@ export default function CategoriesPage() {
         is_active: formData.is_active
       }
 
-      const { data, error } = await supabase
-        .from('categories')
-        .update(categoryData as any)
+      const { data, error } = await (supabase.from('categories') as any)
+        .update(categoryData)
         .eq('id', selectedCategory.id)
         .select()
         .single()
