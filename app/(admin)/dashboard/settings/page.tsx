@@ -165,8 +165,8 @@ export default function SettingsPage() {
   const handleTestPrinterConnection = async () => {
     const printerData = formData.printer
     const result = await testPrinterConnection(
-      printerData.printer_port || 'USB001',
-      printerData.printer_type || 'thermal'
+      (printerData as any).printer_port || 'USB001',
+      (printerData as any).printer_type || 'thermal'
     )
     
     if (result.success) {
@@ -179,9 +179,9 @@ export default function SettingsPage() {
   const handleTestPrint = async () => {
     const printerData = formData.printer
     const result = await testPrint(
-      printerData.printer_port || 'USB001',
-      printerData.printer_type || 'thermal',
-      printerData.paper_width || '58mm'
+      (printerData as any).printer_port || 'USB001',
+      (printerData as any).printer_type || 'thermal',
+      (printerData as any).paper_width || '58mm'
     )
     
     if (result.success) {

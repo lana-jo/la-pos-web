@@ -106,12 +106,12 @@ export async function createUser(formData: {
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
         .insert({
-          id: authData.user.id,
+          id: formData.id,
           full_name: formData.full_name.trim(),
           role: formData.role,
-          email: email,
-          phone: formData.phone?.trim() || null
-        })
+          email: formData.email,
+          phone: formData.phone?.trim() || null,
+        } as any)
         .select()
         .single()
 
@@ -121,7 +121,7 @@ export async function createUser(formData: {
         profileData = newProfile
         console.log('Profile created manually:', newProfile)
       }
-    } else if (existingProfile.role !== formData.role || existingProfile.full_name !== formData.full_name.trim() || existingProfile.phone !== (formData.phone?.trim() || null)) {
+    } else if ((existingProfile as any).role !== formData.role || (existingProfile as any).full_name !== formData.full_name.trim() || (existingProfile as any).phone !== (formData.phone?.trim() || null)) {
       // Profile exists but needs update
       const profileUpdate = {
         full_name: formData.full_name.trim(),
@@ -130,8 +130,7 @@ export async function createUser(formData: {
         updated_at: new Date().toISOString()
       }
 
-      const { data: updatedProfile, error: profileError } = await supabase
-        .from('profiles')
+      const { data: updatedProfile, error: profileError } = await (supabase.from('profiles') as any)
         .update(profileUpdate)
         .eq('id', authData.user.id)
         .select()

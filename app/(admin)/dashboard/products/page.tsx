@@ -126,7 +126,7 @@ export default function ProductsPage() {
                 return false
             }
 
-            if (profile.role !== 'admin') {
+            if ((profile as any).role !== 'admin') {
                 toast.error('Akses ditolak: Hanya admin yang dapat mengakses halaman ini')
                 router.push('/auth/unauthorized')
                 return false

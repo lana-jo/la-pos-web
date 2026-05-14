@@ -48,13 +48,13 @@ export function useUserProfile() {
       }
 
       const userProfileData = {
-        full_name: profile.full_name || "Unknown User",
-        role: profile.role,
+        full_name: (profile as any).full_name || "Unknown User",
+        role: (profile as any).role,
       };
 
       setUserProfile(userProfileData);
 
-      if (profile.role !== "cashier" && profile.role !== "admin") {
+      if ((profile as any).role !== "cashier" && (profile as any).role !== "admin") {
         toast.error("Akses ditolak: Hanya cashier yang dapat mengakses POS");
         router.push("/auth/unauthorized");
         return;

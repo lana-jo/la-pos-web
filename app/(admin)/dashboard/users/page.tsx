@@ -14,13 +14,10 @@ import {
   Plus,
   Edit,
   Trash2,
-  ArrowLeft,
   X,
   Eye,
   EyeOff,
 } from "lucide-react";
-import DashboardHeader from "@/components/layout/DashboardHeader";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { toast } from "sonner";
 import { Profile } from "@/types";
 
@@ -46,10 +43,6 @@ const EMPTY_FORM: FormData = {
   phone: "",
   is_active: true,
 };
-
-// Cast query builder to avoid `never` parameter errors without generated schema
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = (table: string) => supabase.from(table) as any;
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -461,8 +454,12 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    checkUserRole();
-    fetchData();
+    // Use a small delay to avoid synchronous setState during effect execution
+    const timer = setTimeout(() => {
+      checkUserRole();
+      fetchData();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [checkUserRole, fetchData]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
