@@ -339,13 +339,13 @@ export function ProductFormFields({
                         disabled={isSubmitting}
                     >
                         <Plus className="h-4 w-4 mr-1" />
-                        Tambah Satuan
+                        Tambah Varian
                     </Button>
                 </div>
 
                 {formData.variants.length === 0 ? (
                     <p className="text-sm text-muted-foreground italic">
-                        Belum ada varian. Klik &quot;Tambah Satuan&quot; untuk menambahkan (contoh: Eceran, Grosir, Box, Dus)
+                        Belum ada varian. Klik &quot;Tambah Varian&quot; untuk menambahkan (contoh: Eceran, Grosir, Box, Dus)
                     </p>
                 ) : (
                     <div className="space-y-3">
