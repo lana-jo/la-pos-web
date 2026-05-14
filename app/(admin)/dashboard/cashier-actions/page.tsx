@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -98,8 +98,10 @@ export default function CashierActionsPage() {
   }, []);
 
   useEffect(() => {
-    checkUserRole();
-    fetchActions();
+    startTransition(() => {
+      checkUserRole();
+      fetchActions();
+    });
   }, [checkUserRole, fetchActions]);
 
   // Filter actions

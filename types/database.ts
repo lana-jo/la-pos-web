@@ -1,33 +1,42 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export type Database = {
   public: {
+    Enums: {
+      user_role: 'admin' | 'cashier' | 'customer'
+      payment_status: 'pending' | 'paid' | 'expired' | 'cancelled'
+      payment_method: 'cash' | 'qris' | 'transfer' | 'debt'
+      action_type: 'void' | 'discount' | 'refund' | 'stock_adjustment' | 'shift_open' | 'shift_close'
+      movement_type: 'purchase' | 'sale' | 'adjustment' | 'return_in' | 'return_out' | 'damage' | 'void'
+      reference_type: 'transaction' | 'purchase_order' | 'refund' | 'manual'
+      shift_status: 'open' | 'closed'
+      debt_status: 'outstanding' | 'partial' | 'paid'
+      discount_type: 'percentage' | 'fixed'
+      purchase_status: 'draft' | 'ordered' | 'received' | 'partial' | 'cancelled'
+    }
     Tables: {
       profiles: {
         Row: {
           id: string
-          role: 'admin' | 'cashier' | 'customer'
+          role: Database['public']['Enums']['user_role']
           full_name: string | null
           phone: string | null
           avatar_url: string | null
           pin_hash: string | null
-          theme_preference: 'light' | 'dark' | 'system' | null
+          theme_preference: 'light' | 'dark' | 'system'
           email: string | null
           is_active: boolean
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['profiles']['Row']>
-      }
-      units: {
-        Row: {
-          id: string
-          name: string
-          symbol: string
-          is_active: boolean
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['units']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['units']['Row']>
       }
       categories: {
         Row: {
@@ -42,6 +51,17 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['categories']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['categories']['Row']>
+      }
+      units: {
+        Row: {
+          id: string
+          name: string
+          symbol: string
+          is_active: boolean
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['units']['Row'], 'id' | 'created_at'>
+        Update: Partial<Database['public']['Tables']['units']['Row']>
       }
       suppliers: {
         Row: {
@@ -59,6 +79,21 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['suppliers']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['suppliers']['Row']>
       }
+      customers: {
+        Row: {
+          id: string
+          name: string
+          phone: string | null
+          address: string | null
+          notes: string | null
+          total_debt: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['customers']['Row']>
+      }
       products: {
         Row: {
           id: string
@@ -71,11 +106,11 @@ export type Database = {
           cost_price: number
           price: number
           stock: number
-          cached_stock: number
-          track_stock: boolean
-          low_stock_threshold: number
           min_stock: number
           max_stock: number | null
+          track_stock: boolean
+          cached_stock: number
+          low_stock_threshold: number
           image_url: string | null
           is_active: boolean
           is_consignment: boolean
@@ -95,6 +130,8 @@ export type Database = {
           cost_price: number
           conversion_qty: number
           min_qty: number
+          cached_stock: number
+          inherit_cost_price: boolean
           is_active: boolean
           is_default: boolean
           created_at: string
@@ -103,30 +140,11 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['product_variants']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['product_variants']['Row']>
       }
-      discounts: {
-        Row: {
-          id: string
-          name: string
-          code: string | null
-          discount_type: 'percentage' | 'fixed'
-          value: number
-          max_discount: number | null
-          min_purchase: number
-          max_usage: number | null
-          usage_count: number
-          is_active: boolean
-          valid_from: string
-          valid_until: string | null
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['discounts']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['discounts']['Row']>
-      }
       shifts: {
         Row: {
           id: string
           cashier_id: string
-          status: 'open' | 'closed'
+          status: Database['public']['Enums']['shift_status']
           opening_cash: number
           closing_cash: number | null
           expected_cash: number | null
@@ -137,21 +155,6 @@ export type Database = {
         }
         Insert: Omit<Database['public']['Tables']['shifts']['Row'], 'id' | 'opened_at'>
         Update: Partial<Database['public']['Tables']['shifts']['Row']>
-      }
-      customers: {
-        Row: {
-          id: string
-          name: string
-          phone: string | null
-          address: string | null
-          notes: string | null
-          total_debt: number
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['customers']['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['customers']['Row']>
       }
       transactions: {
         Row: {
@@ -166,8 +169,8 @@ export type Database = {
           total: number
           amount_paid: number
           change_amount: number
-          payment_method: 'cash' | 'qris' | 'transfer' | 'debt'
-          payment_status: 'pending' | 'paid' | 'expired' | 'cancelled'
+          payment_method: Database['public']['Enums']['payment_method']
+          payment_status: Database['public']['Enums']['payment_status']
           notes: string | null
           midtrans_order_id: string | null
           qris_url: string | null
@@ -200,13 +203,32 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['transaction_items']['Row'], 'id'>
         Update: Partial<Database['public']['Tables']['transaction_items']['Row']>
       }
+      inventory_movements: {
+        Row: {
+          id: string
+          product_id: string
+          product_variant_id: string | null
+          movement_type: Database['public']['Enums']['movement_type']
+          reference_type: Database['public']['Enums']['reference_type']
+          reference_id: string | null
+          qty_change: number
+          qty_before: number
+          qty_after: number
+          unit_cost: number
+          notes: string | null
+          created_by: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['inventory_movements']['Row'], 'id' | 'created_at' | 'qty_before' | 'qty_after'>
+        Update: Partial<Database['public']['Tables']['inventory_movements']['Row']>
+      }
       purchase_orders: {
         Row: {
           id: string
           supplier_id: string | null
           created_by: string | null
           received_by: string | null
-          status: 'draft' | 'ordered' | 'received' | 'partial' | 'cancelled'
+          status: Database['public']['Enums']['purchase_status']
           invoice_number: string | null
           total: number
           paid_amount: number
@@ -219,46 +241,13 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['purchase_orders']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['purchase_orders']['Row']>
       }
-      purchase_order_items: {
-        Row: {
-          id: string
-          purchase_order_id: string
-          product_id: string | null
-          product_name: string
-          barcode: string | null
-          qty_ordered: number
-          qty_received: number
-          unit_cost: number
-          subtotal: number
-        }
-        Insert: Omit<Database['public']['Tables']['purchase_order_items']['Row'], 'id'>
-        Update: Partial<Database['public']['Tables']['purchase_order_items']['Row']>
-      }
-      stock_movements: {
-        Row: {
-          id: string
-          product_id: string
-          product_variant_id: string | null
-          movement_type: 'purchase' | 'sale' | 'adjustment' | 'return_in' | 'return_out' | 'damage' | 'void'
-          reference_id: string | null
-          reference_type: string | null
-          qty_before: number
-          qty_change: number
-          qty_after: number
-          notes: string | null
-          created_by: string | null
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['stock_movements']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['stock_movements']['Row']>
-      }
       customer_debts: {
         Row: {
           id: string
           customer_id: string
           transaction_id: string | null
           cashier_id: string | null
-          status: 'outstanding' | 'partial' | 'paid'
+          status: Database['public']['Enums']['debt_status']
           amount: number
           paid_amount: number
           remaining: number
@@ -267,36 +256,8 @@ export type Database = {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Database['public']['Tables']['customer_debts']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Insert: Omit<Database['public']['Tables']['customer_debts']['Row'], 'id' | 'created_at' | 'updated_at' | 'remaining'>
         Update: Partial<Database['public']['Tables']['customer_debts']['Row']>
-      }
-      debt_payments: {
-        Row: {
-          id: string
-          debt_id: string
-          cashier_id: string | null
-          amount: number
-          notes: string | null
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['debt_payments']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['debt_payments']['Row']>
-      }
-      cashier_actions: {
-        Row: {
-          id: string
-          cashier_id: string | null
-          shift_id: string | null
-          action_type: 'void' | 'discount' | 'refund' | 'stock_adjustment' | 'shift_open' | 'shift_close'
-          target_id: string | null
-          target_type: string | null
-          pin_verified: boolean
-          notes: string | null
-          metadata: any
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['cashier_actions']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['cashier_actions']['Row']>
       }
       settings: {
         Row: {
@@ -313,18 +274,6 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['settings']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['settings']['Row']>
       }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
     }
   }
 }

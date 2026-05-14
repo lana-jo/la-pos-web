@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
@@ -74,7 +74,9 @@ export function useUserProfile() {
   };
 
   useEffect(() => {
-    checkUserRole();
+    startTransition(() => {
+      checkUserRole();
+    });
   }, []);
 
   return { userProfile, loading, refetch: checkUserRole };
@@ -167,7 +169,7 @@ export function useTransactions() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
       const {
@@ -207,11 +209,13 @@ export function useTransactions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    startTransition(() => {
+      fetchTransactions();
+    });
+  }, [fetchTransactions]);
 
   return { transactions, loading, fetchTransactions };
 }

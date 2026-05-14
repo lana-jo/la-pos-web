@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { ChartData, DateRange } from "@/types/dashboard";
@@ -13,11 +13,7 @@ export const useChartData = (dateRange: DateRange) => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchChartData();
-  }, [dateRange]);
-
-  const fetchChartData = async () => {
+  const fetchChartData = useCallback(async () => {
     try {
       console.log("Starting fetchChartData...");
 
@@ -208,7 +204,13 @@ export const useChartData = (dateRange: DateRange) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    startTransition(() => {
+      fetchChartData();
+    });
+  }, [dateRange, fetchChartData]);
 
   return { chartData, loading, refetch: fetchChartData };
 };

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, startTransition } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { Cashier, CashierStats, CashierFilters } from '@/types/cashier'
@@ -55,7 +55,9 @@ export function useCashiers() {
   }, [])
 
   useEffect(() => {
-    fetchCashiers()
+    startTransition(() => {
+      fetchCashiers()
+    })
   }, [fetchCashiers])
 
   useEffect(() => {
@@ -63,7 +65,11 @@ export function useCashiers() {
       .channel('profiles-changes')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'profiles', filter: 'role=eq.cashier' },
-        () => fetchCashiers()
+        () => {
+          startTransition(() => {
+            fetchCashiers()
+          })
+        }
       )
       .subscribe()
 

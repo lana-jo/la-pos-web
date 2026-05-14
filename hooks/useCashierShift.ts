@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, startTransition } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { Shift, ShiftFormData, ShiftCloseData } from '@/types'
@@ -204,12 +204,16 @@ export function useCashierShift() {
 
   // Auto-refresh shift status
   useEffect(() => {
-    fetchCurrentShift()
+    startTransition(() => {
+      fetchCurrentShift()
+    })
     
     // Set up interval to refresh shift status every 30 seconds
     const interval = setInterval(() => {
       if (currentShift?.status === 'open') {
-        fetchCurrentShift()
+        startTransition(() => {
+          fetchCurrentShift()
+        })
       }
     }, 30000)
 

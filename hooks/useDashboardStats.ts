@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { DashboardStats, DateRange, TransactionRow, DEFAULT_STATS } from "@/types/dashboard";
@@ -9,11 +9,7 @@ export const useDashboardStats = (dateRange: DateRange) => {
   const [stats, setStats] = useState<DashboardStats>(DEFAULT_STATS);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, [dateRange]);
-
-  const fetchDashboardStats = async () => {
+  const fetchDashboardStats = useCallback(async () => {
     try {
       // Build date bounds in local timezone for accurate day filtering
       const now = new Date();
@@ -130,7 +126,13 @@ export const useDashboardStats = (dateRange: DateRange) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    startTransition(() => {
+      fetchDashboardStats();
+    });
+  }, [dateRange, fetchDashboardStats]);
 
   return { stats, loading, refetch: fetchDashboardStats };
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, startTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Product, ProductVariant, Database } from "@/types";
@@ -202,8 +202,10 @@ export function usePOSProducts({ autoFetch = true }: UsePOSProductsProps = {}) {
   // Auto-fetch on mount if enabled
   useEffect(() => {
     if (autoFetch) {
-      fetchProducts();
-      fetchCategories();
+      startTransition(() => {
+        fetchProducts();
+        fetchCategories();
+      });
     }
   }, [autoFetch, fetchProducts, fetchCategories]);
 

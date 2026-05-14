@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, startTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { Product, ProductVariant, Database } from "@/types";
@@ -311,7 +311,9 @@ export function usePOSOperations({ cashierId }: UsePOSOperationsProps = {}) {
   // Auto-check user role on mount
   useEffect(() => {
     if (!userProfile) {
-      checkUserRole();
+      startTransition(() => {
+        checkUserRole();
+      });
     }
   }, [userProfile, checkUserRole]);
 

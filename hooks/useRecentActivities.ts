@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { RecentActivity } from "@/types/dashboard";
@@ -9,11 +9,7 @@ export const useRecentActivities = () => {
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchRecentActivities();
-  }, []);
-
-  const fetchRecentActivities = async () => {
+  const fetchRecentActivities = useCallback(async () => {
     console.log(`[DASHBOARD] fetchRecentActivities started`);
     const startTime = Date.now();
     
@@ -125,7 +121,13 @@ export const useRecentActivities = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    startTransition(() => {
+      fetchRecentActivities();
+    });
+  }, [fetchRecentActivities]);
 
   return { activities, loading, refetch: fetchRecentActivities };
 };

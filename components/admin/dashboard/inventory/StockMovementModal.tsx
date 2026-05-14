@@ -81,7 +81,7 @@ export function StockMovementModal({
 
           {!hasVariants && selectedProduct && (
             <div className="text-sm text-muted-foreground px-1">
-              Stok Saat Ini: {selectedProduct.track_stock ? selectedProduct.cached_stock : selectedProduct.stock}
+              Stok Saat Ini: {selectedProduct.cached_stock ?? 0}
             </div>
           )}
           

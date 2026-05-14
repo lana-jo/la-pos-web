@@ -10,7 +10,7 @@ interface InventoryTableProps {
 
 export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
   const getStockStatus = (product: any) => {
-    const currentStock = product.track_stock ? product.cached_stock : product.stock;
+    const currentStock = product.cached_stock ?? 0;
     const threshold = product.low_stock_threshold || 5;
     
     if (currentStock === 0) return { color: "bg-destructive", text: "Stok Habis", icon: AlertTriangle };
@@ -42,10 +42,9 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
           ) : (
             products.map((product) => {
               const hasVariants = product.variants && product.variants.length > 0;
-              // Menggunakan stok produk langsung karena sekarang semua varian berbagi pool yang sama (Base Unit)
-              const totalStock = (product.track_stock ? (product.cached_stock ?? product.stock) : product.stock) || 0;
+              const totalStock = product.cached_stock ?? 0;
               
-              const status = getStockStatus({ ...product, cached_stock: totalStock });
+              const status = getStockStatus(product);
               const StatusIcon = status.icon;
               
               return (

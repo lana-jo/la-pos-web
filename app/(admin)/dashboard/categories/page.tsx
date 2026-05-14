@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -37,12 +37,7 @@ export default function CategoriesPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    checkUserRole()
-    fetchData()
-  }, [])
-
-  const checkUserRole = async () => {
+  const checkUserRole = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
 
@@ -72,9 +67,9 @@ export default function CategoriesPage() {
       console.error('Error checking user role:', error)
       router.push('/login')
     }
-  }
+  }, [router])
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       console.log('🔄 Fetching categories from Supabase...')
 
@@ -123,7 +118,14 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    startTransition(() => {
+      checkUserRole()
+      fetchData()
+    })
+  }, [checkUserRole, fetchData])
 
   const resetForm = () => {
     setFormData({

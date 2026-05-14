@@ -1,14 +1,16 @@
 'use client'
 
 import { useTheme as useNextTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, startTransition } from 'react'
 
 export function useTheme() {
   const { theme, setTheme, systemTheme, resolvedTheme } = useNextTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
+    startTransition(() => {
+      setMounted(true)
+    })
   }, [])
 
   const toggleTheme = () => {

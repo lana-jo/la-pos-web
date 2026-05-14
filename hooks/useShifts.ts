@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, startTransition } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import type { Shift, ShiftFilters, ShiftStats } from '@/types'
 
@@ -17,6 +17,13 @@ export function useShifts() {
     sortOrder: 'desc'
   })
   const [currentPage, setCurrentPage] = useState(1)
+  const [now, setNow] = useState(0)
+
+  useEffect(() => {
+    startTransition(() => {
+      setNow(Date.now())
+    })
+  }, [shifts])
 
   const fetchShifts = useCallback(async () => {
     setLoading(true)
@@ -175,8 +182,8 @@ export function useShifts() {
     // Sort client-side for complex sorting
     if (filters.sortBy === 'duration') {
       filtered.sort((a, b) => {
-        const durationA = (a.closed_at ? new Date(a.closed_at).getTime() : Date.now()) - new Date(a.opened_at).getTime()
-        const durationB = (b.closed_at ? new Date(b.closed_at).getTime() : Date.now()) - new Date(b.opened_at).getTime()
+        const durationA = (a.closed_at ? new Date(a.closed_at).getTime() : now) - new Date(a.opened_at).getTime()
+        const durationB = (b.closed_at ? new Date(b.closed_at).getTime() : now) - new Date(b.opened_at).getTime()
         return filters.sortOrder === 'asc' ? durationA - durationB : durationB - durationA
       })
     } else if (filters.sortBy === 'sales') {
@@ -191,7 +198,7 @@ export function useShifts() {
     const endIndex = startIndex + 10
     
     return filtered.slice(startIndex, endIndex)
-  }, [shifts, filters, currentPage])
+  }, [shifts, filters, currentPage, now])
 
   const totalPages = Math.ceil(shifts.length / 10)
   const totalFiltered = filteredAndPaginatedShifts.length
@@ -251,7 +258,9 @@ export function useShifts() {
 
   // Fetch shifts on component mount
   useEffect(() => {
-    fetchShifts()
+    startTransition(() => {
+      fetchShifts()
+    })
   }, [fetchShifts])
 
   return {

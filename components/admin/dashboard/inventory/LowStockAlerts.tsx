@@ -56,7 +56,7 @@ export function LowStockAlerts() {
   };
 
   const getStockStatus = (product: LowStockProduct) => {
-    const currentStock = product.track_stock ? product.cached_stock : product.stock;
+    const currentStock = product.cached_stock ?? 0;
     const threshold = product.low_stock_threshold || 5;
     
     if (currentStock === 0) {
@@ -94,12 +94,12 @@ export function LowStockAlerts() {
   };
 
   const criticalProducts = lowStockProducts.filter(p => {
-    const currentStock = p.track_stock ? p.cached_stock : p.stock;
+    const currentStock = p.cached_stock ?? 0;
     return currentStock === 0;
   });
 
   const warningProducts = lowStockProducts.filter(p => {
-    const currentStock = p.track_stock ? p.cached_stock : p.stock;
+    const currentStock = p.cached_stock ?? 0;
     const threshold = p.low_stock_threshold || 5;
     return currentStock > 0 && currentStock <= threshold;
   });
@@ -180,7 +180,7 @@ export function LowStockAlerts() {
               {criticalProducts.map((product) => {
                 const status = getStockStatus(product);
                 const StatusIcon = status.icon;
-                const currentStock = product.track_stock ? product.cached_stock : product.stock;
+                const currentStock = product.cached_stock ?? 0;
                 
                 return (
                   <div key={product.id} className="p-4 hover:bg-red-50/50 transition-colors">
@@ -242,7 +242,7 @@ export function LowStockAlerts() {
               {warningProducts.map((product) => {
                 const status = getStockStatus(product);
                 const StatusIcon = status.icon;
-                const currentStock = product.track_stock ? product.cached_stock : product.stock;
+                const currentStock = product.cached_stock ?? 0;
                 const threshold = product.low_stock_threshold || 5;
                 
                 return (

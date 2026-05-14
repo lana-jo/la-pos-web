@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, useMemo, startTransition } from "react";
 import { useRouter } from "next/navigation";
 import { BarChart3 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -26,8 +26,9 @@ export default function DashboardPage() {
   const router = useRouter();
   const { userName } = useUserRole();
   
-  // Set default date range to last 7 days
-  const defaultRange = getDateRangeForPreset("7days");
+  // Memoize default date range to prevent recreation on every render
+  const defaultRange = useMemo(() => getDateRangeForPreset("7days"), []);
+  
   const [dateRange, setDateRange] = useState<DateRange>(defaultRange);
   const [selectedPreset, setSelectedPreset] = useState<PresetRange>("7days");
   const [mounted, setMounted] = useState(false);
@@ -36,37 +37,41 @@ export default function DashboardPage() {
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Refs for logging
+  // Refs for logging - use 0 as initial for performanceStart, will be set in useEffect
   const renderCount = useRef(0);
-  const performanceStart = useRef<number>(Date.now());
+  const performanceStart = useRef<number>(0);
 
   // ─── Logging Functions ────────────────────────────────────────────────────────
 
-  const logDashboardEvent = (event: string, data?: any) => {
+  const logDashboardEvent = useCallback((event: string, data?: any) => {
     const timestamp = new Date().toISOString();
     console.log(`[DASHBOARD] ${timestamp} - ${event}`, data || '');
-  };
+  }, []);
 
-  const logPerformance = (operation: string, startTime: number) => {
+  const logPerformance = useCallback((operation: string, startTime: number) => {
+    if (startTime === 0) return;
     const duration = Date.now() - startTime;
     console.log(`[DASHBOARD PERFORMANCE] ${operation}: ${duration}ms`);
-  };
+  }, []);
 
-  const logError = (error: Error, context: string) => {
+  const logError = useCallback((error: Error, context: string) => {
     console.error(`[DASHBOARD ERROR] ${context}:`, error);
-  };
+  }, []);
 
-  const logUserInteraction = (action: string, details?: any) => {
+  const logUserInteraction = useCallback((action: string, details?: any) => {
     console.log(`[DASHBOARD USER] ${action} by ${userName || 'unknown'}`, details || '');
-  };
+  }, [userName]);
 
   // ─── Component Lifecycle Logging ───────────────────────────────────────────────
 
   // Prevent hydration mismatch
   useEffect(() => {
-    setMounted(true);
+    performanceStart.current = Date.now();
+    startTransition(() => {
+      setMounted(true);
+    });
     logDashboardEvent('Component mounted', { userName, defaultRange });
-  }, []);
+  }, [userName, defaultRange, logDashboardEvent]);
 
   // Log render count
   renderCount.current += 1;
@@ -91,7 +96,7 @@ export default function DashboardPage() {
       mounted,
       dateRange
     });
-  }, [statsLoading, activitiesLoading, chartsLoading, mounted, dateRange]);
+  }, [statsLoading, activitiesLoading, chartsLoading, mounted, dateRange, logDashboardEvent]);
 
   useEffect(() => {
     if (stats) {
@@ -104,7 +109,7 @@ export default function DashboardPage() {
         todayTransactions: stats.todayTransactions
       });
     }
-  }, [stats]);
+  }, [stats, logDashboardEvent]);
 
   useEffect(() => {
     if (activities && activities.length > 0) {
@@ -113,7 +118,7 @@ export default function DashboardPage() {
         latestActivity: activities[0]?.type
       });
     }
-  }, [activities]);
+  }, [activities, logDashboardEvent]);
 
   useEffect(() => {
     if (chartData) {
@@ -123,7 +128,7 @@ export default function DashboardPage() {
         paymentMethodsCount: chartData.paymentMethods?.length || 0
       });
     }
-  }, [chartData]);
+  }, [chartData, logDashboardEvent]);
 
   // ── Date handling ───────────────────────────────────────────────────────────
 
@@ -190,6 +195,7 @@ export default function DashboardPage() {
   // ─── Performance Logging ───────────────────────────────────────────────────────
 
   useEffect(() => {
+    if (performanceStart.current === 0) return;
     const renderTime = Date.now() - performanceStart.current;
     logPerformance('Dashboard render complete', performanceStart.current);
     logDashboardEvent('Dashboard fully loaded', { 
@@ -200,7 +206,7 @@ export default function DashboardPage() {
       hasActivities: !!activities,
       hasChartData: !!chartData
     });
-  }, [stats, activities, chartData, userName, dateRange]);
+  }, [stats, activities, chartData, userName, dateRange, logPerformance, logDashboardEvent]);
 
   // ── Loading state ──────────────────────────────────────────────────────────
 

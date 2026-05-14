@@ -6,10 +6,10 @@
 
 -- [INTEGRATION] FIX: TOTAL STOCK INTEGRATION (LEDGER-BASED)
 -- 1. SINKRONISASI AWAL (Ensure all columns are in sync before we start)
-DO $$ 
+DO $$
 BEGIN
     -- Sinkronisasi kolom 'stock' dan 'cached_stock' pada tabel products.
-    UPDATE public.products 
+    UPDATE public.products
     SET stock = COALESCE(cached_stock, stock, 0),
         cached_stock = COALESCE(cached_stock, stock, 0);
 
@@ -391,14 +391,14 @@ BEGIN
 
   -- 4. Validate Overselling (Business Rule)
   IF NEW.qty_after < 0 AND NEW.movement_type IN ('sale', 'return_out', 'damage') THEN
-    RAISE EXCEPTION 
-      'Stok tidak cukup untuk produk: %. Tersedia: %, Dibutuhkan: %', 
+    RAISE EXCEPTION
+      'Stok tidak cukup untuk produk: %. Tersedia: %, Dibutuhkan: %',
       (SELECT name FROM public.products WHERE id = NEW.product_id), v_current_stock, ABS(NEW.qty_change);
   END IF;
 
   -- 5. UPDATE Parent Product (The Single Source of Truth)
   UPDATE public.products
-  SET 
+  SET
     stock = NEW.qty_after,
     cached_stock = NEW.qty_after,
     updated_at = NOW()
@@ -406,7 +406,7 @@ BEGIN
 
   -- 6. SYNC ALL VARIANTS (UI Consistency)
   UPDATE public.product_variants
-  SET 
+  SET
     cached_stock = NEW.qty_after,
     updated_at = NOW()
   WHERE product_id = NEW.product_id;
@@ -433,7 +433,7 @@ BEGIN
   IF v_initial_stock > 0 THEN
     -- A. Determine Acting User (Audit Trail)
     v_uid := auth.uid();
-    
+
     -- Fallback for Batch/SQL Imports (Supportive Security)
     IF v_uid IS NULL THEN
       SELECT id INTO v_uid FROM public.profiles WHERE role = 'admin' AND is_active = true LIMIT 1;
@@ -446,8 +446,8 @@ BEGIN
 
     -- C. RESET Product Stock (Prevent Double Counting)
     -- Ledger (inventory_movements) will add the stock back via the trigger.
-    UPDATE public.products 
-    SET stock = 0, cached_stock = 0 
+    UPDATE public.products
+    SET stock = 0, cached_stock = 0
     WHERE id = NEW.id;
 
     -- D. Record Movement
@@ -468,23 +468,23 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_products_initial_stock ON public.products;
-CREATE TRIGGER trg_products_initial_stock 
-    AFTER INSERT ON public.products 
+CREATE TRIGGER trg_products_initial_stock
+    AFTER INSERT ON public.products
     FOR EACH ROW EXECUTE FUNCTION public.fn_record_initial_stock();
 
 -- 4.3 PRODUCTS — Manual Stock Update Interception (Integrity Enforcement)
 CREATE OR REPLACE FUNCTION public.fn_sync_manual_stock_update()
 RETURNS TRIGGER
 LANGUAGE plpgsql SECURITY DEFINER AS $$
-DECLARE 
-    v_uid UUID; 
+DECLARE
+    v_uid UUID;
     v_diff INTEGER;
 BEGIN
   -- Calculate difference
   v_diff := NEW.stock - OLD.stock;
-  
+
   -- Prevent direct update on stock columns (Force usage of Ledger)
-  NEW.stock := OLD.stock; 
+  NEW.stock := OLD.stock;
   NEW.cached_stock := OLD.cached_stock;
 
   -- Audit Logic
@@ -492,22 +492,22 @@ BEGIN
 
   -- Redirect to Ledger
   INSERT INTO public.inventory_movements (
-    product_id, movement_type, reference_type, reference_id, 
+    product_id, movement_type, reference_type, reference_id,
     qty_change, unit_cost, notes, created_by
   ) VALUES (
-    NEW.id, 'adjustment', 'manual', NEW.id, 
+    NEW.id, 'adjustment', 'manual', NEW.id,
     v_diff, NEW.cost_price, 'Penyesuaian stok manual (via UI Edit)', v_uid
   );
-  
+
   RETURN NEW;
 END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_products_sync_stock_update ON public.products;
-CREATE TRIGGER trg_products_sync_stock_update 
-    BEFORE UPDATE ON public.products 
-    FOR EACH ROW 
-    WHEN (NEW.stock IS DISTINCT FROM OLD.stock) 
+CREATE TRIGGER trg_products_sync_stock_update
+    BEFORE UPDATE ON public.products
+    FOR EACH ROW
+    WHEN (NEW.stock IS DISTINCT FROM OLD.stock)
     EXECUTE FUNCTION public.fn_sync_manual_stock_update();
 
 -- 4.4 TRANSACTIONS — Deduct Stock on Payment
@@ -520,11 +520,11 @@ DECLARE
 BEGIN
     -- Only process when payment status changes to 'paid'
     IF NEW.payment_status = 'paid' AND (OLD.payment_status IS NULL OR OLD.payment_status <> 'paid') THEN
-        FOR r IN 
-            SELECT 
-                ti.product_id, 
-                ti.product_variant_id, 
-                ti.qty, 
+        FOR r IN
+            SELECT
+                ti.product_id,
+                ti.product_variant_id,
+                ti.qty,
                 ti.cost_price,
                 COALESCE(pv.conversion_qty, 1) as conversion_qty
             FROM public.transaction_items ti
@@ -536,24 +536,24 @@ BEGIN
 
             -- Record in Ledger (Trigger fn_process_inventory_movement will handle the math and row locking)
             INSERT INTO public.inventory_movements (
-                product_id, 
-                product_variant_id, 
-                movement_type, 
-                reference_type, 
-                reference_id, 
-                qty_change, 
-                unit_cost, 
-                notes, 
+                product_id,
+                product_variant_id,
+                movement_type,
+                reference_type,
+                reference_id,
+                qty_change,
+                unit_cost,
+                notes,
                 created_by
             ) VALUES (
-                r.product_id, 
-                r.product_variant_id, 
-                'sale', 
-                'transaction', 
-                NEW.id, 
-                -v_deduct_qty, 
-                r.cost_price, 
-                'Penjualan #' || NEW.id::TEXT, 
+                r.product_id,
+                r.product_variant_id,
+                'sale',
+                'transaction',
+                NEW.id,
+                -v_deduct_qty,
+                r.cost_price,
+                'Penjualan #' || NEW.id::TEXT,
                 COALESCE(NEW.cashier_id, auth.uid())
             );
         END LOOP;
@@ -577,11 +577,11 @@ DECLARE
 BEGIN
     -- Process when voided_at is set
     IF NEW.voided_at IS NOT NULL AND OLD.voided_at IS NULL THEN
-        FOR r IN 
-            SELECT 
-                ti.product_id, 
-                ti.product_variant_id, 
-                ti.qty, 
+        FOR r IN
+            SELECT
+                ti.product_id,
+                ti.product_variant_id,
+                ti.qty,
                 ti.cost_price,
                 COALESCE(pv.conversion_qty, 1) as conversion_qty
             FROM public.transaction_items ti
@@ -591,24 +591,24 @@ BEGIN
             v_return_qty := r.qty * r.conversion_qty;
 
             INSERT INTO public.inventory_movements (
-                product_id, 
-                product_variant_id, 
-                movement_type, 
-                reference_type, 
-                reference_id, 
-                qty_change, 
-                unit_cost, 
-                notes, 
+                product_id,
+                product_variant_id,
+                movement_type,
+                reference_type,
+                reference_id,
+                qty_change,
+                unit_cost,
+                notes,
                 created_by
             ) VALUES (
-                r.product_id, 
-                r.product_variant_id, 
-                'void', 
-                'transaction', 
-                NEW.id, 
-                v_return_qty, 
-                r.cost_price, 
-                'Stok dikembalikan (Void Transaksi #' || NEW.id::TEXT || ')', 
+                r.product_id,
+                r.product_variant_id,
+                'void',
+                'transaction',
+                NEW.id,
+                v_return_qty,
+                r.cost_price,
+                'Stok dikembalikan (Void Transaksi #' || NEW.id::TEXT || ')',
                 COALESCE(NEW.voided_by, auth.uid())
             );
         END LOOP;
@@ -631,29 +631,29 @@ DECLARE
 BEGIN
     -- When status changes to 'received'
     IF NEW.status = 'received' AND OLD.status <> 'received' THEN
-        FOR r IN 
+        FOR r IN
             SELECT product_id, qty_received, unit_cost
             FROM public.purchase_order_items
             WHERE purchase_order_id = NEW.id
         LOOP
             IF r.qty_received > 0 THEN
                 INSERT INTO public.inventory_movements (
-                    product_id, 
-                    movement_type, 
-                    reference_type, 
-                    reference_id, 
-                    qty_change, 
-                    unit_cost, 
-                    notes, 
+                    product_id,
+                    movement_type,
+                    reference_type,
+                    reference_id,
+                    qty_change,
+                    unit_cost,
+                    notes,
                     created_by
                 ) VALUES (
-                    r.product_id, 
-                    'purchase', 
-                    'purchase_order', 
-                    NEW.id, 
-                    r.qty_received, 
-                    r.unit_cost, 
-                    'Penerimaan stok (PO #' || COALESCE(NEW.invoice_number, NEW.id::TEXT) || ')', 
+                    r.product_id,
+                    'purchase',
+                    'purchase_order',
+                    NEW.id,
+                    r.qty_received,
+                    r.unit_cost,
+                    'Penerimaan stok (PO #' || COALESCE(NEW.invoice_number, NEW.id::TEXT) || ')',
                     COALESCE(NEW.received_by, auth.uid())
                 );
             END IF;
@@ -676,14 +676,14 @@ BEGIN
   -- 1. On Payment (paid)
   IF (TG_OP = 'UPDATE') THEN
     IF NEW.payment_status = 'paid' AND OLD.payment_status <> 'paid' AND NEW.payment_method = 'cash' AND NEW.shift_id IS NOT NULL THEN
-      UPDATE public.shifts 
+      UPDATE public.shifts
       SET expected_cash = COALESCE(expected_cash, opening_cash) + NEW.total
       WHERE id = NEW.shift_id;
     END IF;
 
     -- 2. On Void
     IF NEW.voided_at IS NOT NULL AND OLD.voided_at IS NULL AND NEW.payment_method = 'cash' AND NEW.shift_id IS NOT NULL THEN
-      UPDATE public.shifts 
+      UPDATE public.shifts
       SET expected_cash = COALESCE(expected_cash, opening_cash) - NEW.total
       WHERE id = NEW.shift_id;
     END IF;
@@ -726,7 +726,7 @@ DECLARE
   expired_transactions_val INTEGER := 0;
   average_transaction_val BIGINT := 0;
   total_items_sold_val INTEGER := 0;
-  
+
   -- Timezone-safe ts
   start_ts TIMESTAMP WITH TIME ZONE;
   end_ts TIMESTAMP WITH TIME ZONE;
@@ -736,19 +736,19 @@ BEGIN
   end_ts := start_ts + INTERVAL '1 day';
 
   -- Calculate transaction stats
-  SELECT 
+  SELECT
     COALESCE(SUM(total) FILTER (WHERE payment_status = 'paid'), 0),
     COUNT(*),
     COUNT(*) FILTER (WHERE payment_status = 'paid'),
     COUNT(*) FILTER (WHERE payment_status = 'pending'),
     COUNT(*) FILTER (WHERE payment_status = 'cancelled'),
     COUNT(*) FILTER (WHERE payment_status = 'expired'),
-    CASE 
-      WHEN COUNT(*) FILTER (WHERE payment_status = 'paid') > 0 
+    CASE
+      WHEN COUNT(*) FILTER (WHERE payment_status = 'paid') > 0
       THEN COALESCE(SUM(total) FILTER (WHERE payment_status = 'paid'), 0) / COUNT(*) FILTER (WHERE payment_status = 'paid')
-      ELSE 0 
+      ELSE 0
     END
-  INTO 
+  INTO
     total_sales_val,
     total_transactions_val,
     paid_transactions_val,
@@ -764,7 +764,7 @@ BEGIN
   INTO total_items_sold_val
   FROM public.transaction_items ti
   JOIN public.transactions t ON ti.transaction_id = t.id
-  WHERE t.created_at >= start_ts AND t.created_at < end_ts 
+  WHERE t.created_at >= start_ts AND t.created_at < end_ts
     AND t.payment_status = 'paid';
 
   -- UPSERT report
@@ -821,12 +821,12 @@ CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING
 
 -- 5.2 Products Policies
 CREATE POLICY "Products are viewable by everyone" ON public.products FOR SELECT USING (true);
-CREATE POLICY "Admins can modify products" ON public.products FOR ALL 
+CREATE POLICY "Admins can modify products" ON public.products FOR ALL
     USING (public.fn_is_admin())
     WITH CHECK (public.fn_is_admin());
 
 -- 5.3 Inventory Policies
-CREATE POLICY "Inventory is viewable by Admins" ON public.inventory_movements FOR SELECT 
+CREATE POLICY "Inventory is viewable by Admins" ON public.inventory_movements FOR SELECT
     USING (public.fn_is_admin());
 
 -- 5.4 Daily Reports Policies
