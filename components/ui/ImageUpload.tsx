@@ -185,32 +185,6 @@ export function ImageUpload({
           </div>
         )}
       </div>
-
-      {/* Manual URL Input */}
-      <div className="space-y-2">
-        <Label htmlFor="image_url" className="text-sm text-muted-foreground">
-          Atau masukkan URL gambar manual
-        </Label>
-        <Input
-          id="image_url"
-          type="url"
-          placeholder="https://example.com/image.jpg"
-          disabled={disabled}
-          value={currentImageUrl || ''}
-          onChange={(e) => {
-            const url = e.target.value
-            console.log('🔗 [CLIENT] Manual URL input changed', { url, hasValue: !!url })
-            if (url) {
-              setPreviewUrl(url)
-              // For manual URLs, we don't pass a File object
-              // The parent component will handle this case
-            } else {
-              console.log('🗑️ [CLIENT] Manual URL cleared')
-              setPreviewUrl(null)
-            }
-          }}
-        />
-      </div>
     </div>
   )
 }
