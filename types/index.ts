@@ -42,6 +42,7 @@ export interface VariantPayload {
   barcode: string | null
   price: number
   cost_price: number
+  inherit_cost_price: boolean
   conversion_qty: number
   min_qty: number
   is_active: boolean
@@ -115,6 +116,7 @@ export interface ProductVariant {
     barcode:        string | null   // optional different barcode per variant
     price:          number          // variant-specific price
     cost_price:     number
+    inherit_cost_price: boolean
     conversion_qty: number          // faktor pengali stok
     min_qty:        number          // minimum kuantitas beli agar varian ini berlaku
     is_active:      boolean

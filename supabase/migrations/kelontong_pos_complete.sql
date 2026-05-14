@@ -448,5 +448,23 @@ $$;
 DROP TRIGGER IF EXISTS trg_products_sync_stock_update ON public.products;
 CREATE TRIGGER trg_products_sync_stock_update BEFORE UPDATE ON public.products FOR EACH ROW WHEN (NEW.stock IS DISTINCT FROM OLD.stock) EXECUTE FUNCTION public.fn_sync_manual_stock_update();
 
+-- 5.25 PRODUCTS — Block direct manual update to stock (Strict Protection)
+CREATE OR REPLACE FUNCTION public.fn_block_direct_stock_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  IF NEW.stock IS DISTINCT FROM OLD.stock THEN
+    RAISE EXCEPTION 'Manipulasi stok dilarang! Stok hanya bisa diubah melalui mutasi (pembelian/penjualan/adjustment).';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_block_direct_stock_update ON public.products;
+CREATE TRIGGER trg_block_direct_stock_update
+  BEFORE UPDATE ON public.products
+  FOR EACH ROW
+  EXECUTE FUNCTION public.fn_block_direct_stock_update();
+
 -- ... [Lain-lain: triggers, RLS, Indexes, Seed Data, dll.] ...
 -- NOTE: Please ensure triggers for transactions, purchase orders, etc are included here as per the original complete file.

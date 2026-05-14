@@ -46,6 +46,7 @@ interface VariantPayload {
   barcode: string | null
   price: number
   cost_price: number
+  inherit_cost_price: boolean
   conversion_qty: number
   min_qty?: number
   is_active: boolean
@@ -137,6 +138,7 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
         barcode: v.barcode,
         price: v.price,
         cost_price: v.cost_price,
+        inherit_cost_price: v.inherit_cost_price,
         conversion_qty: v.conversion_qty,
         is_active: v.is_active,
         is_default: v.is_default,
@@ -280,6 +282,7 @@ export async function updateProductWithVariants(
             barcode: v.barcode,
             price: v.price,
             cost_price: v.cost_price,
+            inherit_cost_price: v.inherit_cost_price,
             conversion_qty: v.conversion_qty,
             is_active: v.is_active,
             is_default: v.is_default,
@@ -308,6 +311,7 @@ export async function updateProductWithVariants(
             barcode: v.barcode,
             price: v.price,
             cost_price: v.cost_price,
+            inherit_cost_price: v.inherit_cost_price,
             conversion_qty: v.conversion_qty,
             is_active: v.is_active,
             is_default: v.is_default,
@@ -401,6 +405,7 @@ interface VariantPayload {
   barcode: string | null
   price: number
   cost_price: number
+  inherit_cost_price: boolean
   conversion_qty: number
   min_qty?: number
   is_active: boolean

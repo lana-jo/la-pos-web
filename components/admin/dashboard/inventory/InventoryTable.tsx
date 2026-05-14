@@ -1,33 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, AlertTriangle } from "lucide-react";
-import { useEffect, useRef } from "react";
-import JsBarcode from "jsbarcode";
-
-// Barcode Renderer Component
-const BarcodeCell = ({ value }: { value: string }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-
-  useEffect(() => {
-    if (svgRef.current && value) {
-      JsBarcode(svgRef.current, value, {
-        format: "CODE128",
-        width: 1.5,
-        height: 25,
-        displayValue: true,
-        fontSize: 12,
-        margin: 0,
-      });
-    }
-  }, [value]);
-
-  if (!value) return <span className="text-xs text-muted-foreground italic">-</span>;
-  return (
-    <div className="flex flex-col items-start gap-1">
-      <svg ref={svgRef} />
-    </div>
-  );
-};
+import { Barcode } from "@/components/ui/Barcode";
 
 interface InventoryTableProps {
   products: any[];
@@ -68,9 +42,8 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
           ) : (
             products.map((product) => {
               const hasVariants = product.variants && product.variants.length > 0;
-              const totalStock = hasVariants 
-                ? product.variants.reduce((sum: number, v: any) => sum + (v.cached_stock || 0), 0)
-                : (product.track_stock ? product.cached_stock : product.stock) || 0;
+              // Menggunakan stok produk langsung karena sekarang semua varian berbagi pool yang sama (Base Unit)
+              const totalStock = (product.track_stock ? (product.cached_stock ?? product.stock) : product.stock) || 0;
               
               const status = getStockStatus({ ...product, cached_stock: totalStock });
               const StatusIcon = status.icon;
@@ -91,7 +64,7 @@ export function InventoryTable({ products, onAdjust }: InventoryTableProps) {
                     )}
                   </td>
                   <td className="p-4 text-muted-foreground">{product.category_name === 'UNCATEGORIZED' ? 'BELUM DI KATEGORIKAN' : product.category_name}</td>
-                  <td className="p-4"><BarcodeCell value={product.barcode} /></td>
+                  <td className="p-4"><Barcode value={product.barcode} /></td>
                   <td className="p-4 text-center font-bold text-foreground">
                     {totalStock}
                   </td>

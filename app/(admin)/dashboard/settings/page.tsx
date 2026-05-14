@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner'
 import { getSettings, updateSettings, updateAllSettings, testPrinterConnection, testPrint, exportSettings, importSettings } from '@/lib/settings/actions'
 import { supabase } from '@/lib/supabase/client'
+import { Setting } from '@/types'
 // Refactored Components
 import { SettingsHeader } from '@/components/admin/dashboard/settings/SettingsHeader'
 import { GeneralTab } from '@/components/admin/dashboard/settings/GeneralTab'
@@ -85,7 +86,7 @@ export default function SettingsPage() {
           .select('*')
         
         if (!fetchError && allSettings) {
-          (allSettings as any[]).forEach((setting: any) => {
+          (allSettings as Setting[]).forEach((setting: Setting) => {
             if (categorizedData[setting.category]) {
               let value: any = setting.value
               if (setting.data_type === 'boolean') {
