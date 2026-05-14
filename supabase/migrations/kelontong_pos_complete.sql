@@ -396,14 +396,29 @@ CREATE TRIGGER trg_inventory_movement_process
 -- 5.15 PRODUCTS — Auto-record initial stock
 CREATE OR REPLACE FUNCTION public.fn_record_initial_stock()
 RETURNS TRIGGER
-LANGUAGE plpgsql SECURITY DEFINER AS $$
-DECLARE v_uid UUID;
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE 
+  v_uid UUID;
 BEGIN
   IF NEW.stock > 0 THEN
     v_uid := auth.uid();
-    IF v_uid IS NULL THEN SELECT id INTO v_uid FROM public.profiles WHERE role = 'admin' AND is_active = true LIMIT 1; END IF;
-    INSERT INTO public.inventory_movements (product_id, product_variant_id, movement_type, reference_type, reference_id, qty_change, unit_cost, notes, created_by)
-    VALUES (NEW.id, NULL, 'adjustment', 'manual', NEW.id, NEW.stock, NEW.cost_price, 'Stok awal', v_uid);
+
+    -- Tolak mentah-mentah jika tidak ada sesi user (Strict Audit)
+    IF v_uid IS NULL THEN
+      RAISE EXCEPTION 'Akses ditolak: Operasi penambahan stok awal wajib dilakukan melalui sesi aplikasi yang terautentikasi (auth.uid tidak ditemukan).';
+    END IF;
+
+    INSERT INTO public.inventory_movements (
+      product_id, product_variant_id, movement_type,
+      reference_type, reference_id,
+      qty_change, unit_cost, notes, created_by
+    ) VALUES (
+      NEW.id, NULL, 'adjustment',
+      'manual', NEW.id,
+      NEW.stock, NEW.cost_price,
+      'Stok awal saat pendaftaran produk',
+      v_uid
+    );
   END IF;
   RETURN NEW;
 END;
