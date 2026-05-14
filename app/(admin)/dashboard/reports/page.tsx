@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { TrendingUp, DollarSign, ShoppingCart, ArrowLeft, Eye } from 'lucide-react'
+import { TrendingUp, DollarSign, ShoppingCart, ArrowLeft, Eye, Download } from 'lucide-react'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 import { DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
@@ -82,11 +82,14 @@ export default function ReportsPage() {
   }, [])
 
   const fetchTransactions = useCallback(async () => {
-    if (!dateRange?.from || !dateRange?.to) return
+    // Jika tidak ada range, gunakan range 30 hari terakhir sebagai default
+    const from = dateRange?.from || new Date(new Date().setDate(new Date().getDate() - 30))
+    const to = dateRange?.to || new Date()
 
     setLoading(true)
     try {
-      let query = db('transactions')
+      const { data, error } = await supabase
+        .from('transactions')
         .select(`
           *,
           cashier:profiles!transactions_cashier_id_fkey(full_name),
@@ -96,18 +99,16 @@ export default function ReportsPage() {
             product:products(name)
           )
         `)
-        .gte('created_at', dateRange.from.toISOString())
-        .lte('created_at', dateRange.to.toISOString())
+        .gte('created_at', from.toISOString())
+        .lte('created_at', to.toISOString())
         .order('created_at', { ascending: false })
-
-      const { data, error } = await query
 
       if (error) throw error
 
       const txs = (data || []) as Transaction[]
       setTransactions(txs)
       calculateStats(txs)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching transactions:', error)
       toast.error('Gagal mengambil data transaksi')
     } finally {
@@ -117,7 +118,10 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      fetchTransactions()
+      const timer = setTimeout(() => {
+        fetchTransactions()
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [authLoading, user, fetchTransactions])
 
@@ -133,6 +137,35 @@ export default function ReportsPage() {
   const handleViewDetails = (tx: Transaction) => {
     setSelectedTx(tx)
     setIsModalOpen(true)
+  }
+
+  const downloadReport = () => {
+    if (transactions.length === 0) return
+
+    const headers = ['ID Transaksi', 'Tanggal', 'Pelanggan', 'Metode Bayar', 'Status', 'Total']
+    const rows = transactions.map(tx => [
+      tx.id,
+      new Date(tx.created_at).toLocaleString('id-ID'),
+      tx.customer?.name || 'Umum',
+      tx.payment_method,
+      tx.payment_status,
+      tx.total
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `laporan-transaksi-${dateRange?.from?.toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Laporan berhasil diunduh')
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -163,6 +196,10 @@ export default function ReportsPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={downloadReport} disabled={loading || transactions.length === 0}>
+              <Download className="mr-2 h-4 w-4" />
+              Download
+            </Button>
             <DatePickerWithRange date={dateRange} setDate={setDateRange} />
           </div>
         </div>
