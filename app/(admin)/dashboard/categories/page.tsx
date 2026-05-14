@@ -187,7 +187,7 @@ export default function CategoriesPage() {
 
       const { data, error } = await supabase
         .from('categories')
-        .insert(categoryData)
+        .insert(categoryData as any)
         .select()
         .single()
 
