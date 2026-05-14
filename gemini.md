@@ -19,7 +19,7 @@ Anda WAJIB memberikan respon HANYA menggunakan format XML berikut. Jangan ada te
 (Status: PASS/FAIL. Jelaskan singkat mengapa solusi yang akan diberikan tidak merusak keamanan atau integritas data database.)
 </security_and_db_check>
 
-<surgical_diff>
+<surgical_diff file="path/to/your/file.ts">
 (Sediakan HANYA blok kode yang berubah. Gunakan komentar `// ... kode sebelumnya tidak berubah ...` di atas dan di bawah perubahan. Wajib sertakan nama file.)
 </surgical_diff>
 </engine_response>

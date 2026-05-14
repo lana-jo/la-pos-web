@@ -32,10 +32,6 @@ const DEFAULT_STATS: ReportStats = {
   averageTransaction: 0,
 }
 
-// Cast query builder to avoid `never` parameter errors without generated schema
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = (table: string) => supabase.from(table) as any
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const statusVariant = (status: PaymentStatus): 'default' | 'secondary' | 'destructive' => {

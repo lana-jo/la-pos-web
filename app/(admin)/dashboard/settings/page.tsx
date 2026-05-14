@@ -24,8 +24,8 @@ import { NotificationTab } from '@/components/admin/dashboard/settings/Notificat
 export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [settings, setSettings] = useState<Record<string, any>>({})
-  const [formData, setFormData] = useState<Record<string, Record<string, any>>>({
+  const [settings, setSettings] = useState<Record<string, unknown>>({})
+  const [formData, setFormData] = useState<Record<string, Record<string, unknown>>>({
     general: {
       language: 'id',
       currency: 'IDR',
@@ -63,10 +63,10 @@ export default function SettingsPage() {
     try {
       const result = await getSettings()
       if (result.success && result.data) {
-        setSettings(result.data)
+        setSettings(result.data as Record<string, unknown>)
         
         // Organize settings by category for form data
-        const categorizedData: Record<string, Record<string, any>> = {
+        const categorizedData: Record<string, Record<string, unknown>> = {
           general: {},
           payment: {},
           printer: {},
@@ -83,7 +83,7 @@ export default function SettingsPage() {
         if (!fetchError && allSettings) {
           (allSettings as Setting[]).forEach((setting: Setting) => {
             if (categorizedData[setting.category]) {
-              let value: any = setting.value
+              let value: unknown = setting.value
               if (setting.data_type === 'boolean') {
                 value = setting.value === 'true'
               } else if (setting.data_type === 'number') {
@@ -123,7 +123,7 @@ export default function SettingsPage() {
       }
       
       // Filter only the fields that belong to this category
-      const filteredData: Record<string, any> = {}
+      const filteredData: Record<string, unknown> = {}
       Object.keys(categoryData).forEach(key => {
         if (category === 'general' && ['store_name', 'store_phone', 'store_email', 'store_address', 'language', 'currency', 'timezone'].includes(key)) {
           filteredData[key] = categoryData[key]
@@ -138,7 +138,7 @@ export default function SettingsPage() {
         }
       })
       
-      const result = await updateSettings(category, filteredData)
+      const result = await updateSettings(category, filteredData as Record<string, any>)
       
       if (result.success) {
         toast.success(result.message)
@@ -152,7 +152,7 @@ export default function SettingsPage() {
     }
   }
 
-  const handleInputChange = (category: string, key: string, value: any) => {
+  const handleInputChange = (category: string, key: string, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [category]: {
