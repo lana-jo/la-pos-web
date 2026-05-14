@@ -276,8 +276,7 @@ export default function CategoriesPage() {
 
     try {
       if (selectedCategory.product_count && selectedCategory.product_count > 0) {
-        const { error: unlinkError } = await supabase
-          .from('products')
+        const { error: unlinkError } = await (supabase.from('products') as any)
           .update({ category_id: null })
           .eq('category_id', selectedCategory.id)
 
