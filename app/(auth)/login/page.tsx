@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useProfileTheme()
 
@@ -38,17 +39,17 @@ export default function LoginPage() {
         return
       }
 
-      // Jika sukses, cookie sudah otomatis terpasang oleh server!
-      toast.success('Login berhasil!', { duration: 3000 })
+      // Jika sukses
+      setRedirecting(true)
+      toast.success('Login berhasil! Mengalihkan...', { duration: 3000 })
 
       // Penting: Refresh router agar Next.js membaca status cookie terbaru
-      // Middleware akan otomatis redirect ke halaman yang sesuai berdasarkan role
       router.refresh() 
 
-      // Tunggu sebentar lalu redirect ke root, middleware akan handle redirect berdasarkan role
+      // Tunggu sebentar lalu redirect ke root
       setTimeout(() => {
         router.push('/')
-      }, 1500)
+      }, 1000)
 
     } catch (err) {
       toast.error('Terjadi kesalahan saat login')
@@ -58,6 +59,12 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center pos-terminal p-4">
+      {redirecting && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-xl font-semibold text-foreground">Sedang masuk ke sistem...</p>
+        </div>
+      )}
       <div className="absolute top-4 right-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
