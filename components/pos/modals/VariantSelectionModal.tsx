@@ -32,7 +32,13 @@ export function VariantSelectionModal({
 
   // Reset quantity setiap kali modal dibuka atau produk berganti
   useEffect(() => {
-    if (isOpen) setQuantity(1);
+    if (isOpen) {
+      // Use a small delay to avoid synchronous setState during effect execution
+      const timer = setTimeout(() => {
+        setQuantity(1);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
   }, [isOpen, product]);
 
   // LOGIKA INTI: Menghitung ketersediaan unit varian berdasarkan stok mentah (pcs)

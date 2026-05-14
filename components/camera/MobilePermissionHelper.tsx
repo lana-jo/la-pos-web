@@ -16,10 +16,6 @@ export function MobilePermissionHelper({ onRequestPermission, isSupported }: Mob
   const [isChecking, setIsChecking] = useState(false)
   const { isDark } = useTheme()
 
-  useEffect(() => {
-    checkPermissionStatus()
-  }, [])
-
   const checkPermissionStatus = async () => {
     if (!navigator.permissions || !navigator.permissions.query) {
       setPermissionState('unknown')
@@ -37,6 +33,38 @@ export function MobilePermissionHelper({ onRequestPermission, isSupported }: Mob
       setPermissionState('unknown')
     }
   }
+
+  useEffect(() => {
+    let active = true
+
+    const checkStatus = async () => {
+      if (!navigator.permissions || !navigator.permissions.query) {
+        if (active) setPermissionState('unknown')
+        return
+      }
+
+      try {
+        const result = await navigator.permissions.query({ name: 'camera' as PermissionName })
+        if (active) setPermissionState(result.state as 'granted' | 'denied' | 'prompt')
+        
+        const handleChange = () => {
+          if (active) setPermissionState(result.state as 'granted' | 'denied' | 'prompt')
+        }
+        
+        result.addEventListener('change', handleChange)
+        return () => result.removeEventListener('change', handleChange)
+      } catch (error) {
+        if (active) setPermissionState('unknown')
+      }
+    }
+
+    const cleanupPromise = checkStatus()
+    
+    return () => {
+      active = false
+      cleanupPromise.then(cleanup => cleanup?.())
+    }
+  }, [])
 
   const handleRequestPermission = async () => {
     if (!isSupported) {

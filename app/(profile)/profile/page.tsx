@@ -36,11 +36,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile && user) {
-      setFormData({
-        full_name: profile.full_name || "",
-        email: user.email || "",
-        theme_preference: profile.theme_preference || "system",
-      });
+      // Use a small delay to avoid synchronous setState during effect execution
+      const timer = setTimeout(() => {
+        setFormData({
+          full_name: profile.full_name || "",
+          email: user.email || "",
+          theme_preference: profile.theme_preference || "system",
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [profile, user]);
 

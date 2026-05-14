@@ -44,7 +44,11 @@ export default function SuppliersPage() {
   }
 
   useEffect(() => {
-    loadSuppliers()
+    // Use a small delay to avoid synchronous setState during effect execution
+    const timer = setTimeout(() => {
+      loadSuppliers()
+    }, 0);
+    return () => clearTimeout(timer);
   }, [])
 
   const resetForm = () => {

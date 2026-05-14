@@ -105,18 +105,6 @@ export function useBarcodeQueue() {
     }
   }, [addItem])
 
-  const enqueue = useCallback((barcode: string) => {
-    console.log("[POS Barcode Queue] Enqueuing barcode:", { barcode, currentQueueLength: queue.current.length });
-    queue.current.push(barcode)
-    
-    if (!isProcessing.current) {
-      console.log("[POS Barcode Queue] Starting queue processing");
-      processQueue()
-    } else {
-      console.log("[POS Barcode Queue] Queue already processing, barcode queued");
-    }
-  }, [])
-
   const processQueue = useCallback(async () => {
     if (queue.current.length === 0 || isProcessing.current) {
       console.log("[POS Barcode Queue] Queue processing skipped:", { 
@@ -138,6 +126,18 @@ export function useBarcodeQueue() {
     isProcessing.current = false
     console.log("[POS Barcode Queue] Queue processing completed");
   }, [processBarcode])
+
+  const enqueue = useCallback((barcode: string) => {
+    console.log("[POS Barcode Queue] Enqueuing barcode:", { barcode, currentQueueLength: queue.current.length });
+    queue.current.push(barcode)
+    
+    if (!isProcessing.current) {
+      console.log("[POS Barcode Queue] Starting queue processing");
+      processQueue()
+    } else {
+      console.log("[POS Barcode Queue] Queue already processing, barcode queued");
+    }
+  }, [processQueue])
 
   return { enqueue }
 }

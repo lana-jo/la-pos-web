@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, startTransition } from "reac
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import type { Product, ProductVariant, Database } from "@/types";
+import type { Product, ProductVariant, Database, Transaction } from "@/types";
 
 interface UserProfile {
   full_name: string;
@@ -23,7 +23,7 @@ export function useUserProfile() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const checkUserRole = async () => {
+  const checkUserRole = useCallback(async () => {
     try {
       setLoading(true);
       const {
@@ -35,17 +35,11 @@ export function useUserProfile() {
         return;
       }
 
-      const { data: profile, error: profileError } = (await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role, full_name")
         .eq("id", session.user.id)
-        .maybeSingle()) as {
-        data: {
-          role: "admin" | "cashier" | "customer";
-          full_name: string;
-        } | null;
-        error: any;
-      };
+        .maybeSingle();
 
       if (profileError || !profile) {
         console.error("Error fetching profile:", profileError);
@@ -71,13 +65,14 @@ export function useUserProfile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
-    startTransition(() => {
-      checkUserRole();
-    });
-  }, []);
+    const init = async () => {
+      await checkUserRole();
+    };
+    init();
+  }, [checkUserRole]);
 
   return { userProfile, loading, refetch: checkUserRole };
 }
@@ -131,18 +126,18 @@ export function useProducts() {
 
       if (productsError) throw productsError;
 
-      const normalizedProducts = (productsData || []).map((p: any) => ({
+      const normalizedProducts = (productsData || []).map((p) => ({
         ...p,
-        variants: p.product_variants || [],
-        category_id: p.category_id || null,
-        unit_id: p.unit_id || null,
-        supplier_id: p.supplier_id || null,
-        description: p.description || null,
-        cost_price: p.cost_price || 0,
-        min_stock: p.low_stock_threshold || 0,
-        max_stock: p.max_stock || null,
-        is_consignment: p.is_consignment || false,
-      } as Product));
+        variants: (p as any).product_variants || [],
+        category_id: (p as any).category_id || null,
+        unit_id: (p as any).unit_id || null,
+        supplier_id: (p as any).supplier_id || null,
+        description: (p as any).description || null,
+        cost_price: (p as any).cost_price || 0,
+        min_stock: (p as any).low_stock_threshold || 0,
+        max_stock: (p as any).max_stock || null,
+        is_consignment: (p as any).is_consignment || false,
+      } as unknown as Product));
 
       setProducts(normalizedProducts);
     } catch (error) {
@@ -166,7 +161,7 @@ export function useProducts() {
 }
 
 export function useTransactions() {
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
@@ -196,14 +191,14 @@ export function useTransactions() {
       if (error) throw error;
 
       setTransactions(data || []);
-    } catch (error: any) {
-      console.error("Error fetching transactions stringified:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    } catch (error: unknown) {
+      const err = error as any;
       console.error("Error fetching transactions details:", {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code,
-        fullError: error
+        message: err?.message,
+        details: err?.details,
+        hint: err?.hint,
+        code: err?.code,
+        fullError: err
       });
       toast.error("Failed to load transactions");
     } finally {

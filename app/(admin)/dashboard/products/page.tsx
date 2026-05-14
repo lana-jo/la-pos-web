@@ -110,21 +110,31 @@ export default function ProductsPage() {
     const checkUserRole = useCallback(async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession()
-            if (!session) { router.push('/login'); return }
+            if (!session) { 
+                router.push('/login')
+                return false
+            }
 
-            const { data: profile, error } = await db('profiles')
+            const { data: profile, error } = await supabase
+                .from('profiles')
                 .select('role')
                 .eq('id', session.user.id)
                 .maybeSingle()
 
-            if (error || !profile) { router.push('/login'); return }
+            if (error || !profile) { 
+                router.push('/login')
+                return false
+            }
 
             if (profile.role !== 'admin') {
                 toast.error('Akses ditolak: Hanya admin yang dapat mengakses halaman ini')
                 router.push('/auth/unauthorized')
+                return false
             }
+            return true
         } catch {
             router.push('/login')
+            return false
         }
     }, [router])
 
@@ -226,8 +236,13 @@ export default function ProductsPage() {
     }, [])
 
     useEffect(() => {
-        checkUserRole()
-        fetchData()
+        const init = async () => {
+            const isAdmin = await checkUserRole()
+            if (isAdmin) {
+                fetchData()
+            }
+        }
+        init()
     }, [checkUserRole, fetchData])
 
     // ── Helpers ────────────────────────────────────────────────────────────────

@@ -33,17 +33,21 @@ export function ChangePasswordModal({ isOpen, onClose, userId }: ChangePasswordM
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setFormData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      setErrors({});
-      setShowPasswords({
-        current: false,
-        new: false,
-        confirm: false,
-      });
+      // Use a small delay to avoid synchronous setState during effect execution
+      const timer = setTimeout(() => {
+        setFormData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setErrors({});
+        setShowPasswords({
+          current: false,
+          new: false,
+          confirm: false,
+        });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

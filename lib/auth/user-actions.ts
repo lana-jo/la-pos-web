@@ -1,14 +1,13 @@
 'use server'
 
 import { supabaseServer } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { ThemePreference } from '@/types'
 
 
 export async function getUserEmail(userId: string): Promise<{ success: boolean; email?: string; error?: string }> {
   try {
-    const supabase = supabaseServer as any
+    const supabase = supabaseServer
 
     const { data, error } = await supabase.auth.admin.getUserById(userId)
 
@@ -31,7 +30,7 @@ export async function createUser(formData: {
   phone?: string
 }) {
   try {
-    const supabase = supabaseServer as any
+    const supabase = supabaseServer
 
     // Validation
     if (!formData.full_name.trim()) {
@@ -175,7 +174,7 @@ export async function updateUser(userId: string, formData: {
   is_active?: boolean
 }) {
   try {
-    const supabase = supabaseServer as any
+    const supabase = supabaseServer
 
     // Validation
     if (!formData.full_name.trim()) {
@@ -304,7 +303,7 @@ export async function deleteUser(userId: string) {
 
 export async function updateThemePreference(theme: ThemePreference) {
   try {
-    const supabase = supabaseServer as any
+    const supabase = supabaseServer
 
     const { data: { user } } = await supabase.auth.getUser()
     

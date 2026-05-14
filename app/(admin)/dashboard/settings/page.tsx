@@ -58,11 +58,6 @@ export default function SettingsPage() {
     }
   })
 
-  // Load settings on mount
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
   const loadSettings = async () => {
     setIsLoading(true)
     try {
@@ -109,6 +104,14 @@ export default function SettingsPage() {
       setIsLoading(false)
     }
   }
+
+  // Load settings on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadSettings()
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [])
 
   const handleSave = async (category: string) => {
     setIsSaving(true)

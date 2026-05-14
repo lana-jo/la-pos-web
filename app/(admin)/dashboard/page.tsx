@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useState, useRef, useMemo, startTransition } from "react";
 import { useRouter } from "next/navigation";
-import { BarChart3 } from "lucide-react";
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useRecentActivities } from "@/hooks/useRecentActivities";
@@ -17,7 +15,7 @@ import { DateRangeFilter, AnalyticsOverview } from "@/components/admin/dashboard
 import { MenuNavigation } from "@/components/admin/dashboard/MenuNavigation";
 import { RecentActivityCard } from "@/components/admin/dashboard/RecentActivity";
 import { ActivityDetailModal } from "@/components/admin/dashboard/ActivityDetailModal";
-import { DateRange, PresetRange } from "@/types/dashboard";
+import { DateRange, PresetRange, RecentActivity } from "@/types/dashboard";
 import { getDateRangeForPreset } from "@/lib/dashboard/dateUtils";
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -34,7 +32,7 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   
   // Modal state for activity details
-  const [selectedActivity, setSelectedActivity] = useState<any>(null);
+  const [selectedActivity, setSelectedActivity] = useState<RecentActivity | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Refs for logging - use 0 as initial for performanceStart, will be set in useEffect
@@ -43,7 +41,7 @@ export default function DashboardPage() {
 
   // ─── Logging Functions ────────────────────────────────────────────────────────
 
-  const logDashboardEvent = useCallback((event: string, data?: any) => {
+  const logDashboardEvent = useCallback((event: string, data?: unknown) => {
     const timestamp = new Date().toISOString();
     console.log(`[DASHBOARD] ${timestamp} - ${event}`, data || '');
   }, []);
@@ -58,7 +56,7 @@ export default function DashboardPage() {
     console.error(`[DASHBOARD ERROR] ${context}:`, error);
   }, []);
 
-  const logUserInteraction = useCallback((action: string, details?: any) => {
+  const logUserInteraction = useCallback((action: string, details?: unknown) => {
     console.log(`[DASHBOARD USER] ${action} by ${userName || 'unknown'}`, details || '');
   }, [userName]);
 
@@ -73,11 +71,13 @@ export default function DashboardPage() {
     logDashboardEvent('Component mounted', { userName, defaultRange });
   }, [userName, defaultRange, logDashboardEvent]);
 
-  // Log render count
-  renderCount.current += 1;
-  if (renderCount.current === 1) {
-    logDashboardEvent('First render', { renderCount: renderCount.current });
-  }
+  // Log render count safely in an effect
+  useEffect(() => {
+    renderCount.current += 1;
+    if (renderCount.current === 1) {
+      logDashboardEvent('First render', { renderCount: renderCount.current });
+    }
+  });
 
   // Custom hooks for data fetching
   const { stats, loading: statsLoading } = useDashboardStats(dateRange);
@@ -170,7 +170,7 @@ export default function DashboardPage() {
       minimumFractionDigits: 0,
     }).format(amount);
 
-  const handleActivityClick = (activity: any) => {
+  const handleActivityClick = (activity: RecentActivity) => {
     const startTime = Date.now();
     logUserInteraction('Activity clicked', { 
       activityId: activity.id, 

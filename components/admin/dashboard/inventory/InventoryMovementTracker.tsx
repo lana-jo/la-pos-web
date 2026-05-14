@@ -57,24 +57,6 @@ export function InventoryMovementTracker() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedMovement, setSelectedMovement] = useState<InventoryMovement | null>(null);
 
-  useEffect(() => {
-    fetchMovements();
-  }, [dateFilter]);
-
-  const fetchMovements = async () => {
-    try {
-      const response = await fetch(`/api/stock/movements?period=${dateFilter}`);
-      if (!response.ok) throw new Error('Gagal mengambil data pergerakan');
-      const data = await response.json();
-      setMovements(data);
-      calculateSummary(data);
-    } catch (error) {
-      toast.error('Gagal memuat pergerakan stok');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const calculateSummary = (data: InventoryMovement[]) => {
     const summary = data.reduce(
       (acc, movement) => {
@@ -102,6 +84,27 @@ export function InventoryMovementTracker() {
     
     setSummary(summary);
   };
+
+  const fetchMovements = async () => {
+    try {
+      const response = await fetch(`/api/stock/movements?period=${dateFilter}`);
+      if (!response.ok) throw new Error('Gagal mengambil data pergerakan');
+      const data = await response.json();
+      setMovements(data);
+      calculateSummary(data);
+    } catch (error) {
+      toast.error('Gagal memuat pergerakan stok');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMovements();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [dateFilter]);
 
   const filteredMovements = movements.filter(movement => {
     const matchesSearch = 

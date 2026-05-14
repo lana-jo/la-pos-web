@@ -25,22 +25,27 @@ export default function Home() {
 
     if (isRedirecting) return;
 
-    setIsRedirecting(true);
-    
-    // Redirect based on user role
-    switch (profile.role) {
-      case "admin":
-        router.push("/admin/dashboard");
-        break;
-      case "cashier":
-        router.push("/cashier/pos");
-        break;
-      case "customer":
-        router.push("/customer/catalog");
-        break;
-      default:
-        router.push("/auth/unauthorized");
-    }
+    // Use a small delay to avoid synchronous setState during effect execution
+    const timer = setTimeout(() => {
+      setIsRedirecting(true);
+      
+      // Redirect based on user role
+      switch (profile.role) {
+        case "admin":
+          router.push("/admin/dashboard");
+          break;
+        case "cashier":
+          router.push("/cashier/pos");
+          break;
+        case "customer":
+          router.push("/customer/catalog");
+          break;
+        default:
+          router.push("/auth/unauthorized");
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [user, profile, loading, router, isRedirecting]);
 
   if (loading) {

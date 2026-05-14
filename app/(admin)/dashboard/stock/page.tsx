@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,15 +26,35 @@ interface Product {
   updated_at: string;
 }
 
+interface InventoryMovement {
+  id: string;
+  product_id: string;
+  product_variant_id: string | null;
+  movement_type: string;
+  qty_change: number;
+  qty_before: number;
+  qty_after: number;
+  unit_cost: number;
+  notes: string | null;
+  created_at: string;
+  products?: {
+    name: string;
+    barcode: string;
+  };
+  product_variants?: {
+    name: string;
+    barcode: string;
+  };
+}
+
 export default function StockManagementPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [movements, setMovements] = useState<any[]>([]);
-  const [errorLogs, setErrorLogs] = useState<any[]>([]);
+  const [movements, setMovements] = useState<InventoryMovement[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [stockFilter, setStockFilter] = useState("all");
-  const [selectedProduct, setSelectedProduct] = useState<Product | any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariantId, setSelectedVariantId] = useState("");
   const [movementType, setMovementType] = useState<'in' | 'out'>('in');
   const [quantity, setQuantity] = useState("");
@@ -42,12 +62,7 @@ export default function StockManagementPage() {
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchProducts();
-    fetchMovements();
-  }, []);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch('/api/products');
       if (!response.ok) throw new Error('Gagal memuat produk');
@@ -58,9 +73,9 @@ export default function StockManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchMovements = async () => {
+  const fetchMovements = useCallback(async () => {
     try {
       const response = await fetch('/api/stock/movements');
       if (!response.ok) throw new Error('Gagal memuat pergerakan');
@@ -69,7 +84,16 @@ export default function StockManagementPage() {
     } catch (error) {
       console.error('Gagal memuat pergerakan:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    // Use a small delay to avoid synchronous setState during effect execution
+    const timer = setTimeout(() => {
+      fetchProducts();
+      fetchMovements();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchProducts, fetchMovements]);
 
   const filteredProducts = products.filter(product => {
     // Pastikan hanya produk aktif yang ditampilkan

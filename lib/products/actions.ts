@@ -67,7 +67,7 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
 
   try {
     // Check for duplicate product name
-    const { data: existingProduct, error: checkError } = await supabaseUntyped
+    const { data: existingProduct } = await supabaseUntyped
       .from('products')
       .select('id')
       .eq('name', payload.product.name.trim())
@@ -86,7 +86,6 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
       .insert(payload.product as any)
       .select('id')
       .single()
-      .returns<{ id: string }>()
 
     if (productError) {
       console.error('❌ [ERROR] Product creation failed', productError)
@@ -98,7 +97,7 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
       return { success: false, error: 'Failed to create product' }
     }
 
-    // Extract product ID with explicit typing
+    // Extract product ID
     const productId = (newProduct as { id: string }).id;
     console.log('✅ [SUCCESS] Product created successfully', { productId })
 
@@ -163,7 +162,7 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
     console.log('🎉 [SUCCESS] Product creation completed successfully')
     revalidatePath('/dashboard/products')
     return { success: true, data: newProduct }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in createProductWithVariants', error)
     return { success: false, error: 'Failed to create product' }
   }
@@ -186,7 +185,7 @@ export async function updateProductWithVariants(
 
   try {
     // Check for duplicate product name (excluding current product)
-    const { data: existingProduct, error: checkError } = await supabaseUntyped
+    const { data: existingProduct } = await supabaseUntyped
       .from('products')
       .select('id')
       .eq('name', payload.product.name.trim())
@@ -336,7 +335,7 @@ export async function updateProductWithVariants(
     console.log('🎉 [SUCCESS] All operations completed successfully')
     revalidatePath('/dashboard/products')
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in updateProductWithVariants', error)
     return { success: false, error: 'Failed to update product' }
   }
@@ -361,7 +360,7 @@ export async function deleteProduct(productId: string) {
     console.log('✅ [SUCCESS] Product soft-deleted successfully')
     revalidatePath('/dashboard/products')
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in deleteProduct', error)
     return { success: false, error: 'Failed to delete product' }
   }
@@ -388,19 +387,6 @@ export async function fetchProductsWithVariants() {
 
 // ─── Product Variants Server Actions ─────────────────────────────────────────
 
-interface VariantPayload {
-  product_id?: string
-  variant_name: string
-  barcode: string | null
-  price: number
-  cost_price: number
-  inherit_cost_price: boolean
-  conversion_qty: number
-  min_qty?: number
-  is_active: boolean
-  is_default: boolean
-}
-
 export async function fetchAllVariants() {
   console.log('📊 [DEBUG] fetchAllVariants called')
 
@@ -422,15 +408,15 @@ export async function fetchAllVariants() {
       return { success: false, error: error.message }
     }
 
-    const formattedData = variants?.map((variant: any) => ({
+    const formattedData = (variants || []).map((variant) => ({
       ...variant,
-      product_name: variant.products.name,
-      unit_id: variant.products.unit_id
-    })) || []
+      product_name: (variant as any).products.name,
+      unit_id: (variant as any).products.unit_id
+    }))
 
     console.log('✅ [SUCCESS] Variants fetched successfully', { count: formattedData.length })
     return { success: true, data: formattedData }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in fetchAllVariants', error)
     return { success: false, error: 'Failed to fetch variants' }
   }
@@ -485,7 +471,7 @@ export async function createVariant(payload: VariantPayload) {
     console.log('✅ [SUCCESS] Variant created successfully')
     revalidatePath('/dashboard/products/variants')
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in createVariant', error)
     return { success: false, error: 'Failed to create variant' }
   }
@@ -543,7 +529,7 @@ export async function updateVariant(variantId: string, payload: VariantPayload) 
     console.log('✅ [SUCCESS] Variant updated successfully')
     revalidatePath('/dashboard/products/variants')
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in updateVariant', error)
     return { success: false, error: 'Failed to update variant' }
   }
@@ -569,7 +555,7 @@ export async function deactivateVariant(variantId: string) {
     console.log('✅ [SUCCESS] Variant deactivated successfully')
     revalidatePath('/dashboard/products/variants')
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in deactivateVariant', error)
     return { success: false, error: 'Failed to deactivate variant' }
   }
@@ -594,7 +580,7 @@ export async function fetchSuppliers() {
 
     console.log('✅ [SUCCESS] Suppliers fetched successfully', { count: suppliers?.length || 0 })
     return { success: true, data: suppliers || [] }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in fetchSuppliers', error)
     return { success: false, error: 'Failed to fetch suppliers' }
   }
@@ -619,7 +605,7 @@ export async function fetchUnits() {
 
     console.log('✅ [SUCCESS] Units fetched successfully', { count: units?.length || 0 })
     return { success: true, data: units || [] }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('💥 [CRITICAL] Unexpected error in fetchUnits', error)
     return { success: false, error: 'Failed to fetch units' }
   }

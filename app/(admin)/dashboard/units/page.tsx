@@ -39,7 +39,11 @@ export default function UnitsPage() {
   }
 
   useEffect(() => {
-    loadUnits()
+    // Use a small delay to avoid synchronous setState during effect execution
+    const timer = setTimeout(() => {
+      loadUnits()
+    }, 0);
+    return () => clearTimeout(timer);
   }, [])
 
   const resetForm = () => {

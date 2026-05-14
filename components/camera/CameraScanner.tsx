@@ -25,19 +25,84 @@ export function CameraScanner({ isOpen, onClose, onBarcodeDetected }: CameraScan
   const isMobile = isMobileDevice()
   const { isDark, mounted } = useTheme()
 
-  useEffect(() => {
-    if (isOpen && !isScanning) {
-      startCamera()
-    } else if (!isOpen && stream) {
-      stopCamera()
+  const stopCamera = () => {
+    if (scannerRef.current) {
+      try {
+        scannerRef.current.stop()
+      } catch (e) {
+        console.log('Scanner already stopped')
+      }
+      scannerRef.current = null
     }
     
-    return () => {
-      if (stream) {
-        stopCamera()
-      }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null)
     }
-  }, [isOpen])
+    
+    setIsScanning(false)
+  }
+
+  const startBarcodeScanning = async () => {
+    try {
+      const Quagga = (await import('@ericblade/quagga2')).default
+      
+      Quagga.init({
+        inputStream: {
+          type: "LiveStream",
+          target: videoRef.current || undefined,
+          constraints: {
+            width: 640,
+            height: 480,
+            facingMode: "environment"
+          }
+        },
+        locator: {
+          patchSize: "medium",
+          halfSample: true
+        },
+        numOfWorkers: 2,
+        decoder: {
+          readers: ["ean_reader", "ean_8_reader", "code_128_reader", "upc_reader", "upc_e_reader"]
+        },
+        locate: true
+      }, function(err: unknown) {
+        if (err) {
+          console.error('Quagga initialization error:', err)
+          setError('Gagal menginisialisasi scanner barcode')
+          return
+        }
+        Quagga.start()
+        setIsScanning(true)
+      })
+
+      Quagga.onDetected((result: { codeResult?: { code: string } }) => {
+        const now = Date.now()
+        if (now - lastScanTime.current < 2000) {
+          return // Debounce: prevent duplicate scans within 2 seconds
+        }
+        
+        if (result && result.codeResult) {
+          const barcode = result.codeResult.code
+          lastScanTime.current = now
+          
+          // Play success sound
+          const audio = new Audio('/data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT')
+          audio.volume = 0.3
+          audio.play().catch(() => {})
+          
+          onBarcodeDetected(barcode)
+          toast.success(`Barcode terdeteksi: ${barcode}`)
+        }
+      })
+
+      scannerRef.current = Quagga
+    } catch (err) {
+      console.error('Failed to load Quagga:', err)
+      setError('Gagal memuat library scanner barcode')
+      toast.error('Gagal memuat scanner')
+    }
+  }
 
   const startCamera = async () => {
     try {
@@ -100,84 +165,21 @@ export function CameraScanner({ isOpen, onClose, onBarcodeDetected }: CameraScan
     }
   }
 
-  const stopCamera = () => {
-    if (scannerRef.current) {
-      try {
-        scannerRef.current.stop()
-      } catch (e) {
-        console.log('Scanner already stopped')
+  useEffect(() => {
+    if (isOpen) {
+      if (!isScanning && !stream) {
+        // Use a small delay to avoid synchronous setState during effect execution
+        const timer = setTimeout(() => {
+          startCamera()
+        }, 0)
+        return () => clearTimeout(timer)
       }
-      scannerRef.current = null
+    } else {
+      if (stream || scannerRef.current) {
+        stopCamera()
+      }
     }
-    
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop())
-      setStream(null)
-    }
-    
-    setIsScanning(false)
-  }
-
-  const startBarcodeScanning = async () => {
-    try {
-      const Quagga = (await import('@ericblade/quagga2')).default
-      
-      Quagga.init({
-        inputStream: {
-          type: "LiveStream",
-          target: videoRef.current || undefined,
-          constraints: {
-            width: 640,
-            height: 480,
-            facingMode: "environment"
-          }
-        },
-        locator: {
-          patchSize: "medium",
-          halfSample: true
-        },
-        numOfWorkers: 2,
-        decoder: {
-          readers: ["ean_reader", "ean_8_reader", "code_128_reader", "upc_reader", "upc_e_reader"]
-        },
-        locate: true
-      }, function(err: any) {
-        if (err) {
-          console.error('Quagga initialization error:', err)
-          setError('Gagal menginisialisasi scanner barcode')
-          return
-        }
-        Quagga.start()
-        setIsScanning(true)
-      })
-
-      Quagga.onDetected((result: any) => {
-        const now = Date.now()
-        if (now - lastScanTime.current < 2000) {
-          return // Debounce: prevent duplicate scans within 2 seconds
-        }
-        
-        if (result && result.codeResult) {
-          const barcode = result.codeResult.code
-          lastScanTime.current = now
-          
-          // Play success sound
-          const audio = new Audio('/data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmFgU7k9n1unEiBC13yO/eizEIHWq+8+OWT')
-          audio.volume = 0.3
-          audio.play().catch(() => {})
-          
-          onBarcodeDetected(barcode)
-          toast.success(`Barcode terdeteksi: ${barcode}`)
-        }
-      })
-
-      scannerRef.current = Quagga
-    } catch (err) {
-      console.error('Failed to load Quagga:', err)
-      setError('Gagal memuat library scanner barcode')
-      toast.error('Gagal memuat scanner')
-    }
-  }
+  }, [isOpen, isScanning, stream])
 
   const handleClose = () => {
     stopCamera()

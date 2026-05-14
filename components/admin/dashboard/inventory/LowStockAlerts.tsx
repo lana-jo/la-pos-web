@@ -28,19 +28,6 @@ export function LowStockAlerts() {
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  useEffect(() => {
-    fetchLowStockProducts();
-    
-    let interval: NodeJS.Timeout;
-    if (autoRefresh) {
-      interval = setInterval(fetchLowStockProducts, 30000); // Refresh every 30 seconds
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoRefresh]);
-
   const fetchLowStockProducts = async () => {
     try {
       const response = await fetch('/api/products/low-stock');
@@ -54,6 +41,23 @@ export function LowStockAlerts() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Use a small delay to avoid synchronous setState during effect execution
+    const timer = setTimeout(() => {
+      fetchLowStockProducts();
+    }, 0);
+    
+    let interval: NodeJS.Timeout;
+    if (autoRefresh) {
+      interval = setInterval(fetchLowStockProducts, 30000); // Refresh every 30 seconds
+    }
+    
+    return () => {
+      clearTimeout(timer);
+      if (interval) clearInterval(interval);
+    };
+  }, [autoRefresh]);
 
   const getStockStatus = (product: LowStockProduct) => {
     const currentStock = product.cached_stock ?? 0;
