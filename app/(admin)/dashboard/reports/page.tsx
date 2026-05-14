@@ -394,16 +394,16 @@ export default function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {selectedTx.items?.map((item: any) => (
-                      <tr key={item.id}>
+                    {selectedTx.items?.map((item) => (
+                      <tr key={(item as any).id}>
                         <td className="p-2">
-                          <p className="font-medium">{item.product_name}</p>
-                          {item.variant_name && (
-                            <p className="text-[10px] text-muted-foreground">{item.variant_name}</p>
+                          <p className="font-medium">{(item as any).product_name}</p>
+                          {(item as any).variant_name && (
+                            <p className="text-[10px] text-muted-foreground">{(item as any).variant_name}</p>
                           )}
                         </td>
-                        <td className="p-2 text-center">{item.qty}</td>
-                        <td className="p-2 text-right">{formatCurrency(item.subtotal)}</td>
+                        <td className="p-2 text-center">{(item as any).qty}</td>
+                        <td className="p-2 text-right">{formatCurrency((item as any).subtotal)}</td>
                       </tr>
                     ))}
                   </tbody>
