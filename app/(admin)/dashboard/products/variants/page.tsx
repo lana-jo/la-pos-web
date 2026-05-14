@@ -188,6 +188,7 @@ export default function ProductVariantsPage() {
       cost_price: variant.cost_price.toString(),
       conversion_qty: variant.conversion_qty.toString(),
       min_qty: variant.min_qty.toString(),
+      inherit_cost_price: variant.inherit_cost_price,
       is_active: variant.is_active,
       is_default: variant.is_default
     })
