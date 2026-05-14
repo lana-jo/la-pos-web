@@ -458,6 +458,16 @@ export default function ProductVariantsPage() {
                   />
                   <Label htmlFor="is_default">Default</Label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="inherit_cost_price"
+                    checked={formData.inherit_cost_price}
+                    onChange={(e) => setFormData({ ...formData, inherit_cost_price: e.target.checked })}
+                    disabled={isSubmitting}
+                  />
+                  <Label htmlFor="inherit_cost_price">Auto Harga Beli</Label>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
