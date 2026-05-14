@@ -121,20 +121,23 @@ CREATE TABLE IF NOT EXISTS public.products (
 );
 
 CREATE TABLE IF NOT EXISTS public.product_variants (
-  id             UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
-  product_id     UUID        NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
-  variant_name   TEXT        NOT NULL,
-  barcode        TEXT        UNIQUE,
-  price          INTEGER     NOT NULL CHECK (price >= 0),
-  cost_price     INTEGER     NOT NULL DEFAULT 0 CHECK (cost_price >= 0),
-  conversion_qty INTEGER     NOT NULL DEFAULT 1 CHECK (conversion_qty > 0),
-  min_qty        INTEGER     NOT NULL DEFAULT 1,
-  cached_stock   INTEGER     NOT NULL DEFAULT 0,
-  is_active      BOOLEAN     NOT NULL DEFAULT true,
-  is_default     BOOLEAN     NOT NULL DEFAULT false,
-  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id                 UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  product_id         UUID        NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  variant_name       TEXT        NOT NULL,
+  barcode            TEXT        UNIQUE,
+  price              INTEGER     NOT NULL CHECK (price >= 0),
+  cost_price         INTEGER     NOT NULL DEFAULT 0 CHECK (cost_price >= 0),
+  inherit_cost_price BOOLEAN     NOT NULL DEFAULT false,
+  conversion_qty     INTEGER     NOT NULL DEFAULT 1 CHECK (conversion_qty > 0),
+  min_qty            INTEGER     NOT NULL DEFAULT 1,
+  cached_stock       INTEGER     NOT NULL DEFAULT 0,
+  is_active          BOOLEAN     NOT NULL DEFAULT true,
+  is_default         BOOLEAN     NOT NULL DEFAULT false,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+COMMENT ON COLUMN public.product_variants.inherit_cost_price IS 
+'Jika true, harga beli varian akan dihitung otomatis dari (harga beli produk * conversion_qty)';
 
 CREATE TABLE IF NOT EXISTS public.discounts (
   id            UUID                 DEFAULT gen_random_uuid() PRIMARY KEY,
