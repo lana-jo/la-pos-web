@@ -143,6 +143,7 @@ export default function ProductVariantsPage() {
         barcode: formData.barcode.trim() || null,
         price,
         cost_price: costPrice,
+        inherit_cost_price: formData.inherit_cost_price,
         conversion_qty: conversionQty,
         min_qty: minQty,
         is_active: formData.is_active,
