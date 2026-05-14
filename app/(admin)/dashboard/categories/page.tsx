@@ -174,7 +174,7 @@ export default function CategoriesPage() {
         return
       }
 
-      const categoryData = {
+      const categoryData: Database['public']['Tables']['categories']['Insert'] = {
         name: formData.name.trim(),
         slug: formData.slug.trim() || formData.name.trim().toLowerCase().replace(/\s+/g, '-'),
         icon: formData.icon.trim() || null,
@@ -187,7 +187,7 @@ export default function CategoriesPage() {
 
       const { data, error } = await supabase
         .from('categories')
-        .insert(categoryData as Database['public']['Tables']['categories']['Insert'])
+        .insert(categoryData)
         .select()
         .single()
 
