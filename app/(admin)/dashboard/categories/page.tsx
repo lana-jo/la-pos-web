@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Grid3x3, Plus, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Category } from '@/types'
+import { Database } from '@/types/database'
 import CategoryTable from '@/components/admin/dashboard/categories/CategoryTable'
 import CategoryModal from '@/components/admin/dashboard/categories/CategoryModal'
 
@@ -186,7 +187,7 @@ export default function CategoriesPage() {
 
       const { data, error } = await supabase
         .from('categories')
-        .insert(categoryData)
+        .insert(categoryData as Database['public']['Tables']['categories']['Insert'])
         .select()
         .single()
 
