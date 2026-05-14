@@ -50,7 +50,7 @@ export default function CategoriesPage() {
         .from('profiles')
         .select('role, is_active')
         .eq('id', session.user.id)
-        .maybeSingle()
+        .maybeSingle() as { data: { role: string; is_active: boolean } | null, error: any }
 
       if (profileError || !profile) {
         console.error('Error fetching profile:', profileError)
