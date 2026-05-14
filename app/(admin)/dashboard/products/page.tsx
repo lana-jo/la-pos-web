@@ -113,13 +113,6 @@ export default function ProductsPage() {
             return false
         }
     }, [router])
-        } catch (error) {
-            console.error('Error fetching products:', error)
-            toast.error('Gagal mengambil data produk')
-        } finally {
-            setLoading(false)
-        }
-    }, [])
 
     // ── Barcode Scanner ─────────────────────────────────────────────────────────
     const handleBarcodeScanned = useCallback((barcode: string) => {
