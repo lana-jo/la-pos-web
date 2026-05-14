@@ -85,7 +85,7 @@ export default function SettingsPage() {
           .select('*')
         
         if (!fetchError && allSettings) {
-          allSettings.forEach(setting => {
+          (allSettings as any[]).forEach((setting: any) => {
             if (categorizedData[setting.category]) {
               let value: any = setting.value
               if (setting.data_type === 'boolean') {
