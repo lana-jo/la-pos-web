@@ -10,13 +10,13 @@ type SettingsInsert = Database['public']['Tables']['settings']['Insert']
 
 // Schema for different setting categories
 const generalSettingsSchema = z.object({
-  store_name: z.string().min(1, 'Nama toko tidak boleh kosong'),
-  store_phone: z.string().min(1, 'Nomor telepon tidak boleh kosong'),
-  store_email: z.string().email('Email tidak valid'),
-  store_address: z.string().min(1, 'Alamat tidak boleh kosong'),
-  language: z.string(),
-  currency: z.string(),
-  timezone: z.string()
+  store_name: z.string().min(1, 'Nama toko tidak boleh kosong').optional(),
+  store_phone: z.string().min(1, 'Nomor telepon tidak boleh kosong').optional(),
+  store_email: z.string().email('Email tidak valid').optional(),
+  store_address: z.string().min(1, 'Alamat tidak boleh kosong').optional(),
+  language: z.string().optional().default('id'),
+  currency: z.string().optional().default('IDR'),
+  timezone: z.string().optional().default('Asia/Jakarta')
 })
 
 const paymentSettingsSchema = z.object({

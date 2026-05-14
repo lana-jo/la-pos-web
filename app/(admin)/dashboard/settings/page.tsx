@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getSettings, updateSettings, updateAllSettings, testPrinterConnection, testPrint, exportSettings, importSettings } from '@/lib/settings/actions'
-
+import { supabase } from '@/lib/supabase/client'
 // Refactored Components
 import { SettingsHeader } from '@/components/admin/dashboard/settings/SettingsHeader'
 import { GeneralTab } from '@/components/admin/dashboard/settings/GeneralTab'
@@ -78,20 +78,25 @@ export default function SettingsPage() {
           notifications: {}
         }
         
-        Object.entries(result.data).forEach(([key, value]) => {
-          // Determine category based on key prefixes
-          if (['store_name', 'store_phone', 'store_email', 'store_address', 'language', 'currency', 'timezone'].includes(key)) {
-            categorizedData.general[key] = value
-          } else if (key.includes('qris') || key.includes('cash') || key.includes('card') || key.includes('midtrans')) {
-            categorizedData.payment[key] = value
-          } else if (key.includes('print') || key.includes('printer') || key.includes('paper')) {
-            categorizedData.printer[key] = value
-          } else if (key.includes('session') || key.includes('login') || key.includes('backup')) {
-            categorizedData.system[key] = value
-          } else if (key.includes('alert') || key.includes('notification') || key.includes('update') || key.includes('error')) {
-            categorizedData.notifications[key] = value
-          }
-        })
+        // Use the existing settings rows to group by category if available, 
+        // or fetch all and categorize based on category property
+        const { data: allSettings, error: fetchError } = await supabase
+          .from('settings')
+          .select('*')
+        
+        if (!fetchError && allSettings) {
+          allSettings.forEach(setting => {
+            if (categorizedData[setting.category]) {
+              let value: any = setting.value
+              if (setting.data_type === 'boolean') {
+                value = setting.value === 'true'
+              } else if (setting.data_type === 'number') {
+                value = parseInt(setting.value || '0')
+              }
+              categorizedData[setting.category][setting.key] = value
+            }
+          })
+        }
         
         setFormData(categorizedData)
       } else {
