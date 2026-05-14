@@ -281,8 +281,7 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
                       updateItemQuantity(item.product.id, item.quantity + 1, item.variant?.id || null)
                     }
                     disabled={(() => {
-                      if (!item.product.track_stock) return false;
-                      const productStock = item.product.cached_stock || item.product.stock || 0;
+                      const productStock = item.product.cached_stock ?? 0;
                       if (item.variant) {
                         const conversionQty = item.variant.conversion_qty || 1;
                         const availableStock = conversionQty > 1

@@ -100,7 +100,16 @@ async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
   const items: Database["public"]["Tables"]["transaction_items"]["Insert"][] =
     cart.map((item) => {
       const unitPrice = item.variant ? item.variant.price : item.product.price;
-      const costPrice = item.variant ? item.variant.cost_price : item.product.cost_price || 0;
+      
+      // Calculate cost price: inherit from product if specified
+      let costPrice = item.product.cost_price || 0;
+      if (item.variant) {
+        if (item.variant.inherit_cost_price) {
+          costPrice = (item.product.cost_price || 0) * (item.variant.conversion_qty || 1);
+        } else {
+          costPrice = item.variant.cost_price;
+        }
+      }
 
       const transactionItem = {
         transaction_id: transactionId,
@@ -153,61 +162,6 @@ async function insertTransactionItems(transactionId: string, cart: CartItem[]) {
 function isValidUUID(str: string): boolean {
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   return uuidRegex.test(str);
-}
-
-async function deductStock(cart: CartItem[]) {
-  console.log("[POS Payment] Starting stock deduction for:", { itemCount: cart.length });
-
-  // Run sequentially — preserve transaction even if a stock update fails
-  for (const item of cart) {
-    // Skip stock deduction for manual products (non-UUID IDs)
-    // since they don't exist in products table
-    if (!isValidUUID(item.product.id)) {
-      console.log(`[POS Payment] Skipping manual product stock deduction: ${item.product.id}`);
-      continue;
-    }
-
-    // Skip stock deduction if product doesn't track stock
-    if (!item.product.track_stock) {
-      console.log(`[POS Payment] Skipping stock deduction for non-tracking product: ${item.product.name}`);
-      continue;
-    }
-
-    console.log(`[POS Payment] Deducting stock for product: ${item.product.name}, quantity: ${item.quantity}`);
-
-    // Read current stock from database to avoid stale client-side values
-    const { data: productData, error: readError } = await db("products")
-      .select("stock")
-      .eq("id", item.product.id)
-      .single();
-
-    if (readError) {
-      console.error(
-        `[POS Payment] Failed to read stock for product ${item.product.id}:`,
-        readError,
-      );
-      continue;
-    }
-
-    const currentStock = (productData as any).stock;
-    const newStock = currentStock - item.quantity;
-
-    // Update with the database-read value
-    const { error } = await db("products")
-      .update({ stock: newStock })
-      .eq("id", item.product.id);
-
-    if (error) {
-      console.error(
-        `[POS Payment] Stock update failed for product ${item.product.id}:`,
-        error,
-      );
-    } else {
-      console.log(`[POS Payment] Stock deducted successfully for product: ${item.product.name}, from ${currentStock} to ${newStock}`);
-    }
-  }
-
-  console.log("[POS Payment] Stock deduction process completed");
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -282,13 +236,6 @@ export async function createCashPayment(
     const itemsEnd = Date.now();
     console.log("[POS Payment] ✓ Transaction items inserted in", itemsEnd - itemsStart, "ms");
     console.log("[POS Payment] --- End Step 4 ---");
-
-    console.log("[POS Payment] --- Step 5: Deduct Stock ---");
-    const stockStart = Date.now();
-    await deductStock(cart);
-    const stockEnd = Date.now();
-    console.log("[POS Payment] ✓ Stock deducted in", stockEnd - stockStart, "ms");
-    console.log("[POS Payment] --- End Step 5 ---");
 
     console.log("[POS Payment] --- Step 5b: Finalize Transaction ---");
     const finalizeStart = Date.now();

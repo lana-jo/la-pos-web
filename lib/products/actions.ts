@@ -137,7 +137,7 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
         variant_name: v.variant_name,
         barcode: v.barcode,
         price: v.price,
-        cost_price: v.cost_price,
+        cost_price: v.inherit_cost_price ? (payload.product.cost_price * v.conversion_qty) : v.cost_price,
         inherit_cost_price: v.inherit_cost_price,
         conversion_qty: v.conversion_qty,
         is_active: v.is_active,
@@ -281,7 +281,7 @@ export async function updateProductWithVariants(
             variant_name: v.variant_name,
             barcode: v.barcode,
             price: v.price,
-            cost_price: v.cost_price,
+            cost_price: v.inherit_cost_price ? (payload.product.cost_price * v.conversion_qty) : v.cost_price,
             inherit_cost_price: v.inherit_cost_price,
             conversion_qty: v.conversion_qty,
             is_active: v.is_active,
@@ -310,7 +310,7 @@ export async function updateProductWithVariants(
             variant_name: v.variant_name,
             barcode: v.barcode,
             price: v.price,
-            cost_price: v.cost_price,
+            cost_price: v.inherit_cost_price ? (payload.product.cost_price * v.conversion_qty) : v.cost_price,
             inherit_cost_price: v.inherit_cost_price,
             conversion_qty: v.conversion_qty,
             is_active: v.is_active,
@@ -456,9 +456,26 @@ export async function createVariant(payload: VariantPayload) {
       return { success: false, error: 'Nama varian sudah ada untuk produk ini' }
     }
 
+    // Handle cost price inheritance
+    let finalCostPrice = payload.cost_price;
+    if (payload.inherit_cost_price && payload.product_id) {
+      const { data: product } = await supabaseUntyped
+        .from('products')
+        .select('cost_price')
+        .eq('id', payload.product_id)
+        .single();
+      
+      if (product) {
+        finalCostPrice = (product.cost_price || 0) * (payload.conversion_qty || 1);
+      }
+    }
+
     const { error } = await supabaseUntyped
       .from('product_variants')
-      .insert(payload as any)
+      .insert({
+        ...payload,
+        cost_price: finalCostPrice
+      } as any)
 
     if (error) {
       console.error('❌ [ERROR] Variant creation failed', error)
@@ -495,10 +512,25 @@ export async function updateVariant(variantId: string, payload: VariantPayload) 
       return { success: false, error: 'Nama varian sudah ada untuk produk ini' }
     }
 
+    // Handle cost price inheritance
+    let finalCostPrice = payload.cost_price;
+    if (payload.inherit_cost_price && payload.product_id) {
+      const { data: product } = await supabaseUntyped
+        .from('products')
+        .select('cost_price')
+        .eq('id', payload.product_id)
+        .single();
+      
+      if (product) {
+        finalCostPrice = (product.cost_price || 0) * (payload.conversion_qty || 1);
+      }
+    }
+
     const { error } = await supabaseUntyped
       .from('product_variants')
       .update({
         ...payload,
+        cost_price: finalCostPrice,
         updated_at: new Date().toISOString()
       } as any)
       .eq('id', variantId)

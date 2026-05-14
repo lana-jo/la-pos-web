@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -49,435 +50,358 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export default function ReportsPage() {
   const router = useRouter()
+  const { user, profile, loading: authLoading } = useAuth()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [stats, setStats]               = useState<ReportStats>(DEFAULT_STATS)
-  const [loading, setLoading]           = useState(true)
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const [transactionItems, setTransactionItems] = useState<TransactionItem[]>([])
-  const [loadingDetails, setLoadingDetails] = useState(false)
-  const [date, setDate] = useState<DateRange | undefined>()
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+  const [stats, setStats] = useState<ReportStats>(DEFAULT_STATS)
+  const [loading, setLoading] = useState(true)
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    to: new Date(),
+  })
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // ── Auth guard ─────────────────────────────────────────────────────────────
+  // ─── Data Fetching ──────────────────────────────────────────────────────────
 
-  const checkUserRole = useCallback(async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { router.push('/login'); return }
+  const calculateStats = useCallback((txs: Transaction[]) => {
+    const paid = txs.filter(t => t.payment_status === 'paid')
+    const totalRevenue = paid.reduce((sum, t) => sum + t.total, 0)
+    const totalTransactions = txs.length
+    const paidTransactions = paid.length
+    const pendingTransactions = txs.filter(t => t.payment_status === 'pending').length
+    const averageTransaction = paidTransactions > 0 ? totalRevenue / paidTransactions : 0
 
-      const { data: profile, error } = await db('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
-      if (error || !profile) { router.push('/login'); return }
-
-      if (profile.role !== 'admin') {
-        toast.error('Akses ditolak: Hanya admin yang dapat mengakses halaman ini')
-        router.push('/auth/unauthorized')
-      }
-    } catch {
-      router.push('/login')
-    }
-  }, [router])
-
-  // ── Data fetching ──────────────────────────────────────────────────────────
-
-  const fetchTransactionDetails = useCallback(async (transactionId: string) => {
-    try {
-      setLoadingDetails(true)
-      const { data: itemsData, error: itemsError } = await db('transaction_items')
-        .select('*')
-        .eq('transaction_id', transactionId)
-        .order('id')
-
-      if (itemsError) throw itemsError
-
-      const itemsWithProducts = await Promise.all(
-        (itemsData || []).map(async (item: any) => {
-          let productData = null;
-          let variantData = null;
-
-          if (item.product_id) {
-            const { data: pData } = await db('products')
-              .select('name, barcode')
-              .eq('id', item.product_id)
-              .single()
-
-            productData = pData || null;
-          }
-
-          if (item.product_variant_id) {
-            const { data: vData } = await db('product_variants')
-              .select('variant_name, barcode')
-              .eq('id', item.product_variant_id)
-              .single()
-
-            variantData = vData || null;
-          }
-
-          return {
-            ...item,
-            product: productData,
-            variant: variantData
-          }
-        })
-      )
-
-      setTransactionItems(itemsWithProducts)
-    } catch (error) {
-      console.error('Error fetching transaction details:', error)
-      toast.error('Gagal mengambil detail transaksi')
-    } finally {
-      setLoadingDetails(false)
-    }
+    setStats({
+      totalRevenue,
+      totalTransactions,
+      paidTransactions,
+      pendingTransactions,
+      averageTransaction,
+    })
   }, [])
 
-  const handleViewDetails = useCallback((transaction: Transaction) => {
-    setSelectedTransaction(transaction)
-    fetchTransactionDetails(transaction.id)
-  }, [fetchTransactionDetails])
+  const fetchTransactions = useCallback(async () => {
+    if (!dateRange?.from || !dateRange?.to) return
 
-  const fetchData = useCallback(async () => {
+    setLoading(true)
     try {
-      setLoading(true)
       let query = db('transactions')
-          .select('id, total, payment_status, payment_method, created_at, cashier_id')
-          .order('created_at', { ascending: false })
+        .select(`
+          *,
+          cashier:profiles!transactions_cashier_id_fkey(full_name),
+          customer:customers(name),
+          items:transaction_items(
+            *,
+            product:products(name)
+          )
+        `)
+        .gte('created_at', dateRange.from.toISOString())
+        .lte('created_at', dateRange.to.toISOString())
+        .order('created_at', { ascending: false })
 
-      if (date?.from) {
-        query = query.gte('created_at', date.from.toISOString())
-      }
-      if (date?.to) {
-        const toDate = new Date(date.to)
-        toDate.setHours(23, 59, 59, 999)
-        query = query.lte('created_at', toDate.toISOString())
-      }
-
-      const { data, error } = await query.limit(100)
+      const { data, error } = await query
 
       if (error) throw error
 
-      const rows: Transaction[] = data ?? []
-      setTransactions(rows)
-
-      const paid    = rows.filter((t) => t.payment_status === 'paid')
-      const pending = rows.filter((t) => t.payment_status === 'pending')
-      const revenue = paid.reduce((sum, t) => sum + t.total, 0)
-
-      setStats({
-        totalRevenue:        revenue,
-        totalTransactions:   rows.length,
-        paidTransactions:    paid.length,
-        pendingTransactions: pending.length,
-        averageTransaction:  paid.length > 0 ? revenue / paid.length : 0,
-      })
-    } catch (error) {
-      console.error('Error fetching report data:', error)
-      toast.error('Gagal mengambil data laporan')
+      const txs = (data || []) as Transaction[]
+      setTransactions(txs)
+      calculateStats(txs)
+    } catch (error: any) {
+      console.error('Error fetching transactions:', error)
+      toast.error('Gagal mengambil data transaksi')
     } finally {
       setLoading(false)
     }
-  }, [date])
+  }, [dateRange, calculateStats])
 
   useEffect(() => {
-    checkUserRole()
-  }, [checkUserRole])
+    if (!authLoading && user) {
+      fetchTransactions()
+    }
+  }, [authLoading, user, fetchTransactions])
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
-
-  // ── Formatters ─────────────────────────────────────────────────────────────
+  // ─── Helpers ────────────────────────────────────────────────────────────────
 
   const formatCurrency = (amount: number) =>
-      new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount)
+    new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount)
 
-  const formatDate = (dateString: string) =>
-      new Date(dateString).toLocaleDateString('id-ID', {
-        year: 'numeric', month: 'long', day: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      })
-
-  const successRate = stats.totalTransactions > 0
-      ? Math.round((stats.paidTransactions / stats.totalTransactions) * 100)
-      : 0
-
-  // ── Loading ────────────────────────────────────────────────────────────────
-
-  if (loading && transactions.length === 0) {
-    return (
-        <div className="min-h-screen pos-terminal flex items-center justify-center">
-          <div className="text-center">
-            <div className="pos-loading-spinner mx-auto mb-4" />
-            <p className="text-lg font-medium text-primary">Memuat laporan...</p>
-          </div>
-        </div>
-    )
+  const handleViewDetails = (tx: Transaction) => {
+    setSelectedTx(tx)
+    setIsModalOpen(true)
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // ─── Render ─────────────────────────────────────────────────────────────────
+
+  if (authLoading) return null
 
   return (
-      <div className="min-h-screen pos-terminal">
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-          {/* Header & Filter */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-primary-brand" />
-              LAPORAN & ANALITIK
+    <div className="page-background p-4 sm:p-6 lg:p-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mb-2 -ml-2 text-muted-foreground"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Kembali
+            </Button>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground uppercase tracking-tight">
+              Rekap Laporan
             </h1>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center bg-background p-1 rounded-full border border-border">
-                <Button 
-                    variant={viewMode === 'table' ? 'default' : 'ghost'} 
-                    size="sm" 
-                    className="rounded-full"
-                    onClick={() => setViewMode('table')}
-                >
-                    Tabel
-                </Button>
-                <Button 
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'} 
-                    size="sm" 
-                    className="rounded-full"
-                    onClick={() => setViewMode('grid')}
-                >
-                    Grid
-                </Button>
+            <p className="text-muted-foreground">
+              Pantau performa transaksi dan ringkasan pendapatan.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="pos-card overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
+              <div className="p-2 bg-emerald-500/10 rounded-full">
+                <DollarSign className="h-4 w-4 text-emerald-500" />
               </div>
-              <DatePickerWithRange date={date} setDate={setDate} />
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Dari transaksi sukses</p>
+            </CardContent>
+          </Card>
 
-          {/* ── Stats ── */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Pendapatan</CardTitle>
-                <DollarSign className="h-4 w-4 text-primary-brand" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.totalRevenue)}</div>
-                <p className="text-xs text-muted-foreground mt-1">Dari {stats.paidTransactions} transaksi lunas</p>
-              </CardContent>
-            </Card>
+          <Card className="pos-card overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Transaksi</CardTitle>
+              <div className="p-2 bg-blue-500/10 rounded-full">
+                <ShoppingCart className="h-4 w-4 text-blue-500" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalTransactions}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats.paidTransactions} Berhasil, {stats.pendingTransactions} Pending
+              </p>
+            </CardContent>
+          </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Total Transaksi</CardTitle>
-                <ShoppingCart className="h-4 w-4 text-primary-brand" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-primary-brand">{stats.totalTransactions}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {stats.paidTransactions} lunas, {stats.pendingTransactions} tertunda
-                </p>
-              </CardContent>
-            </Card>
+          <Card className="pos-card overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Rata-rata Transaksi</CardTitle>
+              <div className="p-2 bg-orange-500/10 rounded-full">
+                <TrendingUp className="h-4 w-4 text-orange-500" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(stats.averageTransaction)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Per transaksi sukses</p>
+            </CardContent>
+          </Card>
 
-            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Rata-rata Transaksi</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary-brand" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-primary-brand">{formatCurrency(stats.averageTransaction)}</div>
-                <p className="text-xs text-muted-foreground mt-1">Per transaksi lunas</p>
-              </CardContent>
-            </Card>
+          <Card className="pos-card overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Status Pembayaran</CardTitle>
+              <div className="p-2 bg-purple-500/10 rounded-full">
+                <Badge variant="outline" className="h-4 w-4 p-0 flex items-center justify-center text-[10px]">%</Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats.totalTransactions > 0 
+                  ? Math.round((stats.paidTransactions / stats.totalTransactions) * 100)
+                  : 0}%
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Tingkat kesuksesan</p>
+            </CardContent>
+          </Card>
+        </div>
 
-            <Card className="pos-modal-content border-none shadow-xl transition-all duration-300 p-6">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold text-muted-foreground uppercase">Tingkat Kesuksesan</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary-brand" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-black text-green-600">{successRate}%</div>
-                <p className="text-xs text-muted-foreground mt-1">Tingkat sukses pembayaran</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ── Transaksi ── */}
-          {transactions.length === 0 ? (
-              <Card className="pos-modal-content border-none shadow-xl transition-all duration-300">
-                <CardContent className="text-center py-12">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-bold text-foreground mb-2">Tidak ada transaksi ditemukan</h3>
-                  <p className="text-muted-foreground">Belum ada transaksi yang tercatat</p>
-                </CardContent>
-              </Card>
-          ) : viewMode === 'table' ? (
-              <Card className="pos-modal-content border-none shadow-xl transition-all duration-300">
-                <CardHeader>
-                  <CardTitle>Transaksi Terkini (Tabel)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-muted/50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Tanggal</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground">Metode</th>
-                        <th className="px-6 py-3 text-right text-xs font-bold uppercase tracking-wider text-muted-foreground">Total</th>
-                        <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-muted-foreground">Aksi</th>
-                      </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                      {transactions.map((t) => (
-                          <tr 
-                            key={t.id} 
-                            className="hover:bg-primary-brand/5 transition-all duration-200 cursor-pointer"
-                            onClick={() => handleViewDetails(t)}
+        {/* Transactions Table */}
+        <Card className="pos-card">
+          <CardHeader>
+            <CardTitle>Daftar Transaksi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="pos-loading-spinner mb-4" />
+                <p className="text-muted-foreground animate-pulse">Memuat transaksi...</p>
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="bg-muted w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShoppingCart className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium">Tidak ada transaksi</h3>
+                <p className="text-muted-foreground">Coba ubah rentang tanggal pencarian Anda.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left font-medium text-muted-foreground">
+                      <th className="pb-3 px-2">ID Transaksi</th>
+                      <th className="pb-3 px-2">Tanggal</th>
+                      <th className="pb-3 px-2">Pelanggan</th>
+                      <th className="pb-3 px-2">Total</th>
+                      <th className="pb-3 px-2">Metode</th>
+                      <th className="pb-3 px-2">Status</th>
+                      <th className="pb-3 px-2 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {transactions.map((tx) => (
+                      <tr key={tx.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-2 font-mono text-xs">
+                          {tx.id.split('-')[0].toUpperCase()}
+                        </td>
+                        <td className="py-3 px-2">
+                          {new Date(tx.created_at).toLocaleDateString('id-ID', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
+                        <td className="py-3 px-2">
+                          {tx.customer?.name || 'Umum'}
+                        </td>
+                        <td className="py-3 px-2 font-semibold">
+                          {formatCurrency(tx.total)}
+                        </td>
+                        <td className="py-3 px-2 uppercase text-[10px] font-bold">
+                          <Badge variant="outline">{tx.payment_method}</Badge>
+                        </td>
+                        <td className="py-3 px-2">
+                          <Badge variant={statusVariant(tx.payment_status)}>
+                            {capitalize(tx.payment_status)}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleViewDetails(tx)}
                           >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                              {formatDate(t.created_at)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <Badge variant={statusVariant(t.payment_status)}>
-                                {capitalize(t.payment_status === 'paid' ? 'Lunas' : 'Tertunda')}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                              {t.payment_method === 'cash' ? 'Tunai' : t.payment_method === 'qris' ? 'QRIS' : t.payment_method}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-foreground text-right">
-                              {formatCurrency(t.total)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-primary-brand hover:bg-primary-brand/10"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </td>
-                          </tr>
-                      ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {transactions.map((t) => (
-                  <Card 
-                    key={t.id} 
-                    onClick={() => handleViewDetails(t)}
-                    className="pos-modal-content border-none shadow-xl cursor-pointer group p-6"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                        <Badge variant={statusVariant(t.payment_status)}>
-                            {capitalize(t.payment_status === 'paid' ? 'Lunas' : 'Tertunda')}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground font-mono">{t.id.slice(0, 8)}...</span>
-                    </div>
-                    <div className="space-y-2">
-                        <div className="text-2xl font-black text-primary-brand">{formatCurrency(t.total)}</div>
-                        <div className="text-sm text-foreground">{formatDate(t.created_at)}</div>
-                        <div className="text-sm text-muted-foreground">{t.payment_method === 'cash' ? 'Tunai' : 'QRIS'}</div>
-                    </div>
-                  </Card>
-              ))}
-            </div>
-          )}
-        </main>
-
-        {/* Transaction Details Modal */}
-        <Dialog open={!!selectedTransaction} onOpenChange={(open) => !open && setSelectedTransaction(null)}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto pos-modal-content border-none shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="pos-modal-title">
-                <ShoppingCart className="h-5 w-5" />
-                DETAIL TRANSAKSI
-              </DialogTitle>
-            </DialogHeader>
-
-            {selectedTransaction && (
-              <div className="space-y-6">
-                {/* Transaction Summary */}
-                <div className="grid grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl">
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">ID Transaksi</p>
-                    <p className="font-mono text-sm text-foreground">{selectedTransaction.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Tanggal</p>
-                    <p className="font-medium text-sm text-foreground">{formatDate(selectedTransaction.created_at)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Status</p>
-                    <Badge variant={statusVariant(selectedTransaction.payment_status)}>
-                      {capitalize(selectedTransaction.payment_status === 'paid' ? 'Lunas' : 'Tertunda')}
-                    </Badge>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase">Total</p>
-                    <p className="font-black text-sm text-primary-brand">{formatCurrency(selectedTransaction.total)}</p>
-                  </div>
-                </div>
-
-                {/* Items */}
-                <div>
-                  <h4 className="font-bold text-sm uppercase text-muted-foreground mb-3">Item Dibeli</h4>
-                  {loadingDetails ? (
-                    <div className="text-center py-4">
-                      <div className="pos-loading-spinner mx-auto" />
-                    </div>
-                  ) : transactionItems.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground">Tidak ada item ditemukan</div>
-                  ) : (
-                    <div className="border border-border rounded-xl overflow-hidden">
-                      <table className="w-full">
-                        <thead className="bg-muted/50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-bold uppercase text-muted-foreground">Produk</th>
-                            <th className="px-4 py-3 text-center text-xs font-bold uppercase text-muted-foreground">Qty</th>
-                            <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Harga Satuan</th>
-                            <th className="px-4 py-3 text-right text-xs font-bold uppercase text-muted-foreground">Subtotal</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                          {transactionItems.map((item) => (
-                            <tr key={item.id} className="hover:bg-background/50">
-                              <td className="px-4 py-3">
-                                <div>
-                                  <p className="font-medium text-sm text-foreground">
-                                    {item.product?.name || 'Produk Tidak Dikenal'}
-                                    {item.variant && (
-                                      <span className="text-xs text-muted-foreground ml-1">
-                                        ({item.variant.variant_name})
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-center text-sm text-foreground">
-                                {item.qty}
-                              </td>
-                              <td className="px-4 py-3 text-right text-sm text-foreground">
-                                {formatCurrency(item.unit_price)}
-                              </td>
-                              <td className="px-4 py-3 text-right text-sm font-black text-foreground">
-                                {formatCurrency(item.subtotal)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Detail Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detail Transaksi</DialogTitle>
+          </DialogHeader>
+          
+          {selectedTx && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-start border-b pb-4">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">ID Transaksi</p>
+                  <p className="font-mono font-bold">{selectedTx.id}</p>
+                </div>
+                <Badge variant={statusVariant(selectedTx.payment_status)}>
+                  {capitalize(selectedTx.payment_status)}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Tanggal</p>
+                  <p>{new Date(selectedTx.created_at).toLocaleString('id-ID')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Kasir</p>
+                  <p>{selectedTx.cashier?.full_name || 'System'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Pelanggan</p>
+                  <p>{selectedTx.customer?.name || 'Umum'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase">Metode Bayar</p>
+                  <p className="uppercase font-medium">{selectedTx.payment_method}</p>
+                </div>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted">
+                    <tr className="text-left">
+                      <th className="p-2">Item</th>
+                      <th className="p-2 text-center">Qty</th>
+                      <th className="p-2 text-right">Harga</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {selectedTx.items?.map((item: any) => (
+                      <tr key={item.id}>
+                        <td className="p-2">
+                          <p className="font-medium">{item.product_name}</p>
+                          {item.variant_name && (
+                            <p className="text-[10px] text-muted-foreground">{item.variant_name}</p>
+                          )}
+                        </td>
+                        <td className="p-2 text-center">{item.qty}</td>
+                        <td className="p-2 text-right">{formatCurrency(item.subtotal)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="space-y-1 text-sm pt-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatCurrency(selectedTx.subtotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Diskon</span>
+                  <span>-{formatCurrency(selectedTx.discount_amount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Pajak (0%)</span>
+                  <span>{formatCurrency(selectedTx.tax_amount)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-2 font-bold text-lg">
+                  <span>Total</span>
+                  <span className="text-primary">{formatCurrency(selectedTx.total)}</span>
+                </div>
+              </div>
+
+              {selectedTx.notes && (
+                <div className="bg-muted p-2 rounded text-xs">
+                  <p className="font-semibold mb-1">Catatan:</p>
+                  <p>{selectedTx.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
