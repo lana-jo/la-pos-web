@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-COMMENT ON COLUMN public.product_variants.inherit_cost_price IS
+COMMENT ON COLUMN public.product_variants.inher it_cost_price IS
 'Jika true, harga beli varian akan dihitung otomatis dari (harga beli produk * conversion_qty)';
 
 CREATE TABLE IF NOT EXISTS public.product_variants (
