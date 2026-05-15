@@ -13,8 +13,8 @@ async function test() {
         sort_order: 1
     };
 
-    const { data: result, error } = await supabase
-        .from('categories')
+    const { data: result, error } = await (supabase
+        .from('categories') as any)
         .insert(data)
         .select()
         .single();
