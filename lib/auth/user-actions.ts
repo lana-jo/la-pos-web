@@ -308,8 +308,8 @@ export async function updateThemePreference(theme: ThemePreference) {
       return { success: false, error: 'User not authenticated' }
     }
 
-    const { error } = await supabase
-      .from('profiles')
+    const { error } = await (supabase
+      .from('profiles') as any)
       .update({ theme_preference: theme })
       .eq('id', user.id)
 
