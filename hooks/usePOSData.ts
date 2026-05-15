@@ -126,18 +126,26 @@ export function useProducts() {
 
       if (productsError) throw productsError;
 
-      const normalizedProducts = (productsData || []).map((p) => ({
-        ...p,
-        variants: (p as any).product_variants || [],
-        category_id: (p as any).category_id || null,
-        unit_id: (p as any).unit_id || null,
-        supplier_id: (p as any).supplier_id || null,
-        description: (p as any).description || null,
-        cost_price: (p as any).cost_price || 0,
-        min_stock: (p as any).low_stock_threshold || 0,
-        max_stock: (p as any).max_stock || null,
-        is_consignment: (p as any).is_consignment || false,
-      } as unknown as Product));
+      const normalizedProducts = (productsData || []).map((p) => {
+        const product = p as any;
+        return {
+          id: product.id,
+          name: product.name,
+          barcode: product.barcode,
+          price: product.price,
+          stock: product.stock,
+          is_active: product.is_active,
+          variants: product.product_variants || [],
+          category_id: product.category_id || null,
+          unit_id: product.unit_id || null,
+          supplier_id: product.supplier_id || null,
+          description: product.description || null,
+          cost_price: product.cost_price || 0,
+          min_stock: product.low_stock_threshold || 0,
+          max_stock: product.max_stock || null,
+          is_consignment: product.is_consignment || false,
+        } as unknown as Product;
+      });
 
       setProducts(normalizedProducts);
     } catch (error) {

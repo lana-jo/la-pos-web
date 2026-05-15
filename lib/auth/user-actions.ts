@@ -103,15 +103,14 @@ export async function createUser(formData: {
     if (!existingProfile) {
       // Profile not created by trigger, create it manually
       console.log('Profile not found, creating manually...')
-      const { data: newProfile, error: insertError } = await supabase
-        .from('profiles')
+      const { data: newProfile, error: insertError } = await (supabase.from('profiles') as any)
         .insert({
-          id: formData.id,
+          id: authData.user.id,
           full_name: formData.full_name.trim(),
           role: formData.role,
           email: formData.email,
           phone: formData.phone?.trim() || null,
-        } as any)
+        })
         .select()
         .single()
 
@@ -219,8 +218,7 @@ export async function updateUser(userId: string, formData: {
       profileUpdate.is_active = formData.is_active
     }
 
-    const { error: profileError } = await supabase
-      .from('profiles')
+    const { error: profileError } = await (supabase.from('profiles') as any)
       .update(profileUpdate)
       .eq('id', userId)
 

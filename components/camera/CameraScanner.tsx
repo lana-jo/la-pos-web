@@ -76,13 +76,13 @@ export function CameraScanner({ isOpen, onClose, onBarcodeDetected }: CameraScan
         setIsScanning(true)
       })
 
-      Quagga.onDetected((result: { codeResult?: { code: string } }) => {
+      Quagga.onDetected((result: { codeResult?: { code?: string | null } }) => {
         const now = Date.now()
         if (now - lastScanTime.current < 2000) {
           return // Debounce: prevent duplicate scans within 2 seconds
         }
         
-        if (result && result.codeResult) {
+        if (result && result.codeResult && result.codeResult.code) {
           const barcode = result.codeResult.code
           lastScanTime.current = now
           

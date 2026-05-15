@@ -374,7 +374,7 @@ export default function POSPage() {
         <TransactionHistoryModal
           isOpen={modalState.showTransactionHistory}
           onClose={() => closeModal("showTransactionHistory")}
-          transactions={transactions}
+          transactions={transactions as any[]}
           loading={transactionsLoading}
           onRefresh={fetchTransactions}
           onTransactionClick={(transaction) => {

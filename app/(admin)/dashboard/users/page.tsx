@@ -398,17 +398,21 @@ export default function UsersPage() {
         return;
       }
 
-      const { data: profile, error } = await db("profiles")
+      const { data: profile, error } = await supabase
+        .from("profiles")
         .select("role")
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (error || !profile) {
+      const typedProfile = profile as { role: 'admin' | 'cashier' | 'customer' } | null;
+
+      if (error || !typedProfile) { 
         router.push("/login");
         return;
       }
 
-      if (profile.role !== "admin") {
+      if (typedProfile.role !== "admin") {
+
         toast.error(
           "Akses ditolak: Hanya admin yang dapat mengakses halaman ini",
         );
@@ -433,7 +437,8 @@ export default function UsersPage() {
 
       setCurrentUserId(session.user.id);
 
-      const { data, error } = await db("profiles")
+      const { data, error } = await supabase
+        .from("profiles")
         .select("*")
         .order("created_at", { ascending: false });
 

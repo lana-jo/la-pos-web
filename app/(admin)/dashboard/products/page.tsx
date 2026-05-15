@@ -25,6 +25,7 @@ import { FormVariant } from '@/components/admin/dashboard/products'
 import { useAdminBarcodeScanner } from '@/hooks/useAdminBarcodeScanner'
 import { CameraScanner } from '@/components/camera/CameraScanner'
 import { createProductWithVariants, updateProductWithVariants, deleteProduct, fetchProductsWithVariants, fetchUnits, fetchSuppliers } from '@/lib/products/actions'
+import { formatCurrency } from '@/lib/pos/utils'
 import {
     CategoryFilter,
     EmptyState,
