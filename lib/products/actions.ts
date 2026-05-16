@@ -208,7 +208,11 @@ export async function fetchProductsWithVariants() {
       .order('name')
 
     if (error) throw error
-    return data
+    
+    return (data || []).map((p: any) => ({
+      ...p,
+      variants: p.product_variants || []
+    }))
   } catch (error) {
     console.error('Error fetching products:', error)
     return []
