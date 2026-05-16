@@ -27,6 +27,11 @@ DECLARE
   v_current_stock INTEGER;
   v_is_tracking   BOOLEAN;
 BEGIN
+  -- BREAK RECURSION
+  IF pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+
   SELECT track_stock INTO v_is_tracking
   FROM public.products WHERE id = NEW.product_id;
 
