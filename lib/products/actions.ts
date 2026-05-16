@@ -1,89 +1,50 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { uploadProductImage, updateProductImage } from '@/lib/storage/actions'
+import { supabaseServer, createSupabaseServerClient } from '@/lib/supabase/server'
+import { Database } from '@/types'
 
-// Temporary untyped client to bypass TypeScript issues
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabaseUntyped = createClient(supabaseUrl, supabaseServiceKey)
+// Types based on Database schema
+type ProductInsert = Database['public']['Tables']['products']['Insert']
+type ProductUpdate = Database['public']['Tables']['products']['Update']
+type VariantInsert = Database['public']['Tables']['product_variants']['Insert']
+type VariantUpdate = Database['public']['Tables']['product_variants']['Update']
 
-// Log authentication context for debugging
-console.log('🔐 [AUTH] Product actions initialized', {
-  supabaseUrl,
-  hasServiceKey: !!supabaseServiceKey,
-  serviceKeyPrefix: supabaseServiceKey ? supabaseServiceKey.substring(0, 10) + '...' : 'missing'
-})
-
-interface ProductPayload {
-  name: string
-  barcode: string
-  description: string | null
-  cost_price: number
-  price: number
-  stock: number
-  min_stock: number | null
-  max_stock: number | null
-  track_stock: boolean
-  low_stock_threshold: number
-  category_id: string | null
-  unit_id: string | null
-  supplier_id: string | null
-  image_url: string | null
-  is_active: boolean
-  is_consignment: boolean
-}
-
-interface ProductWithImagePayload extends ProductWithVariantsPayload {
-  imageFile?: File
-}
-
-interface VariantPayload {
+interface ProductPayload extends Omit<ProductInsert, 'id' | 'created_at' | 'updated_at'> {}
+interface VariantPayload extends Omit<VariantInsert, 'id' | 'created_at' | 'updated_at'> {
   id?: string
-  product_id?: string
-  variant_name: string
-  barcode: string | null
-  price: number
-  cost_price: number
-  inherit_cost_price: boolean
-  conversion_qty: number
-  min_qty?: number
-  is_active: boolean
-  is_default: boolean
 }
 
-interface ProductWithVariantsPayload {
-  product: ProductPayload
-  variants: VariantPayload[]
-}
-
-export async function createProductWithVariants(payload: ProductWithImagePayload) {
-  console.log('➕ [DEBUG] createProductWithVariants called', {
-    variantsCount: payload.variants.length,
-    hasImage: !!payload.imageFile,
-    payload: JSON.stringify({ ...payload, imageFile: payload.imageFile?.name || null }, null, 2)
-  })
-
+export async function createProductWithVariants(formData: FormData) {
   try {
-    // Check for duplicate product name
-    const { data: existingProduct } = await supabaseUntyped
-      .from('products')
-      .select('id')
-      .eq('name', payload.product.name.trim())
-      .single()
+    const product = JSON.parse(formData.get('product') as string) as ProductPayload
+    const variants = JSON.parse(formData.get('variants') as string) as VariantPayload[]
+    const imageFile = formData.get('imageFile') as File | null
 
-    if (existingProduct) {
-      console.error('❌ [ERROR] Product name already exists', { name: payload.product.name })
-      return { success: false, error: 'Nama produk sudah ada' }
+    console.log('➕ [DEBUG] createProductWithVariants called', {
+      name: product.name,
+      variantsCount: variants.length,
+      hasImage: !!imageFile
+    })
+
+    const supabase = await createSupabaseServerClient()
+
+    // Check for duplicate barcode (more critical than name)
+    const { data: existingBarcode } = await (supabase as any)
+      .from('products')
+      .select('id, name')
+      .eq('barcode', product.barcode)
+      .maybeSingle()
+
+    if (existingBarcode) {
+      return { success: false, error: `Barcode "${product.barcode}" sudah digunakan oleh produk "${existingBarcode.name}"` }
     }
 
-    // Insert product first
-    console.log('📝 [DEBUG] Creating product', payload.product)
-    
-    const { data: newProduct, error: productError } = await supabaseUntyped
+    // Insert product
+    const { data: newProduct, error: productError } = await (supabase as any)
       .from('products')
-      .insert(payload.product as any)
+      .insert(product)
       .select('id')
       .single()
 
@@ -92,521 +53,259 @@ export async function createProductWithVariants(payload: ProductWithImagePayload
       return { success: false, error: productError.message }
     }
 
-    if (!newProduct) {
-      console.error('❌ [ERROR] No product data returned')
-      return { success: false, error: 'Failed to create product' }
-    }
-
-    // Extract product ID
-    const productId = (newProduct as { id: string }).id;
-    console.log('✅ [SUCCESS] Product created successfully', { productId })
+    const productId = (newProduct as any).id
 
     // Upload image if provided
-    if (payload.imageFile) {
-      console.log('📤 [DEBUG] Uploading product image')
-      const uploadResult = await uploadProductImage(payload.imageFile, productId)
+    if (imageFile) {
+      const uploadResult = await uploadProductImage(imageFile, productId)
       
-      if (!uploadResult.success) {
-        console.error('❌ [ERROR] Image upload failed', uploadResult.error)
-        // Don't fail the entire operation if image upload fails, just log it
-        console.warn('⚠️ [WARN] Product created but image upload failed')
-      } else {
-        console.log('✅ [SUCCESS] Image uploaded successfully', { url: uploadResult.url })
-        
-        // Update product with image URL
-        const { error: updateError } = await supabaseUntyped
+      if (uploadResult.success && uploadResult.url) {
+        await (supabase as any)
           .from('products')
           .update({ image_url: uploadResult.url })
           .eq('id', productId)
-
-        if (updateError) {
-          console.error('❌ [ERROR] Failed to update product with image URL', updateError)
-          // Don't fail the operation, just log it
-          console.warn('⚠️ [WARN] Image uploaded but failed to update product record')
-        }
       }
     }
 
-    // Insert variants if any
-    if (payload.variants.length > 0) {
-      console.log('➕ [DEBUG] Creating variants', { count: payload.variants.length })
-      
-      const variantsWithProductId = payload.variants.map(v => ({
+    // Insert variants
+    if (variants.length > 0) {
+      const variantsWithProductId = variants.map(v => ({
+        ...v,
         product_id: productId,
-        variant_name: v.variant_name,
-        barcode: v.barcode,
-        price: v.price,
-        cost_price: v.inherit_cost_price ? (payload.product.cost_price * v.conversion_qty) : v.cost_price,
-        inherit_cost_price: v.inherit_cost_price,
-        conversion_qty: v.conversion_qty,
-        is_active: v.is_active,
-        is_default: v.is_default,
+        // Ensure cost_price is calculated correctly if inherited
+        cost_price: v.inherit_cost_price ? ((product.cost_price || 0) * (v.conversion_qty || 1)) : v.cost_price,
       }))
 
-      console.log('📝 [DEBUG] Inserting variants data', variantsWithProductId)
-
-      const { error: variantError } = await supabaseUntyped
+      const { error: variantError } = await (supabase as any)
         .from('product_variants')
-        .insert(variantsWithProductId as any)
+        .insert(variantsWithProductId as any[]) // Casting to any[] because of complex Insert type
 
       if (variantError) {
         console.error('❌ [ERROR] Variants creation failed', variantError)
-        return { success: false, error: variantError.message }
+        return { success: false, error: 'Produk dibuat tapi gagal menambahkan varian: ' + variantError.message }
       }
-      
-      console.log('✅ [SUCCESS] All variants created successfully')
-    } else {
-      console.log('ℹ️ [INFO] No variants to create')
     }
 
-    console.log('🎉 [SUCCESS] Product creation completed successfully')
     revalidatePath('/dashboard/products')
+    revalidatePath('/dashboard/inventory')
     return { success: true, data: newProduct }
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('💥 [CRITICAL] Unexpected error in createProductWithVariants', error)
-    return { success: false, error: 'Failed to create product' }
+    return { success: false, error: error.message || 'Gagal membuat produk' }
   }
 }
 
 export async function updateProductWithVariants(
   productId: string,
   existingVariantIds: string[],
-  payload: ProductWithImagePayload,
+  formData: FormData,
   currentImageUrl?: string
 ) {
-  console.log('🔄 [DEBUG] updateProductWithVariants called', {
-    productId,
-    existingVariantIds,
-    variantsCount: payload.variants.length,
-    hasImage: !!payload.imageFile,
-    currentImageUrl,
-    payload: JSON.stringify({ ...payload, imageFile: payload.imageFile?.name || null }, null, 2)
-  })
-
   try {
-    // Check for duplicate product name (excluding current product)
-    const { data: existingProduct } = await supabaseUntyped
-      .from('products')
-      .select('id')
-      .eq('name', payload.product.name.trim())
-      .neq('id', productId)
-      .single()
+    const product = JSON.parse(formData.get('product') as string) as ProductUpdate
+    const variants = JSON.parse(formData.get('variants') as string) as VariantPayload[]
+    const imageFile = formData.get('imageFile') as File | null
 
-    if (existingProduct) {
-      console.error('❌ [ERROR] Product name already exists', { name: payload.product.name })
-      return { success: false, error: 'Nama produk sudah ada' }
-    }
+    console.log('🔄 [DEBUG] updateProductWithVariants called', { productId, name: product.name })
 
-    let finalImageUrl: string | null = payload.product.image_url
+    const supabase = await createSupabaseServerClient()
 
-    // Handle image upload if new image provided
-    if (payload.imageFile) {
-      console.log('📤 [DEBUG] Uploading new product image')
-      const uploadResult = await updateProductImage(payload.imageFile, productId, currentImageUrl)
-      
-      if (!uploadResult.success) {
-        console.error('❌ [ERROR] Image upload failed', uploadResult.error)
-        // Don't fail the entire operation if image upload fails, just log it
-        console.warn('⚠️ [WARN] Product updated but image upload failed')
-      } else {
-        console.log('✅ [SUCCESS] Image uploaded successfully', { url: uploadResult.url })
-        finalImageUrl = uploadResult.url || null
+    // Check for duplicate barcode
+    if (product.barcode) {
+      const { data: existingBarcode } = await (supabase as any)
+        .from('products')
+        .select('id, name')
+        .eq('barcode', product.barcode)
+        .neq('id', productId)
+        .maybeSingle()
+
+      if (existingBarcode) {
+        return { success: false, error: `Barcode "${product.barcode}" sudah digunakan oleh produk "${existingBarcode.name}"` }
       }
     }
 
-    // Update product with potentially new image URL
-    const updateData = {
-      ...payload.product,
-      image_url: finalImageUrl || null,
-      updated_at: new Date().toISOString(),
-    };
-    
-    console.log('📝 [DEBUG] Updating product', { productId, updateData })
-    
-    const { error: productError } = await (supabaseUntyped as any)
+    let finalImageUrl = product.image_url
+
+    // Handle image upload
+    if (imageFile) {
+      const uploadResult = await updateProductImage(imageFile, productId, currentImageUrl)
+      if (uploadResult.success) {
+        finalImageUrl = uploadResult.url
+      }
+    }
+
+    // Update product
+    const { error: productError } = await (supabase as any)
       .from('products')
-      .update(updateData)
+      .update({
+        ...product,
+        image_url: finalImageUrl,
+        updated_at: new Date().toISOString(),
+      })
       .eq('id', productId)
 
     if (productError) {
       console.error('❌ [ERROR] Product update failed', productError)
       return { success: false, error: productError.message }
     }
-    
-    console.log('✅ [SUCCESS] Product updated successfully')
 
-    // Get updated variant IDs
-    const updatedVariantIds = payload.variants.filter(v => v.id).map(v => v.id!)
-    
-    console.log('🔍 [DEBUG] Variant analysis', {
-      existingVariantIds,
-      updatedVariantIds,
-      variantsToDelete: existingVariantIds.filter(id => !updatedVariantIds.includes(id))
-    })
-
-    // Delete variants that were removed
+    // Variant sync logic
+    const updatedVariantIds = variants.filter(v => v.id).map(v => v.id!)
     const idsToDelete = existingVariantIds.filter(id => !updatedVariantIds.includes(id))
+
     if (idsToDelete.length > 0) {
-      console.log('🗑️ [DEBUG] Deleting variants', { idsToDelete })
-      
-      const { error: deleteError } = await supabaseUntyped
-        .from('product_variants')
-        .delete()
-        .in('id', idsToDelete)
-
-      if (deleteError) {
-        console.error('❌ [ERROR] Variant deletion failed', deleteError)
-        return { success: false, error: deleteError.message }
-      }
-      
-      console.log('✅ [SUCCESS] Variants deleted successfully')
+      await (supabase as any).from('product_variants').delete().in('id', idsToDelete)
     }
 
-    // Update or insert variants
-    for (const v of payload.variants) {
-      console.log('🔄 [DEBUG] Processing variant', { 
-        id: v.id, 
-        variant_name: v.variant_name,
-        isNew: !v.id 
-      })
-      
+    for (const v of variants) {
+      const variantData = {
+        ...v,
+        cost_price: v.inherit_cost_price ? (((product as any).cost_price || 0) * (v.conversion_qty || 1)) : v.cost_price,
+        updated_at: new Date().toISOString(),
+      }
+
       if (v.id) {
-        // Update existing variant
-        console.log('✏️ [DEBUG] Updating existing variant', { variantId: v.id })
-        
-        const { error: updateError } = await supabaseUntyped
-          .from('product_variants')
-          .update({
-            variant_name: v.variant_name,
-            barcode: v.barcode,
-            price: v.price,
-            cost_price: v.inherit_cost_price ? (payload.product.cost_price * v.conversion_qty) : v.cost_price,
-            inherit_cost_price: v.inherit_cost_price,
-            conversion_qty: v.conversion_qty,
-            is_active: v.is_active,
-            is_default: v.is_default,
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq('id', v.id)
-
-        if (updateError) {
-          console.error('❌ [ERROR] Variant update failed', { variantId: v.id, error: updateError })
-          return { success: false, error: updateError.message }
-        }
-        
-        console.log('✅ [SUCCESS] Variant updated successfully', { variantId: v.id })
+        const { id, ...updateFields } = variantData
+        await (supabase as any).from('product_variants').update(updateFields as any).eq('id', v.id)
       } else {
-        // Insert new variant
-        console.log('➕ [DEBUG] Inserting new variant', { 
-          productId,
-          variant_name: v.variant_name 
-        })
-        
-        const { error: insertError } = await supabaseUntyped
-          .from('product_variants')
-          .insert({
-            product_id: productId,
-            variant_name: v.variant_name,
-            barcode: v.barcode,
-            price: v.price,
-            cost_price: v.inherit_cost_price ? (payload.product.cost_price * v.conversion_qty) : v.cost_price,
-            inherit_cost_price: v.inherit_cost_price,
-            conversion_qty: v.conversion_qty,
-            is_active: v.is_active,
-            is_default: v.is_default,
-          } as any)
-
-        if (insertError) {
-          console.error('❌ [ERROR] Variant insert failed', { 
-            productId,
-            variant_name: v.variant_name,
-            error: insertError 
-          })
-          return { success: false, error: insertError.message }
-        }
-        
-        console.log('✅ [SUCCESS] Variant inserted successfully', { 
-          productId,
-          variant_name: v.variant_name 
-        })
+        await (supabase as any).from('product_variants').insert({ ...variantData, product_id: productId } as any)
       }
     }
 
-    console.log('🎉 [SUCCESS] All operations completed successfully')
     revalidatePath('/dashboard/products')
+    revalidatePath('/dashboard/inventory')
     return { success: true }
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error('💥 [CRITICAL] Unexpected error in updateProductWithVariants', error)
-    return { success: false, error: 'Failed to update product' }
+    return { success: false, error: error.message || 'Gagal memperbarui produk' }
   }
 }
 
 export async function deleteProduct(productId: string) {
-  console.log('🗑️ [DEBUG] deleteProduct (soft-delete) called', { productId })
-  
   try {
-    console.log('📝 [DEBUG] Soft-deleting product', { productId })
-    
-    const { error } = await supabaseUntyped
+    const supabase = await createSupabaseServerClient()
+    const { error } = await (supabase as any)
       .from('products')
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', productId)
 
-    if (error) {
-      console.error('❌ [ERROR] Product soft-delete failed', error)
-      return { success: false, error: error.message }
-    }
-
-    console.log('✅ [SUCCESS] Product soft-deleted successfully')
+    if (error) throw error
     revalidatePath('/dashboard/products')
+    revalidatePath('/dashboard/inventory')
     return { success: true }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in deleteProduct', error)
-    return { success: false, error: 'Failed to delete product' }
+  } catch (error: any) {
+    console.error('💥 [CRITICAL] Error in deleteProduct', error)
+    return { success: false, error: error.message }
   }
 }
 
-import { safeAction } from '@/lib/utils/action-wrapper'
-
-// ... (other imports)
-
 export async function fetchProductsWithVariants() {
-  return await safeAction(async () => {
-    // Fetch products with categories and variants in a single query
-    const { data, error } = await supabaseUntyped
+  try {
+    const { data, error } = await (supabaseServer as any)
       .from('products')
       .select('*, categories(name), product_variants(*)')
-      .eq('product_variants.is_active', true) // Filter nested relation
+      .eq('is_active', true)
       .order('name')
 
     if (error) throw error
-
     return data
-  })
+  } catch (error) {
+    console.error('Error fetching products:', error)
+    return []
+  }
 }
 
-// ─── Product Variants Server Actions ─────────────────────────────────────────
-
 export async function fetchAllVariants() {
-  console.log('📊 [DEBUG] fetchAllVariants called')
-
   try {
-    const { data: variants, error } = await supabaseUntyped
+    const { data: variants, error } = await (supabaseServer as any)
       .from('product_variants')
       .select(`
         *,
-        products!inner(
-          id,
-          name,
-          unit_id
-        )
+        products!inner(id, name, unit_id)
       `)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('❌ [ERROR] Variants fetch failed', error)
-      return { success: false, error: error.message }
-    }
+    if (error) throw error
 
-    const formattedData = (variants || []).map((variant) => ({
+    const formattedData = (variants || []).map((variant: any) => ({
       ...variant,
-      product_name: (variant as any).products.name,
-      unit_id: (variant as any).products.unit_id
+      product_name: variant.products.name,
+      unit_id: variant.products.unit_id
     }))
 
-    console.log('✅ [SUCCESS] Variants fetched successfully', { count: formattedData.length })
     return { success: true, data: formattedData }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in fetchAllVariants', error)
-    return { success: false, error: 'Failed to fetch variants' }
+  } catch (error: any) {
+    console.error('Error fetching variants:', error)
+    return { success: false, error: error.message }
   }
 }
 
-export async function createVariant(payload: VariantPayload) {
-  console.log('➕ [DEBUG] createVariant called', { payload })
-
+export async function createVariant(payload: VariantInsert) {
   try {
-    // Check for duplicate variant name within the same product
-    const { data: existingVariant, error: checkError } = await supabaseUntyped
-      .from('product_variants')
-      .select('id')
-      .eq('product_id', payload.product_id)
-      .eq('variant_name', payload.variant_name.trim())
-      .single()
-
-    if (existingVariant) {
-      console.error('❌ [ERROR] Variant name already exists for this product', { 
-        product_id: payload.product_id, 
-        variant_name: payload.variant_name 
-      })
-      return { success: false, error: 'Nama varian sudah ada untuk produk ini' }
-    }
-
-    // Handle cost price inheritance
-    let finalCostPrice = payload.cost_price;
-    if (payload.inherit_cost_price && payload.product_id) {
-      const { data: product } = await supabaseUntyped
-        .from('products')
-        .select('cost_price')
-        .eq('id', payload.product_id)
-        .single();
-      
-      if (product) {
-        finalCostPrice = (product.cost_price || 0) * (payload.conversion_qty || 1);
-      }
-    }
-
-    const { error } = await supabaseUntyped
-      .from('product_variants')
-      .insert({
-        ...payload,
-        cost_price: finalCostPrice
-      } as any)
-
-    if (error) {
-      console.error('❌ [ERROR] Variant creation failed', error)
-      return { success: false, error: error.message }
-    }
-
-    console.log('✅ [SUCCESS] Variant created successfully')
+    const supabase = await createSupabaseServerClient()
+    const { error } = await (supabase as any).from('product_variants').insert(payload)
+    if (error) throw error
     revalidatePath('/dashboard/products/variants')
     return { success: true }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in createVariant', error)
-    return { success: false, error: 'Failed to create variant' }
+  } catch (error: any) {
+    return { success: false, error: error.message }
   }
 }
 
-export async function updateVariant(variantId: string, payload: VariantPayload) {
-  console.log('🔄 [DEBUG] updateVariant called', { variantId, payload })
-
+export async function updateVariant(variantId: string, payload: VariantUpdate) {
   try {
-    // Check for duplicate variant name within the same product (excluding current variant)
-    const { data: existingVariant, error: checkError } = await supabaseUntyped
+    const supabase = await createSupabaseServerClient()
+    const { error } = await (supabase as any)
       .from('product_variants')
-      .select('id')
-      .eq('product_id', payload.product_id)
-      .eq('variant_name', payload.variant_name.trim())
-      .neq('id', variantId)
-      .single()
-
-    if (existingVariant) {
-      console.error('❌ [ERROR] Variant name already exists for this product', { 
-        product_id: payload.product_id, 
-        variant_name: payload.variant_name 
-      })
-      return { success: false, error: 'Nama varian sudah ada untuk produk ini' }
-    }
-
-    // Handle cost price inheritance
-    let finalCostPrice = payload.cost_price;
-    if (payload.inherit_cost_price && payload.product_id) {
-      const { data: product } = await supabaseUntyped
-        .from('products')
-        .select('cost_price')
-        .eq('id', payload.product_id)
-        .single();
-      
-      if (product) {
-        finalCostPrice = (product.cost_price || 0) * (payload.conversion_qty || 1);
-      }
-    }
-
-    const { error } = await supabaseUntyped
-      .from('product_variants')
-      .update({
-        ...payload,
-        cost_price: finalCostPrice,
-        updated_at: new Date().toISOString()
-      } as any)
+      .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', variantId)
-
-    if (error) {
-      console.error('❌ [ERROR] Variant update failed', error)
-      return { success: false, error: error.message }
-    }
-
-    console.log('✅ [SUCCESS] Variant updated successfully')
+    if (error) throw error
     revalidatePath('/dashboard/products/variants')
     return { success: true }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in updateVariant', error)
-    return { success: false, error: 'Failed to update variant' }
+  } catch (error: any) {
+    return { success: false, error: error.message }
   }
 }
 
 export async function deactivateVariant(variantId: string) {
-  console.log('🗑️ [DEBUG] deactivateVariant called', { variantId })
-
   try {
-    const { error } = await supabaseUntyped
+    const supabase = await createSupabaseServerClient()
+    const { error } = await (supabase as any)
       .from('product_variants')
-      .update({
-        is_active: false,
-        updated_at: new Date().toISOString()
-      } as any)
+      .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', variantId)
-
-    if (error) {
-      console.error('❌ [ERROR] Variant deactivation failed', error)
-      return { success: false, error: error.message }
-    }
-
-    console.log('✅ [SUCCESS] Variant deactivated successfully')
+    if (error) throw error
     revalidatePath('/dashboard/products/variants')
     return { success: true }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in deactivateVariant', error)
-    return { success: false, error: 'Failed to deactivate variant' }
+  } catch (error: any) {
+    return { success: false, error: error.message }
   }
 }
 
-// ─── Suppliers Server Action ─────────────────────────────────────────────────
-
 export async function fetchSuppliers() {
-  console.log('📊 [DEBUG] fetchSuppliers called')
-
   try {
-    const { data: suppliers, error } = await supabaseUntyped
+    const { data, error } = await (supabaseServer as any)
       .from('suppliers')
       .select('*')
       .eq('is_active', true)
       .order('name')
-
-    if (error) {
-      console.error('❌ [ERROR] Suppliers fetch failed', error)
-      return { success: false, error: error.message }
-    }
-
-    console.log('✅ [SUCCESS] Suppliers fetched successfully', { count: suppliers?.length || 0 })
-    return { success: true, data: suppliers || [] }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in fetchSuppliers', error)
-    return { success: false, error: 'Failed to fetch suppliers' }
+    if (error) throw error
+    return { success: true, data }
+  } catch (error: any) {
+    return { success: false, error: error.message }
   }
 }
 
-// ─── Units Server Action ─────────────────────────────────────────────────────
-
 export async function fetchUnits() {
-  console.log('📊 [DEBUG] fetchUnits called')
-
   try {
-    const { data: units, error } = await supabaseUntyped
+    const { data, error } = await (supabaseServer as any)
       .from('units')
       .select('*')
       .eq('is_active', true)
       .order('name')
-
-    if (error) {
-      console.error('❌ [ERROR] Units fetch failed', error)
-      return { success: false, error: error.message }
-    }
-
-    console.log('✅ [SUCCESS] Units fetched successfully', { count: units?.length || 0 })
-    return { success: true, data: units || [] }
-  } catch (error: unknown) {
-    console.error('💥 [CRITICAL] Unexpected error in fetchUnits', error)
-    return { success: false, error: 'Failed to fetch units' }
+    if (error) throw error
+    return { success: true, data }
+  } catch (error: any) {
+    return { success: false, error: error.message }
   }
 }

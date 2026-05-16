@@ -219,11 +219,11 @@ export default function ProductsPage() {
         const stock = parseInt(formData.stock, 10)
         const costPrice = parseInt(formData.cost_price, 10) || 0
 
-        if (price > PG_INT_MAX || price < 0) {
+        if (isNaN(price) || price > PG_INT_MAX || price < 0) {
             toast.error(`Harga jual tidak valid: maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`)
             return null
         }
-        if (costPrice > PG_INT_MAX || costPrice < 0) {
+        if (isNaN(costPrice) || costPrice > PG_INT_MAX || costPrice < 0) {
             toast.error(`Harga beli tidak valid: maksimum Rp ${PG_INT_MAX.toLocaleString('id-ID')}`)
             return null
         }
@@ -231,7 +231,7 @@ export default function ProductsPage() {
             toast.error('Harga jual tidak boleh lebih rendah dari harga beli')
             return null
         }
-        if (stock > PG_INT_MAX || stock < 0) {
+        if (isNaN(stock) || stock > PG_INT_MAX || stock < 0) {
             toast.error(`Stok tidak valid: maksimum ${PG_INT_MAX.toLocaleString('id-ID')}`)
             return null
         }
@@ -249,9 +249,9 @@ export default function ProductsPage() {
             variant_name: v.variant_name.trim(),
             barcode: v.barcode.trim() || null,
             price: parseInt(v.price, 10),
-            cost_price: parseInt(v.cost_price, 10),
+            cost_price: parseInt(v.cost_price, 10) || 0,
             inherit_cost_price: v.inherit_cost_price,
-            conversion_qty: parseInt(v.conversion_qty, 10),
+            conversion_qty: parseInt(v.conversion_qty, 10) || 1,
             is_active: v.is_active,
             is_default: v.is_default,
         }))
@@ -260,28 +260,34 @@ export default function ProductsPage() {
         const maxStock = parseInt(formData.max_stock, 10) || 0
         const lowStockThreshold = parseInt(formData.low_stock_threshold, 10) || 5
 
-        return {
-            product: {
-                name: formData.name.trim(),
-                barcode: formData.barcode.trim(),
-                description: formData.description.trim() || null,
-                cost_price: costPrice,
-                price,
-                stock,
-                min_stock: minStock,
-                max_stock: maxStock,
-                track_stock: formData.track_stock,
-                low_stock_threshold: lowStockThreshold,
-                category_id: formData.category_id || null,
-                unit_id: formData.unit_id || null,
-                supplier_id: formData.supplier_id || null,
-                image_url: (formData.image_url || '').trim() || null,
-                is_active: formData.is_active,
-                is_consignment: formData.is_consignment,
-            },
-            variants: variantPayloads,
-            imageFile: formData.imageFile,
+        const productData = {
+            name: formData.name.trim(),
+            barcode: formData.barcode.trim(),
+            description: formData.description.trim() || null,
+            cost_price: costPrice,
+            price,
+            stock,
+            min_stock: minStock,
+            max_stock: maxStock,
+            track_stock: formData.track_stock,
+            low_stock_threshold: lowStockThreshold,
+            category_id: formData.category_id || null,
+            unit_id: formData.unit_id || null,
+            supplier_id: formData.supplier_id || null,
+            image_url: (formData.image_url || '').trim() || null,
+            is_active: formData.is_active,
+            is_consignment: formData.is_consignment,
         }
+
+        // Use FormData to pass File object to Server Action
+        const fData = new FormData()
+        fData.append('product', JSON.stringify(productData))
+        fData.append('variants', JSON.stringify(variantPayloads))
+        if (formData.imageFile) {
+            fData.append('imageFile', formData.imageFile)
+        }
+
+        return fData
     }
 
     // ── CRUD Handlers ──────────────────────────────────────────────────────────
@@ -289,10 +295,7 @@ export default function ProductsPage() {
         if (!isFormValid) { toast.error('Nama, barcode, harga beli, harga jual, dan stok harus diisi'); return }
 
         const payload = buildPayload()
-        if (!payload) {
-            setIsSubmitting(false)
-            return
-        }
+        if (!payload) return
 
         setIsSubmitting(true)
         try {

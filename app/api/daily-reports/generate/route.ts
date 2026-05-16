@@ -78,8 +78,8 @@ export async function POST(request: Request) {
       success: true,
       report: {
         ...report,
-        total_sales: report?.total_sales / 100, // Convert from cents to IDR
-        average_transaction_value: report?.average_transaction_value / 100
+        total_sales: report?.total_sales, // Keep as IDR
+        average_transaction_value: report?.average_transaction_value
       },
       message: `Daily report generated for ${targetDate}`
     })
@@ -140,11 +140,11 @@ export async function GET(request: Request) {
       )
     }
 
-    // Convert cents to IDR for display
+    // Use full IDR values
     const formattedReports = reports?.map((report: any) => ({
       ...report,
-      total_sales: report.total_sales / 100,
-      average_transaction_value: report.average_transaction_value / 100
+      total_sales: report.total_sales,
+      average_transaction_value: report.average_transaction_value
     })) || []
 
     return NextResponse.json({

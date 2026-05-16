@@ -86,8 +86,13 @@ const adminItems: NavigationConfig = [
     items: [
       {
         href: "/dashboard/users",
-        label: "Semua Pengguna",
-        description: "Kelola semua pengguna",
+        label: "Staf & Admin",
+        description: "Kelola akun staf",
+      },
+      {
+        href: "/dashboard/customers",
+        label: "Pelanggan",
+        description: "Kelola data pelanggan & hutang",
       },
     ],
   },
@@ -99,7 +104,7 @@ const adminItems: NavigationConfig = [
       {
         href: "/dashboard/cashiers",
         label: "Akun Kasir",
-        description: "Kelola akun kasir",
+        description: "Kelola izin & PIN kasir",
       },
       {
         href: "/dashboard/shifts",
@@ -109,7 +114,29 @@ const adminItems: NavigationConfig = [
       {
         href: "/dashboard/cashier-actions",
         label: "Aksi Kasir",
-        description: "Log pembatalan, pengembalian, diskon",
+        description: "Log pembatalan, diskon, dll",
+      },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Operasional",
+    icon: Store,
+    items: [
+      {
+        href: "/dashboard/transactions",
+        label: "Transaksi",
+        description: "Riwayat & pembatalan transaksi",
+      },
+      {
+        href: "/dashboard/purchasing",
+        label: "Purchasing",
+        description: "Pesanan pembelian supplier",
+      },
+      {
+        href: "/dashboard/discounts",
+        label: "Manajemen Diskon",
+        description: "Atur promo & potongan harga",
       },
     ],
   },

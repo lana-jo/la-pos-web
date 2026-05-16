@@ -220,33 +220,48 @@ export function ProductFormFields({
                     </span>
                 </div>
 
-                {/* Stock is now managed via Stock Management */}
                 {formData.track_stock && (
-                    <div className="pl-6 border-l-2 border-blue-200">
-                        <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
-                            ⚠️ Stok dikelola melalui <strong>Manajemen Stok</strong>.
-                        </p>
-                    </div>
-                )}
+                    <div className="pl-6 border-l-2 border-blue-200 space-y-4">
+                        {!isEdit ? (
+                            <div>
+                                <Label htmlFor={field('stock')}>Stok Awal *</Label>
+                                <Input
+                                    id={field('stock')}
+                                    type="number"
+                                    min={0}
+                                    value={formData.stock}
+                                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                                    placeholder="0"
+                                    disabled={isSubmitting}
+                                />
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                    Masukkan jumlah stok yang ada saat ini
+                                </p>
+                            </div>
+                        ) : (
+                            <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                                ⚠️ Stok dikelola melalui <strong>Manajemen Stok</strong>.
+                            </p>
+                        )}
 
-                {formData.track_stock && (
-                    <div className="pl-6 border-l-2 border-blue-200">
-                        <Label htmlFor={field('low_stock_threshold')}>
-                            Threshold Alert Stok Rendah
-                        </Label>
-                        <Input
-                            id={field('low_stock_threshold')}
-                            type="number"
-                            min={1}
-                            value={formData.low_stock_threshold}
-                            onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
-                            placeholder="5"
-                            disabled={isSubmitting}
-                            className="mt-1"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Alert akan muncul saat stok mencapai angka ini atau lebih rendah
-                        </p>
+                        <div>
+                            <Label htmlFor={field('low_stock_threshold')}>
+                                Threshold Alert Stok Rendah
+                            </Label>
+                            <Input
+                                id={field('low_stock_threshold')}
+                                type="number"
+                                min={1}
+                                value={formData.low_stock_threshold}
+                                onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value })}
+                                placeholder="5"
+                                disabled={isSubmitting}
+                                className="mt-1"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Alert akan muncul saat stok mencapai angka ini atau lebih rendah
+                            </p>
+                        </div>
                     </div>
                 )}
 

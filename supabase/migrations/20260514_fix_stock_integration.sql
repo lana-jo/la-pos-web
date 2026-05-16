@@ -123,6 +123,11 @@ DECLARE
   v_uid UUID;
   v_diff INTEGER;
 BEGIN
+  -- BREAK RECURSION: Stop loops between stock updates and inventory movements
+  IF pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+
   -- Jika stok diubah secara manual (bukan lewat trigger movement)
   -- Kita belokkan menjadi movement resmi
   v_diff := NEW.stock - OLD.stock;

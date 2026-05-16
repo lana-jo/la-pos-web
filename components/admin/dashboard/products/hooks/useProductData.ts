@@ -27,8 +27,7 @@ export function useProductData() {
             setCategories(categoriesData ?? [])
 
             const result = await fetchProductsWithVariants()
-            if (!result.success) throw new Error(result.error)
-            setProducts(result.data ?? [])
+            setProducts((result || []) as ProductWithCategory[])
 
             const unitsResult = await fetchUnits()
             if (unitsResult.success) setUnits(unitsResult.data ?? [])

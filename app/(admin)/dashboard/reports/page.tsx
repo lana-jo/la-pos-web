@@ -1,6 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { 
+  format, 
+  startOfDay, 
+  endOfDay, 
+  subDays
+} from 'date-fns'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
@@ -8,11 +14,24 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { TrendingUp, DollarSign, ShoppingCart, ArrowLeft, Eye, Download } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  TrendingUp, 
+  DollarSign, 
+  ShoppingCart, 
+  ArrowLeft, 
+  Eye, 
+  Download, 
+  RefreshCw,
+  Calendar as CalendarIcon,
+  BarChart2,
+  List
+} from 'lucide-react'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 import { DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
-import { PaymentStatus, Transaction, TransactionItem } from '@/types'
+import { PaymentStatus, Transaction } from '@/types'
+import { formatCurrency } from '@/lib/pos/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +51,18 @@ const DEFAULT_STATS: ReportStats = {
   averageTransaction: 0,
 }
 
+interface DailyReport {
+  id: string
+  report_date: string
+  total_sales: number
+  total_transactions: number
+  paid_transactions: number
+  pending_transactions: number
+  cancelled_transactions: number
+  average_transaction_value: number
+  total_items_sold: number
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const statusVariant = (status: PaymentStatus): 'default' | 'secondary' | 'destructive' => {
@@ -46,17 +77,20 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export default function ReportsPage() {
   const router = useRouter()
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
 
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [dailyReports, setDailyReports] = useState<DailyReport[]>([])
   const [stats, setStats] = useState<ReportStats>(DEFAULT_STATS)
   const [loading, setLoading] = useState(true)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    from: subDays(new Date(), 29), // Default to 30 days
     to: new Date(),
   })
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("summary")
 
   // ─── Data Fetching ──────────────────────────────────────────────────────────
 
@@ -77,14 +111,25 @@ export default function ReportsPage() {
     })
   }, [])
 
-  const fetchTransactions = useCallback(async () => {
-    // Jika tidak ada range, gunakan range 30 hari terakhir sebagai default
-    const from = dateRange?.from || new Date(new Date().setDate(new Date().getDate() - 30))
-    const to = dateRange?.to || new Date()
+  const fetchData = useCallback(async () => {
+    const from = startOfDay(dateRange?.from || subDays(new Date(), 30))
+    const to = endOfDay(dateRange?.to || (dateRange?.from ? dateRange.from : new Date()))
 
     setLoading(true)
     try {
-      const { data, error } = await supabase
+      // 1. Fetch Daily Summaries
+      const { data: reportsData, error: reportsError } = await supabase
+        .from('daily_reports')
+        .select('*')
+        .gte('report_date', format(from, 'yyyy-MM-dd'))
+        .lte('report_date', format(to, 'yyyy-MM-dd'))
+        .order('report_date', { ascending: false })
+
+      if (reportsError) throw reportsError
+      setDailyReports(reportsData || [])
+
+      // 2. Fetch Detailed Transactions
+      const { data: txsData, error: txsError } = await supabase
         .from('transactions')
         .select(`
           *,
@@ -99,14 +144,14 @@ export default function ReportsPage() {
         .lte('created_at', to.toISOString())
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (txsError) throw txsError
 
-      const txs = (data || []) as Transaction[]
+      const txs = (txsData || []) as Transaction[]
       setTransactions(txs)
       calculateStats(txs)
     } catch (error: unknown) {
-      console.error('Error fetching transactions:', error)
-      toast.error('Gagal mengambil data transaksi')
+      console.error('Error fetching data:', error)
+      toast.error('Gagal mengambil data laporan')
     } finally {
       setLoading(false)
     }
@@ -114,54 +159,46 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      const timer = setTimeout(() => {
-        fetchTransactions()
-      }, 0)
-      return () => clearTimeout(timer)
+      fetchData()
     }
-  }, [authLoading, user, fetchTransactions])
+  }, [authLoading, user, fetchData])
 
-  // ─── Helpers ────────────────────────────────────────────────────────────────
+  // ─── Actions ────────────────────────────────────────────────────────────────
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount)
+  const generateReport = async () => {
+    setIsGenerating(true)
+    try {
+      const response = await fetch('/api/daily-reports/generate', {
+        method: 'POST',
+      })
+      const result = await response.json()
+      
+      if (result.success) {
+        toast.success('Laporan hari ini berhasil diperbarui')
+        fetchData()
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error: any) {
+      toast.error('Gagal membuat laporan: ' + error.message)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const downloadReport = async () => {
+    if (transactions.length === 0) return
+    
+    const from = dateRange?.from?.toISOString().split('T')[0]
+    const to = dateRange?.to?.toISOString().split('T')[0]
+    
+    window.open(`/api/daily-reports/export?start_date=${from}&end_date=${to}&format=csv`, '_blank')
+    toast.success('Mengunduh laporan...')
+  }
 
   const handleViewDetails = (tx: Transaction) => {
     setSelectedTx(tx)
     setIsModalOpen(true)
-  }
-
-  const downloadReport = () => {
-    if (transactions.length === 0) return
-
-    const headers = ['ID Transaksi', 'Tanggal', 'Pelanggan', 'Metode Bayar', 'Status', 'Total']
-    const rows = transactions.map(tx => [
-      tx.id,
-      new Date(tx.created_at).toLocaleString('id-ID'),
-      tx.customer?.name || 'Umum',
-      tx.payment_method,
-      tx.payment_status,
-      tx.total
-    ])
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `laporan-transaksi-${dateRange?.from?.toISOString().split('T')[0]}.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    toast.success('Laporan berhasil diunduh')
   }
 
   // ─── Render ─────────────────────────────────────────────────────────────────
@@ -184,17 +221,33 @@ export default function ReportsPage() {
               Kembali
             </Button>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground uppercase tracking-tight">
-              Rekap Laporan
+              Laporan Penjualan
             </h1>
             <p className="text-muted-foreground">
-              Pantau performa transaksi dan ringkasan pendapatan.
+              Analisis performa bisnis dan rekapitulasi harian.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={downloadReport} disabled={loading || transactions.length === 0}>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={generateReport} 
+              disabled={isGenerating}
+              className="bg-card"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
+              Update Hari Ini
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={downloadReport} 
+              disabled={loading || transactions.length === 0}
+              className="bg-card"
+            >
               <Download className="mr-2 h-4 w-4" />
-              Download
+              Export
             </Button>
             <DatePickerWithRange date={dateRange} setDate={setDateRange} />
           </div>
@@ -202,53 +255,45 @@ export default function ReportsPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="pos-card overflow-hidden">
+          <Card className="pos-card border-l-4 border-l-emerald-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Pendapatan</CardTitle>
-              <div className="p-2 bg-emerald-500/10 rounded-full">
-                <DollarSign className="h-4 w-4 text-emerald-500" />
-              </div>
+              <CardTitle className="text-sm font-medium">Total Omzet</CardTitle>
+              <DollarSign className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Dari transaksi sukses</p>
+              <p className="text-xs text-muted-foreground mt-1">Dari transaksi lunas</p>
             </CardContent>
           </Card>
 
-          <Card className="pos-card overflow-hidden">
+          <Card className="pos-card border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Transaksi</CardTitle>
-              <div className="p-2 bg-blue-500/10 rounded-full">
-                <ShoppingCart className="h-4 w-4 text-blue-500" />
-              </div>
+              <CardTitle className="text-sm font-medium">Volume Penjualan</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalTransactions}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.paidTransactions} Berhasil, {stats.pendingTransactions} Pending
+                {stats.paidTransactions} Lunas, {stats.pendingTransactions} Pending
               </p>
             </CardContent>
           </Card>
 
-          <Card className="pos-card overflow-hidden">
+          <Card className="pos-card border-l-4 border-l-orange-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rata-rata Transaksi</CardTitle>
-              <div className="p-2 bg-orange-500/10 rounded-full">
-                <TrendingUp className="h-4 w-4 text-orange-500" />
-              </div>
+              <CardTitle className="text-sm font-medium">Rata-rata Keranjang</CardTitle>
+              <TrendingUp className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{formatCurrency(stats.averageTransaction)}</div>
-              <p className="text-xs text-muted-foreground mt-1">Per transaksi sukses</p>
+              <p className="text-xs text-muted-foreground mt-1">Per transaksi lunas</p>
             </CardContent>
           </Card>
 
-          <Card className="pos-card overflow-hidden">
+          <Card className="pos-card border-l-4 border-l-purple-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Status Pembayaran</CardTitle>
-              <div className="p-2 bg-purple-500/10 rounded-full">
-                <Badge variant="outline" className="h-4 w-4 p-0 flex items-center justify-center text-[10px]">%</Badge>
-              </div>
+              <CardTitle className="text-sm font-medium">Konversi Pembayaran</CardTitle>
+              <BarChart2 className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -256,90 +301,157 @@ export default function ReportsPage() {
                   ? Math.round((stats.paidTransactions / stats.totalTransactions) * 100)
                   : 0}%
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Tingkat kesuksesan</p>
+              <p className="text-xs text-muted-foreground mt-1">Rasio transaksi lunas</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Transactions Table */}
-        <Card className="pos-card">
-          <CardHeader>
-            <CardTitle>Daftar Transaksi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="pos-loading-spinner mb-4" />
-                <p className="text-muted-foreground animate-pulse">Memuat transaksi...</p>
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="bg-muted w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ShoppingCart className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium">Tidak ada transaksi</h3>
-                <p className="text-muted-foreground">Coba ubah rentang tanggal pencarian Anda.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-left font-medium text-muted-foreground">
-                      <th className="pb-3 px-2">ID Transaksi</th>
-                      <th className="pb-3 px-2">Tanggal</th>
-                      <th className="pb-3 px-2">Pelanggan</th>
-                      <th className="pb-3 px-2">Total</th>
-                      <th className="pb-3 px-2">Metode</th>
-                      <th className="pb-3 px-2">Status</th>
-                      <th className="pb-3 px-2 text-right">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {transactions.map((tx) => (
-                      <tr key={tx.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="py-3 px-2 font-mono text-xs">
-                          {tx.id.split('-')[0].toUpperCase()}
-                        </td>
-                        <td className="py-3 px-2">
-                          {new Date(tx.created_at).toLocaleDateString('id-ID', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </td>
-                        <td className="py-3 px-2">
-                          {tx.customer?.name || 'Umum'}
-                        </td>
-                        <td className="py-3 px-2 font-semibold">
-                          {formatCurrency(tx.total)}
-                        </td>
-                        <td className="py-3 px-2 uppercase text-[10px] font-bold">
-                          <Badge variant="outline">{tx.payment_method}</Badge>
-                        </td>
-                        <td className="py-3 px-2">
-                          <Badge variant={statusVariant(tx.payment_status)}>
-                            {capitalize(tx.payment_status)}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-2 text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleViewDetails(tx)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </td>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="bg-card border">
+            <TabsTrigger value="summary" className="flex items-center gap-2">
+              <BarChart2 className="h-4 w-4" />
+              Rekap Harian
+            </TabsTrigger>
+            <TabsTrigger value="transactions" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              Detail Transaksi
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="summary">
+            <Card className="pos-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarIcon className="h-5 w-5 text-primary" />
+                  Ringkasan Pendapatan Harian
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left font-medium text-muted-foreground">
+                        <th className="pb-3 px-2">Tanggal</th>
+                        <th className="pb-3 px-2 text-right">Total Penjualan</th>
+                        <th className="pb-3 px-2 text-center">Transaksi</th>
+                        <th className="pb-3 px-2 text-center">Item Terjual</th>
+                        <th className="pb-3 px-2 text-right">Rata-rata</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </thead>
+                    <tbody className="divide-y">
+                      {dailyReports.map((report) => (
+                        <tr key={report.id} className="hover:bg-muted/30 transition-colors">
+                          <td className="py-3 px-2 font-medium">
+                            {new Date(report.report_date).toLocaleDateString('id-ID', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </td>
+                          <td className="py-3 px-2 text-right font-bold text-emerald-600">
+                            {formatCurrency(report.total_sales)}
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <div className="flex flex-col items-center">
+                              <span>{report.paid_transactions}</span>
+                              <span className="text-[10px] text-muted-foreground">dari {report.total_transactions}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            {report.total_items_sold}
+                          </td>
+                          <td className="py-3 px-2 text-right text-muted-foreground">
+                            {formatCurrency(report.average_transaction_value)}
+                          </td>
+                        </tr>
+                      ))}
+                      {dailyReports.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                            Belum ada rekap harian untuk periode ini.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="transactions">
+            <Card className="pos-card">
+              <CardHeader>
+                <CardTitle>Log Transaksi Terperinci</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="pos-loading-spinner mb-4" />
+                    <p className="text-muted-foreground animate-pulse">Memuat transaksi...</p>
+                  </div>
+                ) : transactions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <h3 className="text-lg font-medium">Tidak ada transaksi</h3>
+                    <p className="text-muted-foreground">Coba ubah rentang tanggal pencarian Anda.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b text-left font-medium text-muted-foreground">
+                          <th className="pb-3 px-2">Waktu</th>
+                          <th className="pb-3 px-2">Pelanggan</th>
+                          <th className="pb-3 px-2 text-right">Total</th>
+                          <th className="pb-3 px-2 text-center">Metode</th>
+                          <th className="pb-3 px-2 text-center">Status</th>
+                          <th className="pb-3 px-2 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {transactions.map((tx) => (
+                          <tr key={tx.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="py-3 px-2">
+                              {new Date(tx.created_at).toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                            <td className="py-3 px-2">
+                              {tx.customer?.name || 'Umum'}
+                            </td>
+                            <td className="py-3 px-2 text-right font-semibold">
+                              {formatCurrency(tx.total)}
+                            </td>
+                            <td className="py-3 px-2 text-center uppercase text-[10px] font-bold">
+                              <Badge variant="outline">{tx.payment_method}</Badge>
+                            </td>
+                            <td className="py-3 px-2 text-center">
+                              <Badge variant={statusVariant(tx.payment_status)}>
+                                {capitalize(tx.payment_status)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-2 text-right">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleViewDetails(tx)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Detail Modal */}
@@ -354,7 +466,7 @@ export default function ReportsPage() {
               <div className="flex justify-between items-start border-b pb-4">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase">ID Transaksi</p>
-                  <p className="font-mono font-bold">{selectedTx.id}</p>
+                  <p className="font-mono font-bold text-xs">{selectedTx.id}</p>
                 </div>
                 <Badge variant={statusVariant(selectedTx.payment_status)}>
                   {capitalize(selectedTx.payment_status)}
@@ -367,16 +479,8 @@ export default function ReportsPage() {
                   <p>{new Date(selectedTx.created_at).toLocaleString('id-ID')}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground uppercase">Kasir</p>
-                  <p>{selectedTx.cashier?.full_name || 'System'}</p>
-                </div>
-                <div>
                   <p className="text-xs text-muted-foreground uppercase">Pelanggan</p>
                   <p>{selectedTx.customer?.name || 'Umum'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase">Metode Bayar</p>
-                  <p className="uppercase font-medium">{selectedTx.payment_method}</p>
                 </div>
               </div>
 
@@ -386,20 +490,20 @@ export default function ReportsPage() {
                     <tr className="text-left">
                       <th className="p-2">Item</th>
                       <th className="p-2 text-center">Qty</th>
-                      <th className="p-2 text-right">Harga</th>
+                      <th className="p-2 text-right">Subtotal</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {selectedTx.items?.map((item) => (
-                      <tr key={(item as any).id}>
+                    {selectedTx.items?.map((item: any) => (
+                      <tr key={item.id}>
                         <td className="p-2">
-                          <p className="font-medium">{(item as any).product_name}</p>
-                          {(item as any).variant_name && (
-                            <p className="text-[10px] text-muted-foreground">{(item as any).variant_name}</p>
+                          <p className="font-medium">{item.product_name || item.product?.name}</p>
+                          {item.variant_name && (
+                            <p className="text-[10px] text-muted-foreground">{item.variant_name}</p>
                           )}
                         </td>
-                        <td className="p-2 text-center">{(item as any).qty}</td>
-                        <td className="p-2 text-right">{formatCurrency((item as any).subtotal)}</td>
+                        <td className="p-2 text-center">{item.qty}</td>
+                        <td className="p-2 text-right">{formatCurrency(item.subtotal)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -411,26 +515,11 @@ export default function ReportsPage() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(selectedTx.subtotal)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Diskon</span>
-                  <span>-{formatCurrency(selectedTx.discount_amount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Pajak (0%)</span>
-                  <span>{formatCurrency(selectedTx.tax_amount)}</span>
-                </div>
                 <div className="flex justify-between border-t pt-2 font-bold text-lg">
                   <span>Total</span>
                   <span className="text-primary">{formatCurrency(selectedTx.total)}</span>
                 </div>
               </div>
-
-              {selectedTx.notes && (
-                <div className="bg-muted p-2 rounded text-xs">
-                  <p className="font-semibold mb-1">Catatan:</p>
-                  <p>{selectedTx.notes}</p>
-                </div>
-              )}
             </div>
           )}
         </DialogContent>

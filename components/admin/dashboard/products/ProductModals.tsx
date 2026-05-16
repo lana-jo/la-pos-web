@@ -120,6 +120,7 @@ export function EditProductModal({
                 units={units}
                 isSubmitting={isSubmitting}
                 idPrefix="edit-"
+                isEdit={true}
             />
             <div className="flex justify-end gap-2 mt-6">
                 <Button variant="outline" onClick={() => { console.log('[ProductModal] Edit cancelled'); onClose(); }} disabled={isSubmitting}>Batal</Button>

@@ -52,13 +52,13 @@ export async function GET(request: Request) {
     // Format reports for export
     const formattedReports = reports.map(report => ({
       'Report Date': report.report_date,
-      'Total Sales (IDR)': (report.total_sales / 100).toLocaleString('id-ID'),
+      'Total Sales (IDR)': (report.total_sales).toLocaleString('id-ID'),
       'Total Transactions': report.total_transactions,
       'Paid Transactions': report.paid_transactions,
       'Pending Transactions': report.pending_transactions,
       'Cancelled Transactions': report.cancelled_transactions,
       'Expired Transactions': report.expired_transactions,
-      'Average Transaction Value (IDR)': (report.average_transaction_value / 100).toLocaleString('id-ID'),
+      'Average Transaction Value (IDR)': (report.average_transaction_value).toLocaleString('id-ID'),
       'Total Items Sold': report.total_items_sold,
       'Generated At': new Date(report.created_at).toLocaleString('id-ID'),
       'Last Updated': new Date(report.updated_at).toLocaleString('id-ID')
@@ -99,10 +99,10 @@ export async function GET(request: Request) {
         format: 'json'
       },
       summary: {
-        total_sales: reports.reduce((sum, r) => sum + r.total_sales, 0) / 100,
+        total_sales: reports.reduce((sum, r) => sum + r.total_sales, 0),
         total_transactions: reports.reduce((sum, r) => sum + r.total_transactions, 0),
         total_items_sold: reports.reduce((sum, r) => sum + r.total_items_sold, 0),
-        average_daily_sales: (reports.reduce((sum, r) => sum + r.total_sales, 0) / reports.length) / 100
+        average_daily_sales: (reports.reduce((sum, r) => sum + r.total_sales, 0) / reports.length)
       },
       reports: formattedReports
     }

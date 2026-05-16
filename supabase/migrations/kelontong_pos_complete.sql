@@ -480,6 +480,11 @@ DECLARE
     v_uid UUID;
     v_diff INTEGER;
 BEGIN
+  -- BREAK RECURSION: Prevent infinite loops between product updates and inventory ledger
+  IF pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+
   -- Calculate difference
   v_diff := NEW.stock - OLD.stock;
 

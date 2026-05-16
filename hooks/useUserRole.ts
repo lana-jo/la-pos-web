@@ -74,5 +74,5 @@ export function useUserRole() {
     return () => subscription.unsubscribe()
   }, [])
 
-  return { userRole, user, userName, loading }
+  return { userRole, user, userName, loading, userId: user?.id }
 }

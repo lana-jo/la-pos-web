@@ -115,16 +115,23 @@ export const MenuNavigation = () => (
       items={[
         {
           href: "/dashboard/users",
-          icon: UserCheck,
+          icon: Shield,
           color: "text-purple-600",
-          title: "Semua Pengguna",
-          description: "Kelola akun admin, kasir, dan pelanggan",
+          title: "Staf & Admin",
+          description: "Kelola akun admin dan kasir",
+        },
+        {
+          href: "/dashboard/customers",
+          icon: UserCheck,
+          color: "text-blue-600",
+          title: "Pelanggan",
+          description: "Kelola data pelanggan dan piutang",
         },
         {
           href: "/dashboard/cashiers",
-          icon: Shield,
+          icon: Users,
           color: "text-orange-600",
-          title: "Kasir",
+          title: "Profil Kasir",
           description: "Kelola izin dan PIN kasir",
         },
         {
@@ -159,52 +166,32 @@ export const MenuNavigation = () => (
           description: "Analitik dan wawasan penjualan",
         },
         {
-          href: "#",
+          href: "/dashboard/transactions",
           icon: CreditCard,
-          color: "text-gray-400",
+          color: "text-blue-600",
           title: "Transaksi",
-          description: "Lihat semua transaksi (Segera Hadir)",
-          disabled: true,
+          description: "Lihat dan kelola semua transaksi penjualan",
         },
         {
-          href: "#",
+          href: "/dashboard/purchasing",
           icon: Receipt,
-          color: "text-gray-400",
-          title: "Pengaturan Resit",
-          description: "Konfigurasi templat resit (Segera Hadir)",
-          disabled: true,
+          color: "text-orange-600",
+          title: "Purchasing",
+          description: "Kelola pesanan pembelian ke supplier",
         },
-      ]}
-    />
-
-    {/* System Settings */}
-    <MenuSection
-      title="Pengaturan Sistem"
-      icon={Settings}
-      iconColor="text-gray-600"
-      items={[
+        {
+          href: "/dashboard/discounts",
+          icon: Tag,
+          color: "text-pink-600",
+          title: "Diskon",
+          description: "Atur promo dan potongan harga",
+        },
         {
           href: "#",
           icon: FileText,
           color: "text-gray-400",
           title: "Log Sistem",
           description: "Lihat log aktivitas sistem (Segera Hadir)",
-          disabled: true,
-        },
-        {
-          href: "#",
-          icon: AlertCircle,
-          color: "text-gray-400",
-          title: "Cadangkan & Pulihkan",
-          description: "Manajemen cadangan data (Segera Hadir)",
-          disabled: true,
-        },
-        {
-          href: "#",
-          icon: CheckCircle,
-          color: "text-gray-400",
-          title: "Kesehatan Sistem",
-          description: "Pantau status sistem (Segera Hadir)",
           disabled: true,
         },
       ]}

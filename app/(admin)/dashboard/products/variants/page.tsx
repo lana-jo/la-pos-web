@@ -57,14 +57,12 @@ export default function ProductVariantsPage() {
 
   const loadProducts = useCallback(async () => {
     const result = await fetchProductsWithVariants()
-    if (result.success) {
-      setProducts((result.data || []).map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        barcode: p.barcode,
-        unit_id: p.unit_id
-      })))
-    }
+    setProducts((result || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      barcode: p.barcode,
+      unit_id: p.unit_id
+    })))
   }, [])
 
   const loadUnits = useCallback(async () => {
