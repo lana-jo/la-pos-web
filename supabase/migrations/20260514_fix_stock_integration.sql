@@ -86,6 +86,11 @@ DECLARE
   v_uid UUID;
   v_initial_stock INTEGER;
 BEGIN
+  -- BREAK RECURSION
+  IF pg_trigger_depth() > 1 THEN
+    RETURN NEW;
+  END IF;
+
   v_initial_stock := COALESCE(NEW.stock, 0);
 
   IF v_initial_stock > 0 THEN
