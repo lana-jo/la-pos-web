@@ -129,12 +129,19 @@ export function ProductTable({
                                 </Badge>
                             </TableCell>
                             <TableCell className="w-28 text-center hidden md:table-cell">
-                                <Badge 
-                                    variant={product.is_active ? 'default' : 'secondary'}
-                                    className={product.is_active ? 'status-active' : 'status-inactive'}
-                                >
-                                    {product.is_active ? 'Aktif' : 'Nonaktif'}
-                                </Badge>
+                                <div className="flex flex-col gap-1 items-center">
+                                    <Badge 
+                                        variant={product.is_active ? 'default' : 'secondary'}
+                                        className={product.is_active ? 'status-active' : 'status-inactive'}
+                                    >
+                                        {product.is_active ? 'Aktif' : 'Nonaktif'}
+                                    </Badge>
+                                    {product.is_consignment && (
+                                        <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-200">
+                                            Titipan
+                                        </Badge>
+                                    )}
+                                </div>
                             </TableCell>
                             <TableCell className="w-24 text-center">
                                 <div className="flex justify-center gap-1">
