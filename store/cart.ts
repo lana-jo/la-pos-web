@@ -58,6 +58,7 @@ export const useCartStore = create<CartStore>()(
       },
 
       updateItemQuantity: (productId, quantity, variantId = null) => {
+        console.log(`[Cart] Updating quantity: prod=${productId}, var=${variantId}, newQty=${quantity}`);
         set((state) => {
           const newCart = state.cart
             .map((item) =>
