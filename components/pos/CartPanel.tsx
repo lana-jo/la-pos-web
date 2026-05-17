@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2, ShoppingCart, Loader2, Plus as AddIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createQRISPayment, createCashPayment } from "@/lib/payment/actions";
 import { InteractiveButton } from "@/components/ui/interactive-button";
