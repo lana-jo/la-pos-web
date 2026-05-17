@@ -44,19 +44,23 @@ async function getSession() {
 
 async function insertTransaction(
   cashierId: string,
+  subtotal: number,
+  discountId: string | null | undefined,
+  discountAmount: number,
   total: number,
   orderId: string,
   method: "cash" | "qris",
 ) {
-  console.log("[POS Payment] Inserting transaction:", { cashierId, total, orderId, method });
+  console.log("[POS Payment] Inserting transaction:", { cashierId, subtotal, discountId, discountAmount, total, orderId, method });
 
   // Always insert as "pending" first; items will be inserted next.
   // The DB trigger blocks item inserts if parent is "paid".
   const { data, error } = await db("transactions")
     .insert({
       cashier_id: cashierId,
-      subtotal: total,
-      discount_amount: 0,
+      subtotal,
+      discount_id: discountId || null,
+      discount_amount: discountAmount,
       tax_amount: 0,
       total,
       amount_paid: method === "cash" ? total : 0,
@@ -169,13 +173,15 @@ function isValidUUID(str: string): boolean {
 export async function createCashPayment(
   cart: CartItem[],
   total: number,
+  discountId?: string | null,
+  discountAmount?: number,
 ): Promise<PaymentResult> {
   const startTime = Date.now();
   console.log("[POS Payment] =========================================");
   console.log("[POS Payment] Starting cash payment server action");
   console.log("[POS Payment] Timestamp:", new Date().toISOString());
   console.log("[POS Payment] =========================================");
-  console.log("[POS Payment] Input params:", { itemCount: cart.length, total });
+  console.log("[POS Payment] Input params:", { itemCount: cart.length, total, discountId, discountAmount });
 
   // Defensive validation
   if (!cart || cart.length === 0) {
@@ -221,6 +227,9 @@ export async function createCashPayment(
     const txStart = Date.now();
     const transaction = await insertTransaction(
       user.id,
+      total + (discountAmount || 0),
+      discountId,
+      discountAmount || 0,
       total,
       orderId,
       "cash",
@@ -286,8 +295,10 @@ export async function createCashPayment(
 export async function createQRISPayment(
   cart: CartItem[],
   total: number,
+  discountId?: string | null,
+  discountAmount?: number,
 ): Promise<PaymentResult> {
-  console.log("[POS Payment] Starting QRIS payment process:", { itemCount: cart.length, total });
+  console.log("[POS Payment] Starting QRIS payment process:", { itemCount: cart.length, total, discountId, discountAmount });
 
   try {
     const session = await getSession();
@@ -298,6 +309,9 @@ export async function createQRISPayment(
     
     const transaction = await insertTransaction(
       session.user.id,
+      total + (discountAmount || 0),
+      discountId,
+      discountAmount || 0,
       total,
       orderId,
       "qris",

@@ -13,7 +13,8 @@ import { Banknote } from "lucide-react";
 import { PrintManager } from "@/lib/printer/printManager";
 import { Transaction, TransactionItem, ProductVariant } from "@/types";
 import { getSettings } from "@/lib/settings/actions";
-import { useEffect } from "react";
+import { fetchDiscounts } from "@/lib/discounts/actions";
+import { useEffect, useState } from "react";
 
 interface CartPanelProps {
   onAddItem?: () => void;
@@ -21,23 +22,33 @@ interface CartPanelProps {
 
 export function CartPanel({ onAddItem }: CartPanelProps) {
   const cart = useCartStore((state) => state.cart);
+  const appliedDiscount = useCartStore((state) => state.appliedDiscount);
   const updateItemQuantity = useCartStore((state) => state.updateItemQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
   const clearCart = useCartStore((state) => state.clearCart);
   const getTotal = useCartStore((state) => state.getTotal);
+  const getSubtotal = useCartStore((state) => state.getSubtotal);
+  const getDiscountAmount = useCartStore((state) => state.getDiscountAmount);
+  const applyDiscount = useCartStore((state) => state.applyDiscount);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [storeSettings, setStoreSettings] = useState<any>(null);
+  const [availableDiscounts, setAvailableDiscounts] = useState<any[]>([]);
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      const result = await getSettings('general');
-      if (result.success) {
-        setStoreSettings(result.data);
-      }
+    const fetchData = async () => {
+      const [settingsRes, discountsRes] = await Promise.all([
+        getSettings('general'),
+        fetchDiscounts()
+      ]);
+      if (settingsRes.success) setStoreSettings(settingsRes.data);
+      if (discountsRes.success) setAvailableDiscounts(discountsRes.data || []);
     };
-    fetchSettings();
+    fetchData();
   }, []);
+
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {

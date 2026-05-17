@@ -1,37 +1,64 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
-import { CartItem, Product, ProductVariant } from '@/types'
+import { CartItem, Product, ProductVariant, Discount } from '@/types'
 
 interface CartStore {
   cart: CartItem[]
+  appliedDiscount: Discount | null
   addItem: (product: Product, quantity?: number, variant?: ProductVariant | null) => void
   updateItemQuantity: (productId: string, quantity: number, variantId?: string | null) => void
   removeItem: (productId: string, variantId?: string | null) => void
   clearCart: () => void
   getTotal: () => number
+  getSubtotal: () => number
+  getDiscountAmount: () => number
   getTotalItems: () => number
   // Add memoized selectors for better performance
   getCartSummary: () => { total: number; itemCount: number }
   // Helper functions for variant handling
   getItemKey: (productId: string, variantId?: string | null) => string
   findItem: (productId: string, variantId?: string | null) => CartItem | undefined
+  applyDiscount: (discount: Discount | null) => void
 }
 
 export const useCartStore = create<CartStore>()(
   subscribeWithSelector((set, get) => {
     // Cache calculations to avoid recomputation
+    let cachedSubtotal = 0
+    let cachedDiscountAmount = 0
     let cachedTotal = 0
     let cachedItemCount = 0
     let cartVersion = 0
+    let currentDiscount: Discount | null = null
 
-    const recalculateCache = (cart: CartItem[]) => {
-      cachedTotal = cart.reduce((total, item) => total + item.unit_price * item.quantity, 0)
+    const calculateDiscountAmount = (subtotal: number, discount: Discount | null): number => {
+      if (!discount) return 0
+      if (subtotal < (discount.min_purchase || 0)) return 0
+
+      let amt = 0
+      if (discount.discount_type === 'percentage') {
+        amt = Math.floor(subtotal * (discount.value / 100))
+        if (discount.max_discount && amt > discount.max_discount) {
+          amt = discount.max_discount
+        }
+      } else {
+        amt = discount.value
+      }
+      return Math.min(amt, subtotal)
+    }
+
+    const recalculateCache = (cart: CartItem[], discount: Discount | null = currentDiscount) => {
+      cachedSubtotal = cart.reduce((total, item) => total + item.unit_price * item.quantity, 0)
       cachedItemCount = cart.reduce((total, item) => total + item.quantity, 0)
+      currentDiscount = discount
+      cachedDiscountAmount = calculateDiscountAmount(cachedSubtotal, discount)
+      cachedTotal = Math.max(0, cachedSubtotal - cachedDiscountAmount)
       cartVersion++
     }
 
     return {
       cart: [],
+      appliedDiscount: null,
 
       addItem: (product, quantity = 1, variant = null) => {
         set((state) => {
@@ -65,7 +92,7 @@ export const useCartStore = create<CartStore>()(
             newCart = [...state.cart, { product, variant, quantity: finalQty, unit_price: unitPrice }]
           }
           
-          recalculateCache(newCart)
+          recalculateCache(newCart, state.appliedDiscount)
           return { cart: newCart }
         })
       },
@@ -87,7 +114,7 @@ export const useCartStore = create<CartStore>()(
             })
             .filter((item) => item.quantity > 0)
           
-          recalculateCache(newCart)
+          recalculateCache(newCart, state.appliedDiscount)
           return { cart: newCart }
         })
       },
@@ -98,17 +125,21 @@ export const useCartStore = create<CartStore>()(
             (item) => !(item.product.id === productId && 
                       (item.variant?.id || null) === variantId)
           )
-          recalculateCache(newCart)
+          recalculateCache(newCart, state.appliedDiscount)
           return { cart: newCart }
         })
       },
 
       clearCart: () => {
-        recalculateCache([])
-        set({ cart: [] })
+        recalculateCache([], null)
+        set({ cart: [], appliedDiscount: null })
       },
 
       getTotal: () => cachedTotal,
+
+      getSubtotal: () => cachedSubtotal,
+
+      getDiscountAmount: () => cachedDiscountAmount,
 
       getTotalItems: () => cachedItemCount,
 
@@ -128,6 +159,13 @@ export const useCartStore = create<CartStore>()(
           (item) => item.product.id === productId && 
                   (item.variant?.id || null) === variantId
         )
+      },
+
+      applyDiscount: (discount) => {
+        set((state) => {
+          recalculateCache(state.cart, discount)
+          return { appliedDiscount: discount }
+        })
       }
     }
   })
