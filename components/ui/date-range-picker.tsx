@@ -104,13 +104,13 @@ export function DatePickerWithRange({
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[160px] justify-start text-left font-normal bg-card",
+                  "w-[190px] justify-start text-left font-normal bg-card",
                   !date?.from && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date?.from ? (
-                  format(date.from, "dd MMM yyyy", { locale: id })
+                  `Dari ${format(date.from, "dd MMM yyyy", { locale: id })}`
                 ) : (
                   <span>Dari Tanggal</span>
                 )}
@@ -141,13 +141,13 @@ export function DatePickerWithRange({
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[160px] justify-start text-left font-normal bg-card",
+                  "w-[190px] justify-start text-left font-normal bg-card",
                   !date?.to && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {date?.to ? (
-                  format(date.to, "dd MMM yyyy", { locale: id })
+                  `Sampai ${format(date.to, "dd MMM yyyy", { locale: id })}`
                 ) : (
                   <span>Sampai Tanggal</span>
                 )}

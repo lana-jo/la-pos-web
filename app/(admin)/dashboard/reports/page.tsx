@@ -210,51 +210,55 @@ export default function ReportsPage() {
     <div className="page-background p-4 sm:p-6 lg:p-8">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mb-2 -ml-2 text-muted-foreground"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Kembali
-            </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground uppercase tracking-tight">
-              Laporan Penjualan
-            </h1>
-            <p className="text-muted-foreground">
-              Analisis performa bisnis dan rekapitulasi harian.
-            </p>
-            {dateRange?.from && (
-              <p className="text-sm font-medium text-primary mt-1">
-                Periode: {format(dateRange.from, 'd MMM yyyy')} 
-                {dateRange.to ? ` - ${format(dateRange.to, 'd MMM yyyy')}` : ''}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mb-2 -ml-2 text-muted-foreground"
+                onClick={() => router.back()}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Kembali
+              </Button>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground uppercase tracking-tight">
+                Laporan Penjualan
+              </h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Analisis performa bisnis dan rekapitulasi harian.
               </p>
-            )}
-          </div>
+              {dateRange?.from && (
+                <p className="text-xs sm:text-sm font-medium text-primary mt-1">
+                  Periode: {format(dateRange.from, 'd MMM yyyy')} 
+                  {dateRange.to ? ` - ${format(dateRange.to, 'd MMM yyyy')}` : ''}
+                </p>
+              )}
+            </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button 
-              variant="outline" 
-              onClick={generateReport} 
-              disabled={isGenerating}
-              className="bg-card"
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`} />
-              Update Hari Ini
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={downloadReport} 
-              disabled={loading || transactions.length === 0}
-              className="bg-card"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={generateReport} 
+                disabled={isGenerating}
+                className="bg-card text-xs sm:text-sm"
+              >
+                <RefreshCw className={`mr-2 h-3 w-3 sm:h-4 sm:w-4 ${isGenerating ? 'animate-spin' : ''}`} />
+                Update
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={downloadReport} 
+                disabled={loading || transactions.length === 0}
+                className="bg-card text-xs sm:text-sm"
+              >
+                <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                Export
+              </Button>
+              <div className="w-full sm:w-auto">
+                <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+              </div>
+            </div>
           </div>
         </div>
 
