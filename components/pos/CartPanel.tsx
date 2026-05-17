@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2, ShoppingCart, Loader2, Plus as AddIcon } from "lucide-react";
+import { getSettings } from "@/lib/settings/actions";
+import { fetchDiscounts } from "@/lib/discounts/actions";
 import { useEffect, useState } from "react";
 
 interface CartPanelProps {
