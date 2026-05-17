@@ -36,7 +36,7 @@ export function TransactionDetailsModal({
           <div>
             <p className="text-muted-foreground">ID Transaksi</p>
             <p className="font-mono text-xs">{transaction.id}</p>
-            <p className="font-mono">{transaction.id}</p>
+
           </div>
           <div>
             <p className="text-muted-foreground">Waktu</p>
