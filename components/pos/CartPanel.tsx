@@ -4,16 +4,16 @@ import { useCartStore } from "@/store/cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Trash2, ShoppingCart, Loader2, Plus as AddIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Minus, Plus, Trash2, ShoppingCart, Loader2, Plus as AddIcon, Tag, X } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { createQRISPayment, createCashPayment } from "@/lib/payment/actions";
-import { InteractiveButton } from "@/components/ui/interactive-button";
 import { Banknote } from "lucide-react";
 import { PrintManager } from "@/lib/printer/printManager";
-import { Transaction, TransactionItem, ProductVariant } from "@/types";
+import { Transaction, TransactionItem, ProductVariant, Discount } from "@/types";
 import { getSettings } from "@/lib/settings/actions";
-import { fetchDiscounts } from "@/lib/discounts/actions";
+import { useEffect } from "react";
+import { PinVerificationModal, DiscountModal } from "@/components/pos/modals";
 
 interface CartPanelProps {
   onAddItem?: () => void;
@@ -33,19 +33,13 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [storeSettings, setStoreSettings] = useState<any>(null);
-  const [availableDiscounts, setAvailableDiscounts] = useState<any[]>([]);
-  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [settingsRes, discountsRes] = await Promise.all([
-        getSettings('general'),
-        fetchDiscounts()
-      ]);
-      if (settingsRes.success) setStoreSettings(settingsRes.data);
-      if (discountsRes.success) setAvailableDiscounts(discountsRes.data || []);
-    };
-    fetchData();
+    getSettings('general').then((res) => {
+      if (res.success) setStoreSettings(res.data);
+    });
   }, []);
 
 
@@ -64,14 +58,16 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
     paidAt?: string
   ) => {
     const printManager = PrintManager.getInstance();
+    const subtotal = getSubtotal();
+    const discountAmount = getDiscountAmount();
     const transaction: Transaction & { items: TransactionItem[] } = {
       id: transactionId,
       cashier_id: null,
       shift_id: null,
       customer_id: null,
-      discount_id: null,
-      subtotal: total,
-      discount_amount: 0,
+      discount_id: appliedDiscount?.id ?? null,
+      subtotal,
+      discount_amount: discountAmount,
       tax_amount: 0,
       total,
       amount_paid: total,
@@ -88,22 +84,20 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
       voided_by: null,
       void_reason: null,
       created_at: new Date().toISOString(),
-      items: cart.map((item) => {
-        return {
-          id: "",
-          transaction_id: transactionId,
-          product_id: item.product.id,
-          product_variant_id: item.variant?.id || null,
-          product_name: item.product.name,
-          variant_name: item.variant?.variant_name || null,
-          barcode: item.variant?.barcode || item.product.barcode,
-          qty: item.quantity,
-          unit_price: item.unit_price,
-          cost_price: item.variant?.cost_price || item.product.cost_price || 0,
-          discount_amount: 0,
-          subtotal: item.unit_price * item.quantity,
-        };
-      }),
+      items: cart.map((item) => ({
+        id: "",
+        transaction_id: transactionId,
+        product_id: item.product.id,
+        product_variant_id: item.variant?.id || null,
+        product_name: item.product.name,
+        variant_name: item.variant?.variant_name || null,
+        barcode: item.variant?.barcode || item.product.barcode,
+        qty: item.quantity,
+        unit_price: item.unit_price,
+        cost_price: item.variant?.cost_price || item.product.cost_price || 0,
+        discount_amount: 0,
+        subtotal: item.unit_price * item.quantity,
+      })),
     };
 
     const success = await printManager.printTransaction(transaction, "Kasir", {
@@ -132,32 +126,26 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
     setIsProcessing(true);
     try {
       const total = getTotal();
+      const discountAmount = getDiscountAmount();
       const serializedCart = cart.map((item) => ({
-        product: {
-          id: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          // ... (simplified for readability, actual implementation uses full object)
-        },
+        product: item.product,
         variant: item.variant,
-        quantity: item.quantity
+        quantity: item.quantity,
       }));
-      
-      const result = await createCashPayment(serializedCart as any, total);
-
+      const result = await createCashPayment(
+        serializedCart as any,
+        total,
+        appliedDiscount?.id ?? null,
+        discountAmount,
+      );
       if (result.success) {
         toast.success("Transaksi berhasil");
-        await printReceipt(
-          result.transactionId,
-          result.total,
-          result.paymentMethod,
-          new Date().toISOString()
-        );
+        await printReceipt(result.transactionId, result.total, result.paymentMethod, new Date().toISOString());
         clearCart();
       } else {
         toast.error(result.error || "Pembayaran gagal");
       }
-    } catch (error) {
+    } catch {
       toast.error("Terjadi kesalahan, silakan coba lagi.");
     } finally {
       setIsProcessing(false);
@@ -173,31 +161,37 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
     setIsProcessing(true);
     try {
       const total = getTotal();
-      const serializedCart = cart.map(item => ({
+      const discountAmount = getDiscountAmount();
+      const serializedCart = cart.map((item) => ({
         product: item.product,
         variant: item.variant,
-        quantity: item.quantity
+        quantity: item.quantity,
       }));
-      
-      const result = await createQRISPayment(serializedCart as any, total);
-
+      const result = await createQRISPayment(
+        serializedCart as any,
+        total,
+        appliedDiscount?.id ?? null,
+        discountAmount,
+      );
       if (result.success) {
         toast.success("Pembayaran dimulai!");
-        await printReceipt(
-          result.transactionId,
-          result.total,
-          result.paymentMethod,
-          new Date().toISOString()
-        );
+        await printReceipt(result.transactionId, result.total, result.paymentMethod, new Date().toISOString());
         clearCart();
       } else {
         toast.error(result.error || "Pembayaran gagal");
       }
-    } catch (error) {
+    } catch {
       toast.error("Pembayaran gagal. Silakan coba lagi.");
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleDiscountClick = () => setShowPinModal(true);
+  const handlePinSuccess = () => { setShowPinModal(false); setShowDiscountModal(true); };
+  const handleApplyDiscount = (discount: Discount | null) => {
+    applyDiscount(discount);
+    toast[discount ? "success" : "info"](discount ? `Diskon "${discount.name}" diterapkan` : "Diskon dihapus");
   };
 
   if (cart.length === 0) {
@@ -224,7 +218,8 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
     );
   }
 
-    return (
+  return (
+    <>
     <Card className="w-full pos-modal-content border-none shadow-xl">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
@@ -316,46 +311,98 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
           ))}
         </div>
 
-        <div className="border-t border-border pt-4">
-          <div className="flex justify-between items-center mb-4">
+        <div className="border-t border-border pt-4 space-y-2">
+          {/* Subtotal (only shown when discount is active) */}
+          {appliedDiscount && (
+            <div className="flex justify-between items-center text-sm text-muted-foreground">
+              <span>Subtotal</span>
+              <span>{formatCurrency(getSubtotal())}</span>
+            </div>
+          )}
+
+          {/* Discount row */}
+          {appliedDiscount && (
+            <div className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5 text-green-600" />
+                <span className="text-green-700 font-medium truncate max-w-[140px]">{appliedDiscount.name}</span>
+                {appliedDiscount.code && (
+                  <Badge variant="secondary" className="text-xs font-mono px-1 py-0">{appliedDiscount.code}</Badge>
+                )}
+                <button
+                  onClick={() => applyDiscount(null)}
+                  className="h-4 w-4 rounded-full bg-muted hover:bg-destructive/20 flex items-center justify-center"
+                  title="Hapus diskon"
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </div>
+              <span className="text-green-600 font-semibold">−{formatCurrency(getDiscountAmount())}</span>
+            </div>
+          )}
+
+          {/* Total */}
+          <div className="flex justify-between items-center">
             <span className="text-base sm:text-lg font-bold text-muted-foreground">Total:</span>
             <span className="text-xl sm:text-2xl font-black text-primary-brand">{formatCurrency(getTotal())}</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Discount button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`w-full h-9 text-xs font-medium gap-1.5 ${
+              appliedDiscount
+                ? "border-green-500 text-green-700 bg-green-50/50 hover:bg-green-50"
+                : "border-dashed border-primary/40 text-primary hover:bg-primary/5"
+            }`}
+            onClick={handleDiscountClick}
+            disabled={isProcessing}
+          >
+            <Tag className="h-3.5 w-3.5" />
+            {appliedDiscount ? "Ganti Diskon" : "Terapkan Diskon"}
+          </Button>
+
+          {/* Payment buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <Button
               className="w-full h-11 pos-button-primary text-sm shadow-lg font-bold"
               size="sm"
               onClick={handleCashPayment}
               disabled={isProcessing || cart.length === 0}
             >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Banknote className="h-4 w-4 mr-2" />
-                  Bayar Tunai
-                </>
-              )}
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Banknote className="h-4 w-4 mr-2" />Bayar Tunai</>}
             </Button>
-
             <Button
               className="w-full h-11 pos-qris-button text-sm shadow-lg font-bold"
               size="sm"
               onClick={handlePayment}
               disabled={isProcessing || cart.length === 0}
             >
-              {isProcessing ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Bayar QRIS
-                </>
-              )}
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShoppingCart className="h-4 w-4 mr-2" />Bayar QRIS</>}
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
+
+    {/* PIN gate */}
+    <PinVerificationModal
+      isOpen={showPinModal}
+      onClose={() => setShowPinModal(false)}
+      onSuccess={handlePinSuccess}
+      title="Verifikasi PIN Diskon"
+      description="Masukkan PIN kasir untuk menerapkan diskon pada transaksi ini"
+    />
+
+    {/* Discount picker */}
+    <DiscountModal
+      isOpen={showDiscountModal}
+      onClose={() => setShowDiscountModal(false)}
+      cartSubtotal={getSubtotal()}
+      onApply={handleApplyDiscount}
+      currentDiscount={appliedDiscount}
+    />
+  </>
   );
 }

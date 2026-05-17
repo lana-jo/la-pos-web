@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -65,7 +65,9 @@ export function DiscountModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await onSubmit(formData);
+    // Normalize empty code string to null — DB has a UNIQUE constraint on this column
+    const payload = { ...formData, code: formData.code.trim() || null };
+    await onSubmit(payload);
     setLoading(false);
     onClose();
   };
@@ -75,6 +77,11 @@ export function DiscountModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{discount ? "Edit Diskon" : "Tambah Diskon Baru"}</DialogTitle>
+          <DialogDescription>
+            {discount
+              ? "Perbarui pengaturan diskon yang sudah ada."
+              : "Isi detail untuk membuat diskon baru."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

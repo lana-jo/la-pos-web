@@ -5,3 +5,4 @@ export { TransactionHistoryModal } from './TransactionHistoryModal';
 export { TransactionDetailModal } from './TransactionDetailModal';
 export { EndOfDayReportModal } from './EndOfDayReportModal';
 export { PinVerificationModal } from './PinVerificationModal';
+export { DiscountModal } from './DiscountModal';
