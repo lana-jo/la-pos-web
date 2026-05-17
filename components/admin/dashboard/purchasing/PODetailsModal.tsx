@@ -30,8 +30,8 @@ export function PODetailsModal({
         
         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
           <div>
-            <p className="text-muted-foreground">No. Invoice</p>
-            <p className="font-semibold text-lg">{order.invoice_number || "-"}</p>
+            <p className="text-muted-foreground">No. PO</p>
+            <p className="font-semibold text-lg">{order.po_number || "-"}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Tanggal</p>
@@ -73,13 +73,12 @@ export function PODetailsModal({
                   <TableCell>
                     <div>
                       <p className="font-medium">{item.product_name}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{item.barcode}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">{item.qty_ordered}</TableCell>
+                  <TableCell className="text-center">{item.ordered_qty}</TableCell>
                   <TableCell className="text-right">{formatCurrency(item.unit_cost)}</TableCell>
                   <TableCell className="text-right font-medium">
-                    {formatCurrency(item.subtotal)}
+                    {formatCurrency(item.ordered_qty * item.unit_cost)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -90,7 +89,7 @@ export function PODetailsModal({
         <div className="mt-4 flex flex-col items-end gap-1">
           <div className="flex justify-between w-48 font-bold text-lg border-t pt-1 mt-1">
             <span>Total:</span>
-            <span className="text-primary-brand">{formatCurrency(order.total)}</span>
+            <span className="text-primary-brand">{formatCurrency(order.total_amount)}</span>
           </div>
         </div>
 

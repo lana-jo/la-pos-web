@@ -528,45 +528,45 @@ export type Database = {
       purchase_orders: {
         Row: {
           id: string
+          po_number: string | null
           supplier_id: string | null
-          created_by: string | null
+          ordered_by: string | null
           received_by: string | null
           status: PurchaseStatus
-          invoice_number: string | null
-          total: number
-          paid_amount: number
+          total_amount: number
           notes: string | null
           ordered_at: string | null
+          expected_at: string | null
           received_at: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
+          po_number?: string | null
           supplier_id?: string | null
-          created_by?: string | null
+          ordered_by?: string | null
           received_by?: string | null
           status?: PurchaseStatus
-          invoice_number?: string | null
-          total?: number
-          paid_amount?: number
+          total_amount?: number
           notes?: string | null
           ordered_at?: string | null
+          expected_at?: string | null
           received_at?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
+          po_number?: string | null
           supplier_id?: string | null
-          created_by?: string | null
+          ordered_by?: string | null
           received_by?: string | null
           status?: PurchaseStatus
-          invoice_number?: string | null
-          total?: number
-          paid_amount?: number
+          total_amount?: number
           notes?: string | null
           ordered_at?: string | null
+          expected_at?: string | null
           received_at?: string | null
           created_at?: string
           updated_at?: string
@@ -699,36 +699,36 @@ export type Database = {
       purchase_order_items: {
         Row: {
           id: string
-          purchase_order_id: string
+          po_id: string
           product_id: string | null
+          variant_id: string | null
           product_name: string
-          barcode: string | null
-          qty_ordered: number
-          qty_received: number
+          ordered_qty: number
+          received_qty: number
           unit_cost: number
-          subtotal: number
+          total_cost: number
         }
         Insert: {
           id?: string
-          purchase_order_id: string
+          po_id: string
           product_id?: string | null
+          variant_id?: string | null
           product_name: string
-          barcode?: string | null
-          qty_ordered: number
-          qty_received?: number
-          unit_cost: number
-          subtotal: number
+          ordered_qty?: number
+          received_qty?: number
+          unit_cost?: number
+          total_cost?: number
         }
         Update: {
           id?: string
-          purchase_order_id?: string
+          po_id?: string
           product_id?: string | null
+          variant_id?: string | null
           product_name?: string
-          barcode?: string | null
-          qty_ordered?: number
-          qty_received?: number
+          ordered_qty?: number
+          received_qty?: number
           unit_cost?: number
-          subtotal?: number
+          total_cost?: number
         }
       }
       debt_payments: {

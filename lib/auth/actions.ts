@@ -188,12 +188,10 @@ export async function createAdminAccount(data: {
   }
 }
 
-export async function verifyCashierPin(userId: string, pin: string): Promise<boolean> {
+export async function verifyCashierPin(pin: string): Promise<boolean> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabaseServer as any).rpc('verify_cashier_pin', {
-      user_id:  userId,
-      pin_text: pin,
+    const { data, error } = await (supabaseServer as any).rpc('fn_verify_pin', {
+      p_pin: pin,
     })
 
     if (error) throw error
@@ -202,6 +200,20 @@ export async function verifyCashierPin(userId: string, pin: string): Promise<boo
     console.error('Error verifying PIN:', error)
     return false
   }
+}
+
+export async function checkRole(requiredRoles: ('owner' | 'manager' | 'cashier')[]) {
+  const { data: { user } } = await supabaseServer.auth.getUser()
+  if (!user) return false
+
+  const { data: profile } = await (supabaseServer as any)
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile) return false
+  return requiredRoles.includes(profile.role)
 }
 
 export async function logCashierAction(data: {

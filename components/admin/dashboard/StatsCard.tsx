@@ -33,15 +33,24 @@ const TrendBadge = ({ value }: { value: number }) => (
 );
 
 export const StatsCard = ({ title, value, icon: Icon, trend, subtitle }: StatsCardProps) => (
-  <Card className="h-full">
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-xs sm:text-sm font-medium">{title}</CardTitle>
-      <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+  <Card className="h-full border-none shadow-lg bg-card/40 backdrop-blur-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 overflow-hidden relative group">
+    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+      <Icon className="h-24 w-24 -mr-8 -mt-8" />
+    </div>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+      <CardTitle className="text-xs sm:text-sm font-bold text-muted-foreground uppercase tracking-wider">{title}</CardTitle>
+      <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+      </div>
     </CardHeader>
-    <CardContent>
-      <div className="text-lg sm:text-xl md:text-2xl font-bold">{value}</div>
-      {trend !== undefined && <TrendBadge value={trend} />}
-      {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
+    <CardContent className="relative z-10">
+      <div className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">{value}</div>
+      {trend !== undefined && (
+        <div className="mt-2">
+          <TrendBadge value={trend} />
+        </div>
+      )}
+      {subtitle && <div className="text-xs text-muted-foreground mt-1 font-medium">{subtitle}</div>}
     </CardContent>
   </Card>
 );

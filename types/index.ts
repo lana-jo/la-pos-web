@@ -220,34 +220,34 @@ export interface TransactionItem {
 
 export interface PurchaseOrder {
     id:             string
+    po_number:      string | null
     supplier_id:    string | null
-    created_by:     string | null
+    ordered_by:     string | null
     received_by:    string | null
     status:         PurchaseStatus
-    invoice_number: string | null
-    total:          number
-    paid_amount:    number
+    total_amount:   number
     notes:          string | null
     ordered_at:     string | null
+    expected_at:    string | null
     received_at:    string | null
     created_at:     string
     updated_at:     string
     supplier?:      Supplier              // joined
-    creator?:       Profile               // joined
+    creator?:       Profile               // joined (ordered_by)
     receiver?:      Profile               // joined
     items?:         PurchaseOrderItem[]   // joined
 }
 
 export interface PurchaseOrderItem {
     id:                string
-    purchase_order_id: string
+    po_id:             string
     product_id:        string | null
+    variant_id:        string | null
     product_name:      string
-    barcode:           string | null
-    qty_ordered:       number
-    qty_received:      number
+    ordered_qty:       number
+    received_qty:      number
     unit_cost:         number
-    subtotal:          number
+    total_cost:        number
     product?:          Product            // joined
 }
 

@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import { formatCurrency } from "@/lib/pos/utils";
 import { LoadingSpinner } from "@/components/ui/LoadingStates";
 import { useUserRole } from "@/hooks/useUserRole";
+import { POCreateModal } from "@/components/admin/dashboard/purchasing/POCreateModal";
+import { usePinVerification } from "@/hooks/usePinVerification";
+import { PinVerificationModal } from "@/components/pos/modals/PinVerificationModal";
 
 export default function PurchasingPage() {
   const { userId } = useUserRole();
@@ -21,6 +24,16 @@ export default function PurchasingPage() {
   
   const [selectedOrder, setSelectedOrder] = useState<POWithDetails | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  
+  const { 
+    isPinModalOpen, 
+    requestVerification, 
+    handlePinSuccess, 
+    handlePinClose, 
+    pinTitle, 
+    pinDescription 
+  } = usePinVerification();
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -48,19 +61,25 @@ export default function PurchasingPage() {
   };
 
   const handleReceiveOrder = async (order: POWithDetails) => {
-    if (window.confirm("Apakah barang untuk pesanan ini sudah diterima? Stok akan bertambah otomatis.")) {
-      const result = await updatePOStatus(order.id, "received", userId || "system");
-      if (result.success) {
-        toast.success("Pesanan ditandai sebagai diterima dan stok telah diperbarui");
-        loadOrders();
-      } else {
-        toast.error("Gagal memperbarui status: " + result.error);
-      }
-    }
+    requestVerification(
+      async () => {
+        setLoading(true);
+        const result = await updatePOStatus(order.id, "received", userId || "system");
+        if (result.success) {
+          toast.success("Pesanan ditandai sebagai diterima dan stok telah diperbarui");
+          loadOrders();
+        } else {
+          toast.error("Gagal memperbarui status: " + result.error);
+        }
+        setLoading(false);
+      },
+      "Konfirmasi Penerimaan",
+      `Masukkan PIN untuk mengonfirmasi penerimaan PO ${order.po_number || order.id}`
+    );
   };
 
   const filteredOrders = orders.filter(o => 
-    o.invoice_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.po_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     o.supplier?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -71,8 +90,8 @@ export default function PurchasingPage() {
           <h1 className="text-2xl font-bold">Purchasing</h1>
           <p className="text-muted-foreground">Kelola pesanan pembelian (PO) ke supplier</p>
         </div>
-        <Button onClick={() => toast.info("Fitur pembuatan PO baru segera hadir")}>
-          <Plus className="mr-2 h-4 w-4" />
+        <Button onClick={() => setIsCreateOpen(true)} className="pos-action-button px-6">
+          <Plus className="mr-2 h-5 w-5" />
           Buat PO Baru
         </Button>
       </div>
@@ -82,7 +101,7 @@ export default function PurchasingPage() {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Cari nomor invoice atau supplier..."
+              placeholder="Cari nomor PO atau supplier..."
               className="pl-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -109,6 +128,23 @@ export default function PurchasingPage() {
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         formatCurrency={formatCurrency}
+      />
+
+      <POCreateModal
+        isOpen={isCreateOpen}
+        onClose={() => {
+          setIsCreateOpen(false);
+          loadOrders();
+        }}
+        userId={userId}
+      />
+
+      <PinVerificationModal
+        isOpen={isPinModalOpen}
+        onClose={handlePinClose}
+        onSuccess={handlePinSuccess}
+        title={pinTitle}
+        description={pinDescription}
       />
     </div>
   );

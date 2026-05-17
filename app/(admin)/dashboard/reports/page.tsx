@@ -226,12 +226,17 @@ export default function ReportsPage() {
             <p className="text-muted-foreground">
               Analisis performa bisnis dan rekapitulasi harian.
             </p>
+            {dateRange?.from && (
+              <p className="text-sm font-medium text-primary mt-1">
+                Periode: {format(dateRange.from, 'd MMM yyyy')} 
+                {dateRange.to ? ` - ${format(dateRange.to, 'd MMM yyyy')}` : ''}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Button 
               variant="outline" 
-              size="sm" 
               onClick={generateReport} 
               disabled={isGenerating}
               className="bg-card"
@@ -241,7 +246,6 @@ export default function ReportsPage() {
             </Button>
             <Button 
               variant="outline" 
-              size="sm" 
               onClick={downloadReport} 
               disabled={loading || transactions.length === 0}
               className="bg-card"

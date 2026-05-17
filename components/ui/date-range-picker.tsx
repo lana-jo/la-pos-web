@@ -97,53 +97,130 @@ export function DatePickerWithRange({
         </SelectContent>
       </Select>
 
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            variant={"outline"}
-            className={cn(
-              "w-[260px] justify-start text-left font-normal bg-card",
-              !date && "text-muted-foreground"
-            )}
-            onClick={() => {
-              if (selectedPreset !== "custom") {
-                setSelectedPreset("custom")
-              }
-            }}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "dd MMM yyyy", { locale: id })} -{" "}
-                  {format(date.to, "dd MMM yyyy", { locale: id })}
-                </>
+      {selectedPreset === "custom" ? (
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[160px] justify-start text-left font-normal bg-card",
+                  !date?.from && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.from ? (
+                  format(date.from, "dd MMM yyyy", { locale: id })
+                ) : (
+                  <span>Dari Tanggal</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="start">
+              <Calendar
+                initialFocus
+                mode="single"
+                defaultMonth={date?.from}
+                selected={date?.from}
+                onSelect={(newDate) => {
+                  setDate({
+                    from: newDate || undefined,
+                    to: date?.to,
+                  })
+                }}
+                disabled={{ after: new Date() }}
+                locale={id}
+              />
+            </PopoverContent>
+          </Popover>
+
+          <span className="text-muted-foreground text-sm">s/d</span>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[160px] justify-start text-left font-normal bg-card",
+                  !date?.to && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date?.to ? (
+                  format(date.to, "dd MMM yyyy", { locale: id })
+                ) : (
+                  <span>Sampai Tanggal</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 z-50" align="end">
+              <Calendar
+                initialFocus
+                mode="single"
+                defaultMonth={date?.to || date?.from}
+                selected={date?.to}
+                onSelect={(newDate) => {
+                  setDate({
+                    from: date?.from,
+                    to: newDate || undefined,
+                  })
+                }}
+                disabled={{ after: new Date() }}
+                locale={id}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+      ) : (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              id="date"
+              variant={"outline"}
+              className={cn(
+                "w-[260px] justify-start text-left font-normal bg-card",
+                !date && "text-muted-foreground"
+              )}
+              onClick={() => {
+                if (selectedPreset !== "custom") {
+                  setSelectedPreset("custom")
+                }
+              }}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "dd MMM yyyy", { locale: id })} -{" "}
+                    {format(date.to, "dd MMM yyyy", { locale: id })}
+                  </>
+                ) : (
+                  format(date.from, "dd MMM yyyy", { locale: id })
+                )
               ) : (
-                format(date.from, "dd MMM yyyy", { locale: id })
-              )
-            ) : (
-              <span>Pilih tanggal</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 z-50" align="end">
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={(newDate) => {
-              setDate(newDate)
-              if (selectedPreset !== "custom") {
-                setSelectedPreset("custom")
-              }
-            }}
-            numberOfMonths={2}
-            locale={id}
-          />
-        </PopoverContent>
-      </Popover>
+                <span>Pilih tanggal</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0 z-50" align="end">
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={(newDate) => {
+                setDate(newDate)
+                if (selectedPreset !== "custom") {
+                  setSelectedPreset("custom")
+                }
+              }}
+              numberOfMonths={2}
+              disabled={{ after: new Date() }}
+              locale={id}
+            />
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   )
 }

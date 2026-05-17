@@ -3,6 +3,7 @@
 import { supabaseServer } from "@/lib/supabase/server";
 import { Database } from "@/types";
 import { revalidatePath } from "next/cache";
+import { checkRole } from "@/lib/auth/actions";
 
 type PurchaseOrder = Database["public"]["Tables"]["purchase_orders"]["Row"];
 type PurchaseOrderItem = Database["public"]["Tables"]["purchase_order_items"]["Row"];
@@ -20,7 +21,7 @@ export async function fetchPurchaseOrders() {
       .select(`
         *,
         supplier:suppliers(name),
-        creator:profiles!purchase_orders_created_by_fkey(full_name)
+        creator:profiles!purchase_orders_ordered_by_fkey(full_name)
       `)
       .order("created_at", { ascending: false });
 
@@ -33,6 +34,9 @@ export async function fetchPurchaseOrders() {
 }
 
 export async function createPurchaseOrder(po: Database["public"]["Tables"]["purchase_orders"]["Insert"], items: any[]) {
+  const isAuthorized = await checkRole(['owner', 'manager']);
+  if (!isAuthorized) throw new Error("Akses ditolak: Hanya Owner atau Manager yang dapat membuat PO");
+
   try {
     // 1. Create PO
     const { data: poData, error: poError } = await (supabaseServer as any)
@@ -46,7 +50,7 @@ export async function createPurchaseOrder(po: Database["public"]["Tables"]["purc
     // 2. Create items
     const poItems = items.map(item => ({
       ...item,
-      purchase_order_id: (poData as any).id
+      po_id: (poData as any).id
     }));
 
     const { error: itemsError } = await (supabaseServer as any)
@@ -68,7 +72,7 @@ export async function fetchPOItems(poId: string) {
     const { data, error } = await (supabaseServer as any)
       .from("purchase_order_items")
       .select("*")
-      .eq("purchase_order_id", poId);
+      .eq("po_id", poId);
 
     if (error) throw error;
     return { success: true, data: data as PurchaseOrderItem[] };
@@ -79,6 +83,9 @@ export async function fetchPOItems(poId: string) {
 }
 
 export async function updatePOStatus(id: string, status: string, receivedBy?: string) {
+  const isAuthorized = await checkRole(['owner', 'manager']);
+  if (!isAuthorized) throw new Error("Unauthorized: Only owners or managers can update PO status");
+
   try {
     const updateData: any = { status };
     if (status === "received") {
@@ -92,6 +99,24 @@ export async function updatePOStatus(id: string, status: string, receivedBy?: st
       .eq("id", id);
 
     if (error) throw error;
+
+    // If received, update all items received_qty to ordered_qty (full receipt)
+    if (status === "received") {
+      const { data: items } = await (supabaseServer as any)
+        .from("purchase_order_items")
+        .select("id, ordered_qty")
+        .eq("po_id", id);
+      
+      if (items) {
+        for (const item of items) {
+          await (supabaseServer as any)
+            .from("purchase_order_items")
+            .update({ received_qty: item.ordered_qty })
+            .eq("id", item.id);
+        }
+      }
+    }
+
     revalidatePath("/dashboard/purchasing");
     return { success: true };
   } catch (error: any) {
