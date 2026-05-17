@@ -311,6 +311,14 @@ export default function ReportsPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground bg-card px-4 py-2 rounded-md border shadow-sm">
+              <span className="font-medium">Rentang Data:</span>{" "}
+              {dateRange?.from ? format(dateRange.from, 'd MMMM yyyy', { locale: id }) : '-'} 
+              <span className="mx-2">s/d</span>
+              {dateRange?.to ? format(dateRange.to, 'd MMMM yyyy', { locale: id }) : (dateRange?.from ? format(dateRange.from, 'd MMMM yyyy', { locale: id }) : '-')}
+            </div>
+          </div>
           <TabsList className="bg-card border">
             <TabsTrigger value="summary" className="flex items-center gap-2">
               <BarChart2 className="h-4 w-4" />
