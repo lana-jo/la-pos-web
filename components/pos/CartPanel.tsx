@@ -6,15 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2, ShoppingCart, Loader2, Plus as AddIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { createQRISPayment, createCashPayment } from "@/lib/payment/actions";
-import { InteractiveButton } from "@/components/ui/interactive-button";
-import { Banknote } from "lucide-react";
-import { PrintManager } from "@/lib/printer/printManager";
-import { Transaction, TransactionItem, ProductVariant } from "@/types";
-import { getSettings } from "@/lib/settings/actions";
-import { fetchDiscounts } from "@/lib/discounts/actions";
-import { useEffect, useState } from "react";
 
 interface CartPanelProps {
   onAddItem?: () => void;
