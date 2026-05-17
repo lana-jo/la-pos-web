@@ -107,13 +107,21 @@ export default function DiscountsPage() {
         <div className="flex justify-center py-12">
           <LoadingSpinner />
         </div>
-      ) : (
+      ) : filteredDiscounts.length > 0 ? (
         <DiscountTable
           discounts={filteredDiscounts}
           onEdit={(d) => { setSelectedDiscount(d); setIsModalOpen(true); }}
           onDelete={handleDeleteDiscount}
           formatCurrency={formatCurrency}
         />
+      ) : (
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+            <Tag className="h-12 w-12 mb-4 opacity-20" />
+            <h3 className="text-lg font-semibold text-foreground">Tidak ada diskon tersedia</h3>
+            <p className="text-sm">Data tidak ada, silahkan tambahkan diskon baru melalui tombol "Tambah Diskon".</p>
+          </CardContent>
+        </Card>
       )}
 
       <DiscountModal
