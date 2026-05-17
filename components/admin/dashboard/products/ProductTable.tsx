@@ -58,7 +58,7 @@ export function ProductTable({
                         <TableHead className="w-64 font-semibold">Produk</TableHead>
                         <TableHead className="w-32 font-semibold">Barcode</TableHead>
                         <TableHead className="w-40 font-semibold hidden lg:table-cell">Kategori</TableHead>
-                        <TableHead className="w-32 text-right font-semibold">Harga</TableHead>
+                        <TableHead className="w-48 text-right font-semibold">Harga Beli / Jual</TableHead>
                         <TableHead className="w-28 text-center font-semibold">Stok</TableHead>
                         <TableHead className="w-28 text-center font-semibold hidden md:table-cell">Status</TableHead>
                         <TableHead className="w-24 text-center font-semibold">Aksi</TableHead>
@@ -112,16 +112,11 @@ export function ProductTable({
                                     <Badge variant="secondary">Belum Dikategorikan</Badge>
                                 )}
                             </TableCell>
-                            <TableCell className="w-32 text-right font-medium text-primary-brand">
-                                {product.variants && product.variants.length > 0 ? (
-                                    <div className="space-y-1">
-                                        <p className="font-semibold">
-                                            {formatCurrency(product.price)}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    formatCurrency(product.price)
-                                )}
+                            <TableCell className="w-48 text-right font-medium">
+                                <div className="space-y-0.5 text-right">
+                                    <p className="text-xs text-muted-foreground">Beli: {formatCurrency(product.cost_price || 0)}</p>
+                                    <p className="font-semibold text-primary-brand">Jual: {formatCurrency(product.price)}</p>
+                                </div>
                             </TableCell>
                             <TableCell className="w-28 text-center">
                                 <Badge variant={product.stock > 10 ? 'default' : 'secondary'}>
@@ -217,16 +212,19 @@ export function ProductTable({
                                                         }
                                                     }}
                                                 >
-                                                    <Printer className="h-4 w-4" />
+                                                 <Printer className="h-4 w-4" />
                                                 </Button>
-                                                <div className="text-right">
-                                                    <p className="font-semibold text-primary-brand">
-                                                        {formatCurrency(variant.price)}
-                                                    </p>
+                                                <div className="text-right space-y-0.5">
                                                     <p className="text-xs text-muted-foreground">
-                                                        Konversi: {variant.conversion_qty}x
-                                                    </p>
-                                                </div>
+                                                        Beli: {formatCurrency(variant.cost_price || 0)}
+                                                     </p>
+                                                     <p className="font-semibold text-primary-brand">
+                                                         Jual: {formatCurrency(variant.price)}
+                                                     </p>
+                                                     <p className="text-xs text-muted-foreground">
+                                                         Konversi: {variant.conversion_qty}x
+                                                     </p>
+                                                 </div>
                                                 <Badge 
                                                     variant={variant.is_active ? 'default' : 'secondary'}
                                                     className={variant.is_active ? 'status-active' : 'status-inactive'}

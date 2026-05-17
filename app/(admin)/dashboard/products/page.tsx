@@ -294,6 +294,14 @@ export default function ProductsPage() {
     const handleAdd = async () => {
         if (!isFormValid) { toast.error('Nama, barcode, harga beli, harga jual, dan stok harus diisi'); return }
 
+        // Validasi nama produk unik (case-insensitive)
+        const nameTrimmed = formData.name.trim().toLowerCase()
+        const nameExists = products.some(p => p.name.trim().toLowerCase() === nameTrimmed && p.is_active)
+        if (nameExists) {
+            toast.error(`Produk dengan nama "${formData.name.trim()}" sudah terdaftar`)
+            return
+        }
+
         const payload = buildPayload()
         if (!payload) return
 
@@ -310,7 +318,7 @@ export default function ProductsPage() {
             fetchData()
         } catch (error) {
             console.error('Error adding product:', error)
-            toast.error('Gagal menambahkan produk')
+            toast.error(error instanceof Error ? error.message : 'Gagal menambahkan produk')
         } finally {
             setIsSubmitting(false)
         }
@@ -318,6 +326,14 @@ export default function ProductsPage() {
 
     const handleEdit = async () => {
         if (!selectedProduct || !isFormValid) { toast.error('Nama, barcode, harga beli, harga jual, dan stok harus diisi'); return }
+
+        // Validasi nama produk unik (case-insensitive)
+        const nameTrimmed = formData.name.trim().toLowerCase()
+        const nameExists = products.some(p => p.name.trim().toLowerCase() === nameTrimmed && p.id !== selectedProduct.id && p.is_active)
+        if (nameExists) {
+            toast.error(`Produk dengan nama "${formData.name.trim()}" sudah terdaftar`)
+            return
+        }
 
         const payload = buildPayload()
         if (!payload) {
@@ -344,7 +360,7 @@ export default function ProductsPage() {
             fetchData()
         } catch (error) {
             console.error('Error updating product:', error)
-            toast.error('Gagal memperbarui produk')
+            toast.error(error instanceof Error ? error.message : 'Gagal memperbarui produk')
         } finally {
             setIsSubmitting(false)
         }
