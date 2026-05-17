@@ -42,14 +42,27 @@ export const useCartStore = create<CartStore>()(
           
           let newCart: CartItem[]
           if (existingItemIndex >= 0) {
+            const currentItem = state.cart[existingItemIndex]
+            const maxStock = product.track_stock ? (
+              variant ? Math.floor((product.cached_stock ?? product.stock ?? 0) / (variant.conversion_qty || 1))
+              : (product.cached_stock ?? product.stock ?? 0)
+            ) : Infinity
+
+            const newQty = Math.min(currentItem.quantity + quantity, maxStock)
             newCart = [...state.cart]
             newCart[existingItemIndex] = {
               ...newCart[existingItemIndex],
-              quantity: newCart[existingItemIndex].quantity + quantity
+              quantity: newQty
             }
           } else {
             const unitPrice = variant ? variant.price : product.price
-            newCart = [...state.cart, { product, variant, quantity, unit_price: unitPrice }]
+            const maxStock = product.track_stock ? (
+              variant ? Math.floor((product.cached_stock ?? product.stock ?? 0) / (variant.conversion_qty || 1))
+              : (product.cached_stock ?? product.stock ?? 0)
+            ) : Infinity
+
+            const finalQty = Math.min(quantity, maxStock)
+            newCart = [...state.cart, { product, variant, quantity: finalQty, unit_price: unitPrice }]
           }
           
           recalculateCache(newCart)
@@ -61,12 +74,17 @@ export const useCartStore = create<CartStore>()(
         console.log(`[Cart] Updating quantity: prod=${productId}, var=${variantId}, newQty=${quantity}`);
         set((state) => {
           const newCart = state.cart
-            .map((item) =>
-              item.product.id === productId && 
-              (item.variant?.id || null) === variantId
-                ? { ...item, quantity: Math.max(0, quantity) }
-                : item
-            )
+            .map((item) => {
+              if (item.product.id === productId && (item.variant?.id || null) === variantId) {
+                const maxStock = item.product.track_stock ? (
+                  item.variant ? Math.floor((item.product.cached_stock ?? item.product.stock ?? 0) / (item.variant.conversion_qty || 1))
+                  : (item.product.cached_stock ?? item.product.stock ?? 0)
+                ) : Infinity
+
+                return { ...item, quantity: Math.min(Math.max(0, quantity), maxStock) }
+              }
+              return item
+            })
             .filter((item) => item.quantity > 0)
           
           recalculateCache(newCart)

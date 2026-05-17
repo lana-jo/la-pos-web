@@ -134,6 +134,8 @@ export function useProducts() {
           barcode: product.barcode,
           price: product.price,
           stock: product.stock,
+          cached_stock: product.cached_stock ?? product.stock ?? 0,
+          track_stock: product.track_stock ?? true,
           is_active: product.is_active,
           variants: product.product_variants || [],
           category_id: product.category_id || null,

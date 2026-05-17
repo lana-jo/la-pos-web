@@ -280,7 +280,15 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
                     onClick={() =>
                       updateItemQuantity(item.product.id, item.quantity + 1, item.variant?.id || null)
                     }
-                    disabled={item.quantity >= (item.variant?.cached_stock ?? item.product.cached_stock ?? 0)}
+                    disabled={
+                      item.product.track_stock ? (
+                        item.variant ? (
+                          item.quantity >= Math.floor((item.product.cached_stock ?? item.product.stock ?? 0) / (item.variant.conversion_qty || 1))
+                        ) : (
+                          item.quantity >= (item.product.cached_stock ?? item.product.stock ?? 0)
+                        )
+                      ) : false
+                    }
                   >
                     <Plus className="h-3 w-3" />
                   </Button>
