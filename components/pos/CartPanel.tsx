@@ -96,6 +96,8 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
         unit_price: item.unit_price,
         cost_price: item.variant?.cost_price || item.product.cost_price || 0,
         discount_amount: 0,
+        discount_id: null,
+        discount_type: null,
         subtotal: item.unit_price * item.quantity,
       })),
     };

@@ -54,7 +54,6 @@ async function insertTransaction(
   console.log("[POS Payment] Inserting transaction:", { cashierId, subtotal, discountId, discountAmount, total, orderId, method });
 
   // Always insert as "pending" first; items will be inserted next.
-  // The DB trigger blocks item inserts if parent is "paid".
   const { data, error } = await db("transactions")
     .insert({
       cashier_id: cashierId,
@@ -79,6 +78,20 @@ async function insertTransaction(
 
   console.log("[POS Payment] Transaction inserted successfully:", { transactionId: data.id, method });
   return data;
+}
+
+async function incrementDiscountUsage(discountId: string | null | undefined) {
+  if (!discountId) return;
+  // Read current count then increment — non-destructive; never goes negative
+  const { data: discount } = await db("discounts")
+    .select("usage_count")
+    .eq("id", discountId)
+    .single();
+  if (discount) {
+    await db("discounts")
+      .update({ usage_count: (discount as any).usage_count + 1 })
+      .eq("id", discountId);
+  }
 }
 
 async function markTransactionPaid(transactionId: string) {
@@ -253,6 +266,13 @@ export async function createCashPayment(
     console.log("[POS Payment] ✓ Transaction finalized in", finalizeEnd - finalizeStart, "ms");
     console.log("[POS Payment] --- End Step 5b ---");
 
+    console.log("[POS Payment] --- Step 5c: Increment Discount Usage ---");
+    if (discountId) {
+      await incrementDiscountUsage(discountId);
+      console.log("[POS Payment] ✓ Discount usage incremented:", discountId);
+    }
+    console.log("[POS Payment] --- End Step 5c ---");
+
     console.log("[POS Payment] --- Step 6: Revalidate Path ---");
     revalidatePath("/cashier/pos");
     console.log("[POS Payment] ✓ Path revalidated");
@@ -320,6 +340,11 @@ export async function createQRISPayment(
 
     await insertTransactionItems(transaction.id, cart);
     console.log("[POS Payment] QRIS transaction items inserted");
+
+    if (discountId) {
+      await incrementDiscountUsage(discountId);
+      console.log("[POS Payment] ✓ Discount usage incremented for QRIS:", discountId);
+    }
 
     console.log("[POS Payment] Creating QRIS charge with Midtrans:", { orderId, total });
     const qrisResponse: QRISChargeResponse = await createQRISCharge(

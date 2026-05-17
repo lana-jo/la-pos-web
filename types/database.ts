@@ -447,6 +447,8 @@ export type Database = {
           unit_price: number
           cost_price: number
           discount_amount: number
+          discount_id: string | null
+          discount_type: string | null
           subtotal: number
         }
         Insert: {
@@ -461,6 +463,8 @@ export type Database = {
           unit_price: number
           cost_price?: number
           discount_amount?: number
+          discount_id?: string | null
+          discount_type?: string | null
           subtotal: number
         }
         Update: {
@@ -475,6 +479,8 @@ export type Database = {
           unit_price?: number
           cost_price?: number
           discount_amount?: number
+          discount_id?: string | null
+          discount_type?: string | null
           subtotal?: number
         }
       }
@@ -661,6 +667,7 @@ export type Database = {
           max_usage: number | null
           usage_count: number
           is_active: boolean
+          is_stackable: boolean
           valid_from: string
           valid_until: string | null
           created_at: string
@@ -676,6 +683,7 @@ export type Database = {
           max_usage?: number | null
           usage_count?: number
           is_active?: boolean
+          is_stackable?: boolean
           valid_from?: string
           valid_until?: string | null
           created_at?: string
@@ -691,6 +699,7 @@ export type Database = {
           max_usage?: number | null
           usage_count?: number
           is_active?: boolean
+          is_stackable?: boolean
           valid_from?: string
           valid_until?: string | null
           created_at?: string

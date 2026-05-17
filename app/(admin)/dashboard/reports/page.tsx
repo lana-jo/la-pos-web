@@ -26,7 +26,8 @@ import {
   RefreshCw,
   Calendar as CalendarIcon,
   BarChart2,
-  List
+  List,
+  Tag
 } from 'lucide-react'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 import { DateRange } from 'react-day-picker'
@@ -42,6 +43,7 @@ interface ReportStats {
   paidTransactions: number
   pendingTransactions: number
   averageTransaction: number
+  totalDiscountGiven: number
 }
 
 const DEFAULT_STATS: ReportStats = {
@@ -50,6 +52,7 @@ const DEFAULT_STATS: ReportStats = {
   paidTransactions: 0,
   pendingTransactions: 0,
   averageTransaction: 0,
+  totalDiscountGiven: 0,
 }
 
 interface DailyReport {
@@ -102,6 +105,8 @@ export default function ReportsPage() {
     const paidTransactions = paid.length
     const pendingTransactions = txs.filter(t => t.payment_status === 'pending').length
     const averageTransaction = paidTransactions > 0 ? totalRevenue / paidTransactions : 0
+    // Sum discount_amount only from paid transactions to reflect actual savings granted
+    const totalDiscountGiven = paid.reduce((sum, t) => sum + (t.discount_amount ?? 0), 0)
 
     setStats({
       totalRevenue,
@@ -109,6 +114,7 @@ export default function ReportsPage() {
       paidTransactions,
       pendingTransactions,
       averageTransaction,
+      totalDiscountGiven,
     })
   }, [])
 
@@ -313,6 +319,17 @@ export default function ReportsPage() {
               <p className="text-xs text-muted-foreground mt-1">Rasio transaksi lunas</p>
             </CardContent>
           </Card>
+
+          <Card className="pos-card border-l-4 border-l-rose-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Diskon Diberikan</CardTitle>
+              <Tag className="h-4 w-4 text-rose-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-rose-600">{formatCurrency(stats.totalDiscountGiven)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Dari transaksi lunas</p>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -417,13 +434,15 @@ export default function ReportsPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b text-left font-medium text-muted-foreground">
-                          <th className="pb-3 px-2">Waktu</th>
-                          <th className="pb-3 px-2">Pelanggan</th>
-                          <th className="pb-3 px-2 text-right">Total</th>
-                          <th className="pb-3 px-2 text-center">Metode</th>
-                          <th className="pb-3 px-2 text-center">Status</th>
-                          <th className="pb-3 px-2 text-right">Aksi</th>
-                        </tr>
+                           <th className="pb-3 px-2">Waktu</th>
+                           <th className="pb-3 px-2">Pelanggan</th>
+                           <th className="pb-3 px-2 text-right">Subtotal</th>
+                           <th className="pb-3 px-2 text-right text-green-700">Diskon</th>
+                           <th className="pb-3 px-2 text-right">Total</th>
+                           <th className="pb-3 px-2 text-center">Metode</th>
+                           <th className="pb-3 px-2 text-center">Status</th>
+                           <th className="pb-3 px-2 text-right">Aksi</th>
+                         </tr>
                       </thead>
                       <tbody className="divide-y">
                         {transactions.map((tx) => (
@@ -438,6 +457,18 @@ export default function ReportsPage() {
                             </td>
                             <td className="py-3 px-2">
                               {tx.customer?.name || 'Umum'}
+                            </td>
+                            <td className="py-3 px-2 text-right text-muted-foreground text-sm">
+                              {formatCurrency(tx.subtotal)}
+                            </td>
+                            <td className="py-3 px-2 text-right">
+                              {tx.discount_amount > 0 ? (
+                                <span className="text-green-600 font-medium text-sm">
+                                  −{formatCurrency(tx.discount_amount)}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">—</span>
+                              )}
                             </td>
                             <td className="py-3 px-2 text-right font-semibold">
                               {formatCurrency(tx.total)}
@@ -532,6 +563,17 @@ export default function ReportsPage() {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>{formatCurrency(selectedTx.subtotal)}</span>
                 </div>
+                {selectedTx.discount_amount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-green-700 flex items-center gap-1">
+                      <Tag className="h-3 w-3" />
+                      Diskon
+                    </span>
+                    <span className="text-green-600 font-medium">
+                      −{formatCurrency(selectedTx.discount_amount)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t pt-2 font-bold text-lg">
                   <span>Total</span>
                   <span className="text-primary">{formatCurrency(selectedTx.total)}</span>

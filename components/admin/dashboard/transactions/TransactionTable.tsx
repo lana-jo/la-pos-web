@@ -3,7 +3,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, XCircle } from "lucide-react";
+import { Eye, XCircle, Tag } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { TransactionWithDetails } from "@/lib/transactions/actions";
@@ -24,11 +24,11 @@ export function TransactionTable({
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "paid":
-        return <Badge className="bg-green-100 text-green-800">Lunas</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Lunas</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
       case "cancelled":
-        return <Badge className="bg-red-100 text-red-800">Dibatalkan</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Dibatalkan</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -44,7 +44,9 @@ export function TransactionTable({
             <TableHead>Kasir</TableHead>
             <TableHead>Pelanggan</TableHead>
             <TableHead>Metode</TableHead>
-            <TableHead className="text-right">Total</TableHead>
+            <TableHead className="text-right">Subtotal</TableHead>
+            <TableHead className="text-right text-green-700">Diskon</TableHead>
+            <TableHead className="text-right font-semibold">Total</TableHead>
             <TableHead className="text-center">Status</TableHead>
             <TableHead className="text-center">Aksi</TableHead>
           </TableRow>
@@ -61,7 +63,22 @@ export function TransactionTable({
               <TableCell>{tx.cashier?.full_name || "-"}</TableCell>
               <TableCell>{tx.customer?.name || "Umum"}</TableCell>
               <TableCell className="capitalize">{tx.payment_method}</TableCell>
-              <TableCell className="text-right font-medium">
+              <TableCell className="text-right text-muted-foreground text-sm">
+                {formatCurrency(tx.subtotal)}
+              </TableCell>
+              <TableCell className="text-right">
+                {tx.discount_amount > 0 ? (
+                  <div className="flex items-center justify-end gap-1">
+                    <Tag className="h-3 w-3 text-green-600" />
+                    <span className="text-green-600 font-medium text-sm">
+                      −{formatCurrency(tx.discount_amount)}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground text-xs">—</span>
+                )}
+              </TableCell>
+              <TableCell className="text-right font-semibold">
                 {formatCurrency(tx.total)}
               </TableCell>
               <TableCell className="text-center">
@@ -92,7 +109,7 @@ export function TransactionTable({
           ))}
           {transactions.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                 Tidak ada transaksi ditemukan
               </TableCell>
             </TableRow>

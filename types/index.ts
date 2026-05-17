@@ -137,6 +137,7 @@ export interface Discount {
     max_usage:     number | null
     usage_count:   number
     is_active:     boolean
+    is_stackable:  boolean
     valid_from:    string
     valid_until:   string | null
     created_at:    string
@@ -213,6 +214,8 @@ export interface TransactionItem {
     unit_price:         number
     cost_price:         number
     discount_amount:    number
+    discount_id:        string | null   // FK → discounts.id (line-level discount)
+    discount_type:      string | null   // denormalised copy at sale time
     subtotal:           number
     product?:           Product         // joined
     variant?:           ProductVariant | null  // joined variant

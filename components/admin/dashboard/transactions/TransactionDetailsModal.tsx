@@ -2,6 +2,8 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Tag } from "lucide-react";
 import { TransactionWithDetails } from "@/lib/transactions/actions";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -21,16 +23,19 @@ export function TransactionDetailsModal({
 }: TransactionDetailsModalProps) {
   if (!transaction) return null;
 
+  const hasDiscount = !!transaction.discount_id && transaction.discount_amount > 0;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Detail Transaksi</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
           <div>
             <p className="text-muted-foreground">ID Transaksi</p>
+            <p className="font-mono text-xs">{transaction.id}</p>
             <p className="font-mono">{transaction.id}</p>
           </div>
           <div>
@@ -87,16 +92,51 @@ export function TransactionDetailsModal({
           </Table>
         </div>
 
+        {/* Totals section */}
         <div className="mt-4 flex flex-col items-end gap-1">
-          <div className="flex justify-between w-48 text-sm">
+          <div className="flex justify-between w-56 text-sm">
             <span className="text-muted-foreground">Subtotal:</span>
             <span>{formatCurrency(transaction.subtotal)}</span>
           </div>
-          <div className="flex justify-between w-48 text-sm">
-            <span className="text-muted-foreground">Diskon:</span>
-            <span>{formatCurrency(transaction.discount_amount)}</span>
-          </div>
-          <div className="flex justify-between w-48 font-bold text-lg border-t pt-1 mt-1">
+
+          {/* Discount row — only shown when a discount was applied */}
+          {hasDiscount && (
+            <div className="flex justify-between w-56 text-sm">
+              <div className="flex items-center gap-1.5 text-green-700">
+                <Tag className="h-3.5 w-3.5" />
+                <span className="font-medium">
+                  {transaction.discount?.name ?? "Diskon"}
+                </span>
+                {transaction.discount?.code && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] font-mono px-1 py-0"
+                  >
+                    {transaction.discount.code}
+                  </Badge>
+                )}
+                {transaction.discount && (
+                  <span className="text-xs text-muted-foreground">
+                    ({transaction.discount.discount_type === "percentage"
+                      ? `${transaction.discount.value}%`
+                      : formatCurrency(transaction.discount.value)})
+                  </span>
+                )}
+              </div>
+              <span className="text-green-600 font-semibold">
+                −{formatCurrency(transaction.discount_amount)}
+              </span>
+            </div>
+          )}
+
+          {transaction.tax_amount > 0 && (
+            <div className="flex justify-between w-56 text-sm">
+              <span className="text-muted-foreground">Pajak:</span>
+              <span>{formatCurrency(transaction.tax_amount)}</span>
+            </div>
+          )}
+
+          <div className="flex justify-between w-56 font-bold text-lg border-t pt-1 mt-1">
             <span>Total:</span>
             <span className="text-primary-brand">{formatCurrency(transaction.total)}</span>
           </div>
@@ -107,7 +147,10 @@ export function TransactionDetailsModal({
             <p className="text-red-800 font-semibold">Alasan Pembatalan:</p>
             <p className="text-red-700">{transaction.void_reason}</p>
             <p className="text-red-600 text-xs mt-1 italic">
-              Dibatalkan pada {transaction.voided_at ? format(new Date(transaction.voided_at), "dd MMM HH:mm") : "-"}
+              Dibatalkan pada{" "}
+              {transaction.voided_at
+                ? format(new Date(transaction.voided_at), "dd MMM HH:mm")
+                : "-"}
             </p>
           </div>
         )}

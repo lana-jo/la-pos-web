@@ -7,9 +7,19 @@ import { revalidatePath } from "next/cache";
 type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 type TransactionItem = Database["public"]["Tables"]["transaction_items"]["Row"];
 
+export type DiscountSnapshot = {
+  id: string;
+  name: string;
+  code: string | null;
+  discount_type: string;
+  value: number;
+  max_discount: number | null;
+};
+
 export type TransactionWithDetails = Transaction & {
   cashier?: { full_name: string | null };
   customer?: { name: string | null };
+  discount?: DiscountSnapshot | null;
   items?: TransactionItem[];
 };
 
@@ -25,7 +35,8 @@ export async function fetchTransactions(filters?: {
       .select(`
         *,
         cashier:profiles!transactions_cashier_id_fkey(full_name),
-        customer:customers(name)
+        customer:customers(name),
+        discount:discounts(id, name, code, discount_type, value, max_discount)
       `)
       .order("created_at", { ascending: false });
 
@@ -67,20 +78,44 @@ export async function fetchTransactionItems(transactionId: string) {
   }
 }
 
-export async function voidTransaction(transactionId: string, reason: string, voidedBy: string) {
+export async function voidTransaction(
+  transactionId: string,
+  reason: string,
+  voidedBy: string
+) {
   try {
+    // Fetch transaction first to check if it had a discount applied
+    const { data: txData, error: txFetchError } = await (supabaseServer as any)
+      .from("transactions")
+      .select("discount_id, payment_status")
+      .eq("id", transactionId)
+      .single();
+
+    if (txFetchError) throw txFetchError;
+    if (txData?.payment_status === "cancelled") {
+      return { success: false, error: "Transaksi sudah dibatalkan sebelumnya" };
+    }
+
+    // Mark as cancelled
     const { error } = await (supabaseServer as any)
       .from("transactions")
       .update({
         payment_status: "cancelled",
         voided_at: new Date().toISOString(),
         voided_by: voidedBy,
-        void_reason: reason
+        void_reason: reason,
       })
       .eq("id", transactionId);
 
     if (error) throw error;
-    
+
+    // Decrement discount usage_count if a discount was applied
+    if (txData?.discount_id) {
+      await (supabaseServer as any).rpc("decrement_discount_usage", {
+        p_discount_id: txData.discount_id,
+      });
+    }
+
     revalidatePath("/dashboard/transactions");
     return { success: true };
   } catch (error: any) {
