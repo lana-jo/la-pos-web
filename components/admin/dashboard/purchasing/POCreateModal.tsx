@@ -50,7 +50,7 @@ export function POCreateModal({ isOpen, onClose, userId }: POCreateModalProps) {
       fetchProductsWithVariants()
     ]);
 
-    if (supResult.success) setSuppliers(supResult.data);
+    if (supResult.success) setSuppliers(supResult.data || []);
     setProducts(prodResult as Product[]);
     setLoading(false);
   };
