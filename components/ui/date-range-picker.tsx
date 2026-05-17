@@ -98,13 +98,13 @@ export function DatePickerWithRange({
       </Select>
 
       {selectedPreset === "custom" ? (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[190px] justify-start text-left font-normal bg-card",
+                  "w-[140px] sm:w-[190px] flex-1 sm:flex-none justify-start text-left font-normal bg-card",
                   !date?.from && "text-muted-foreground"
                 )}
               >
@@ -141,7 +141,7 @@ export function DatePickerWithRange({
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[190px] justify-start text-left font-normal bg-card",
+                  "w-[140px] sm:w-[190px] flex-1 sm:flex-none justify-start text-left font-normal bg-card",
                   !date?.to && "text-muted-foreground"
                 )}
               >
