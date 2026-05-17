@@ -136,7 +136,7 @@ export default function PurchasingPage() {
           setIsCreateOpen(false);
           loadOrders();
         }}
-        userId={userId}
+        userId={userId || null}
       />
 
       <PinVerificationModal
