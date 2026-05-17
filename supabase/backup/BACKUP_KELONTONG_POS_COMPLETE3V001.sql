@@ -2153,8 +2153,7 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES
     ('product-images', 'product-images', true,  5242880,
         ARRAY['image/jpeg','image/png','image/webp','image/gif']),
-    ('avatars',        'avatars',        false, 2097152,
-        ARRAY['image/jpeg','image/png','image/webp']),
+    ('avatars', 'avatars', true, 2097152, ARRAY['image/jpeg','image/png','image/webp']),
     ('receipts',       'receipts',       false, 1048576,
         ARRAY['image/jpeg','image/png','application/pdf']),
     ('attachments',    'attachments',    false, 10485760, NULL)
@@ -2163,15 +2162,23 @@ ON CONFLICT (id) DO UPDATE SET
     file_size_limit    = EXCLUDED.file_size_limit,
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+-- Buka akses BACA agar foto profil bisa tampil di UI siapa saja
+DROP POLICY IF EXISTS "Avatars: Public read access" ON storage.objects;
+CREATE POLICY "Avatars: Public read access" ON storage.objects
+    FOR SELECT TO public USING (bucket_id = 'avatars');
+
+-- Sisanya (Insert, Update, Delete) tetap dikunci HANYA untuk pemilik foto/akun
+DROP POLICY IF EXISTS "Avatars: User full access own folder" ON storage.objects;
+CREATE POLICY "Avatars: User full access own folder" ON storage.objects
+    FOR ALL TO authenticated
+    USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text)
+    WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Other Policies
 DROP POLICY IF EXISTS "product_images:public_select"  ON storage.objects;
 DROP POLICY IF EXISTS "product_images:manager_insert" ON storage.objects;
 DROP POLICY IF EXISTS "product_images:manager_update" ON storage.objects;
 DROP POLICY IF EXISTS "product_images:owner_delete"   ON storage.objects;
-DROP POLICY IF EXISTS "avatars:own_select"            ON storage.objects;
-DROP POLICY IF EXISTS "avatars:own_insert"            ON storage.objects;
-DROP POLICY IF EXISTS "avatars:own_update"            ON storage.objects;
-DROP POLICY IF EXISTS "avatars:own_delete"            ON storage.objects;
-DROP POLICY IF EXISTS "avatars:owner_all"             ON storage.objects;
 DROP POLICY IF EXISTS "receipts:own_select"           ON storage.objects;
 DROP POLICY IF EXISTS "receipts:cashier_insert"       ON storage.objects;
 DROP POLICY IF EXISTS "receipts:manager_select"       ON storage.objects;
@@ -2187,17 +2194,6 @@ CREATE POLICY "product_images:manager_update" ON storage.objects FOR UPDATE TO a
     USING (bucket_id = 'product-images' AND public.fn_is_owner_or_manager());
 CREATE POLICY "product_images:owner_delete"   ON storage.objects FOR DELETE TO authenticated
     USING (bucket_id = 'product-images' AND public.fn_is_owner());
-
-CREATE POLICY "avatars:own_select" ON storage.objects FOR SELECT TO authenticated
-    USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::TEXT);
-CREATE POLICY "avatars:own_insert" ON storage.objects FOR INSERT TO authenticated
-    WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::TEXT);
-CREATE POLICY "avatars:own_update" ON storage.objects FOR UPDATE TO authenticated
-    USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::TEXT);
-CREATE POLICY "avatars:own_delete" ON storage.objects FOR DELETE TO authenticated
-    USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::TEXT);
-CREATE POLICY "avatars:owner_all"  ON storage.objects FOR ALL TO authenticated
-    USING (bucket_id = 'avatars' AND public.fn_is_owner());
 
 CREATE POLICY "receipts:own_select"     ON storage.objects FOR SELECT TO authenticated
     USING (bucket_id = 'receipts' AND (storage.foldername(name))[1] = auth.uid()::TEXT);
