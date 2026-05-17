@@ -20,7 +20,7 @@ import { User, Mail, Phone, Shield, Calendar, Edit2, Save, X, Lock, ArrowLeft, M
 import { useProfileTheme } from "@/hooks/useProfileTheme";
 
 export default function ProfilePage() {
-  const { profile, user, loading } = useAuth();
+  const { profile, user, loading, refreshProfile } = useAuth();
   const { setTheme } = useProfileTheme();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -144,8 +144,8 @@ export default function ProfilePage() {
         setIsEditing(false);
         setErrors({});
         toast.success(result.message || "Profile berhasil diperbarui!");
-        // Refresh profile data
-        window.location.reload();
+        // Refresh profile data instead of full reload
+        await refreshProfile();
       } else {
         console.error(`[PROFILE] Save failed:`, {
           userId: profile.id,
@@ -192,7 +192,7 @@ export default function ProfilePage() {
     
     try {
       const result = await updateProfile(profile.id, {
-        full_name: formData.full_name.trim(),
+        full_name: formData.full_name.trim() || profile.full_name || user?.email?.split('@')[0] || 'User',
         theme_preference: themeValue,
       });
       
@@ -204,6 +204,7 @@ export default function ProfilePage() {
           timestamp: new Date().toISOString()
         });
         toast.success('Tema berhasil diperbarui');
+        await refreshProfile();
       } else {
         console.error(`[THEME] Profile page theme change failed:`, {
           userId: profile.id,
@@ -267,8 +268,8 @@ export default function ProfilePage() {
           source: 'profile_page',
           timestamp: new Date().toISOString()
         });
-        toast.success("Profile berhasil dibuat! Silakan refresh halaman.");
-        window.location.reload();
+        toast.success("Profile berhasil dibuat!");
+        await refreshProfile();
       } else {
         console.error(`[PROFILE] Create profile failed:`, {
           userId: user.id,
@@ -325,14 +326,15 @@ export default function ProfilePage() {
       formData.append('file', file);
       formData.append('userId', profile.id);
 
-      // Upload to your API endpoint (you'll need to create this)
+      // Upload to your API endpoint
       const response = await fetch('/api/upload-avatar', {
         method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
 
       const result = await response.json();
@@ -340,7 +342,7 @@ export default function ProfilePage() {
       if (result.success) {
         // Update profile with new avatar URL
         const updateResult = await updateProfile(profile.id, {
-          full_name: profile.full_name || '',
+          full_name: profile.full_name || user?.email?.split('@')[0] || 'User',
           avatar_url: result.avatarUrl
         });
 
@@ -352,21 +354,21 @@ export default function ProfilePage() {
             timestamp: new Date().toISOString()
           });
           toast.success('Avatar berhasil diperbarui!');
-          window.location.reload();
+          await refreshProfile();
         } else {
           throw new Error(updateResult.error || 'Failed to update profile');
         }
       } else {
         throw new Error(result.error || 'Upload failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[PROFILE] Avatar upload error:', {
         userId: profile.id,
         error,
         source: 'profile_page',
         timestamp: new Date().toISOString()
       });
-      toast.error('Gagal mengupload avatar. Silakan coba lagi.');
+      toast.error(error.message || 'Gagal mengupload avatar. Silakan coba lagi.');
     } finally {
       setIsUploadingAvatar(false);
     }

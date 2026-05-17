@@ -37,40 +37,47 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique filename
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `avatars/${userId}/${uuidv4()}.${fileExtension}`;
+    const fileExtension = file.name.split('.').pop() || 'png';
+    const fileName = `${userId}/${uuidv4()}.${fileExtension}`;
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('avatars')
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: false,
+        upsert: true,
       });
 
     if (uploadError) {
       console.error('Supabase storage upload error:', uploadError);
       return NextResponse.json(
-        { success: false, error: 'Failed to upload file' },
+        { success: false, error: `Failed to upload file: ${uploadError.message}` },
         { status: 500 }
       );
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
+    const { data } = supabase.storage
       .from('avatars')
       .getPublicUrl(fileName);
+
+    if (!data?.publicUrl) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to generate public URL' },
+        { status: 500 }
+      );
+    }
 
     console.log(`[API] Avatar uploaded successfully:`, {
       userId,
       fileName,
-      publicUrl: urlData.publicUrl,
+      publicUrl: data.publicUrl,
       timestamp: new Date().toISOString()
     });
 
     return NextResponse.json({
       success: true,
-      avatarUrl: urlData.publicUrl,
+      avatarUrl: data.publicUrl,
       fileName: fileName
     });
 
