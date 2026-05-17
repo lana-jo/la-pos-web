@@ -122,9 +122,13 @@ export default function PurchasingPage() {
           formatCurrency={formatCurrency}
         />
       ) : (
-        <div className="text-center py-12 border rounded-lg bg-muted/20">
-          <p className="text-muted-foreground">Data tidak ada, silahkan tambahkan data</p>
-        </div>
+        <Card className="border-dashed border-2">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
+            <Truck className="h-12 w-12 mb-4 opacity-20" />
+            <h3 className="text-lg font-semibold text-foreground">Tidak ada pesanan pembelian</h3>
+            <p className="text-sm">Data tidak ada, silahkan tambahkan data baru melalui tombol "Buat PO Baru".</p>
+          </CardContent>
+        </Card>
       )}
 
       <PODetailsModal
