@@ -7,6 +7,7 @@ import {
   endOfDay, 
   subDays
 } from 'date-fns'
+import { id } from 'date-fns/locale'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
