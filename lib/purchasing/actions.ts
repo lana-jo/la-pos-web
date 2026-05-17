@@ -21,7 +21,7 @@ export async function fetchPurchaseOrders() {
       .select(`
         *,
         supplier:suppliers(name),
-        creator:profiles!purchase_orders_ordered_by_fkey(full_name)
+        creator:profiles!purchase_orders_created_by_fkey(full_name)
       `)
       .order("created_at", { ascending: false });
 
@@ -102,18 +102,24 @@ export async function updatePOStatus(id: string, status: string, receivedBy?: st
 
     // If received, update all items received_qty to ordered_qty (full receipt)
     if (status === "received") {
-      const { data: items } = await (supabaseServer as any)
+      const { data: items, error: fetchError } = await (supabaseServer as any)
         .from("purchase_order_items")
         .select("id, ordered_qty")
         .eq("po_id", id);
-      
-      if (items) {
-        for (const item of items) {
-          await (supabaseServer as any)
-            .from("purchase_order_items")
-            .update({ received_qty: item.ordered_qty })
-            .eq("id", item.id);
-        }
+
+      if (fetchError) throw fetchError;
+
+      if (items && items.length > 0) {
+        const bulkUpdates = items.map((item: any) => ({
+          id: item.id,
+          received_qty: item.ordered_qty,
+        }));
+
+        const { error: updateError } = await (supabaseServer as any)
+          .from("purchase_order_items")
+          .upsert(bulkUpdates);
+
+        if (updateError) throw updateError;
       }
     }
 

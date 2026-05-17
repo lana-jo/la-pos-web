@@ -184,18 +184,21 @@ export async function updateProductWithVariants(
       await (supabase as any).from('product_variants').delete().in('id', idsToDelete)
     }
 
-    for (const v of variants) {
-      const variantData = {
-        ...v,
-        cost_price: v.inherit_cost_price ? (((product as any).cost_price || 0) * (v.conversion_qty || 1)) : v.cost_price,
-        updated_at: new Date().toISOString(),
-      }
+    const variantsToUpsert = variants.map(v => ({
+      ...v,
+      product_id: productId,
+      cost_price: v.inherit_cost_price ? (((product as any).cost_price || 0) * (v.conversion_qty || 1)) : v.cost_price,
+      updated_at: new Date().toISOString(),
+    }))
 
-      if (v.id) {
-        const { id, ...updateFields } = variantData
-        await (supabase as any).from('product_variants').update(updateFields as any).eq('id', v.id)
-      } else {
-        await (supabase as any).from('product_variants').insert({ ...variantData, product_id: productId } as any)
+    if (variantsToUpsert.length > 0) {
+      const { error: upsertError } = await (supabase as any)
+        .from('product_variants')
+        .upsert(variantsToUpsert)
+
+      if (upsertError) {
+        console.error('❌ [ERROR] Variants sync failed', upsertError)
+        return { success: false, error: 'Produk diperbarui tapi gagal sinkronisasi varian: ' + upsertError.message }
       }
     }
 

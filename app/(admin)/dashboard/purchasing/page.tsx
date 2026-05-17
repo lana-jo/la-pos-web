@@ -114,13 +114,17 @@ export default function PurchasingPage() {
         <div className="flex justify-center py-12">
           <LoadingSpinner />
         </div>
-      ) : (
+      ) : filteredOrders.length > 0 ? (
         <POTable
           orders={filteredOrders}
           onView={handleViewDetails}
           onReceive={handleReceiveOrder}
           formatCurrency={formatCurrency}
         />
+      ) : (
+        <div className="text-center py-12 border rounded-lg bg-muted/20">
+          <p className="text-muted-foreground">Data tidak ada, silahkan tambahkan data</p>
+        </div>
       )}
 
       <PODetailsModal
