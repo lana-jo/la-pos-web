@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { updateProfile } from "@/lib/profile/actions-new";
 import { createProfile } from "@/lib/auth/actions";
 import { ChangePasswordModal } from "@/components/ui/change-password-modal";
-import { User, Mail, Shield, Calendar, Edit2, Save, X, Lock, ArrowLeft, Moon, Sun, Monitor, Camera, Upload } from "lucide-react";
+import { ChangePinModal } from "@/components/ui/change-pin-modal";
+import { User, Mail, Phone, Shield, Calendar, Edit2, Save, X, Lock, ArrowLeft, Moon, Sun, Monitor, Camera, Upload, Key } from "lucide-react";
 import { useProfileTheme } from "@/hooks/useProfileTheme";
 
 export default function ProfilePage() {
@@ -26,11 +27,13 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
+    phone: "",
     theme_preference: "system" as 'light' | 'dark' | 'system',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -41,6 +44,7 @@ export default function ProfilePage() {
         setFormData({
           full_name: profile.full_name || "",
           email: user.email || "",
+          phone: profile.phone || "",
           theme_preference: profile.theme_preference || "system",
         });
       }, 0);
@@ -69,6 +73,7 @@ export default function ProfilePage() {
       setFormData({
         full_name: profile.full_name || "",
         email: user.email || "",
+        phone: profile.phone || "",
         theme_preference: profile.theme_preference || "system",
       });
     }
@@ -84,6 +89,10 @@ export default function ProfilePage() {
     } else if (formData.full_name.length > 100) {
       newErrors.full_name = "Nama maksimal 100 karakter";
     }
+
+    if (formData.phone && formData.phone.length > 20) {
+      newErrors.phone = "Nomor telepon terlalu panjang";
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -96,6 +105,7 @@ export default function ProfilePage() {
       userId: profile.id,
       formData: {
         full_name: formData.full_name.trim(),
+        phone: formData.phone.trim(),
         theme_preference: formData.theme_preference
       },
       source: 'profile_page',
@@ -117,8 +127,9 @@ export default function ProfilePage() {
     try {
       const result = await updateProfile(profile.id, {
         full_name: formData.full_name.trim(),
+        phone: formData.phone.trim() || null,
         theme_preference: formData.theme_preference,
-      } as { full_name: string; theme_preference: 'light' | 'dark' | 'system' });
+      });
       
       // Apply theme change immediately
       setTheme(formData.theme_preference);
@@ -485,8 +496,8 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Status</span>
-                  <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                    Aktif
+                  <Badge variant={profile.is_active ? "default" : "destructive"} className={profile.is_active ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}>
+                    {profile.is_active ? "Aktif" : "Nonaktif"}
                   </Badge>
                 </div>
                 <Separator className="bg-border" />
@@ -571,6 +582,28 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                <div className="grid gap-2">
+                  <Label htmlFor="phone" className="pos-form-label">Nomor Telepon</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      disabled={!isEditing}
+                      className={cn(
+                        "input-background pl-10",
+                        errors.phone && "border-red-500 focus:border-red-500"
+                      )}
+                      placeholder="Masukkan nomor telepon"
+                    />
+                  </div>
+                  {errors.phone && (
+                    <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
+                  )}
+                </div>
+
                 <Separator className="bg-border" />
 
                 <div className="space-y-4">
@@ -639,6 +672,36 @@ export default function ProfilePage() {
                 </Button>
               </div>
 
+              {/* Change PIN */}
+              <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-background/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                    <Key className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-foreground">Ubah PIN Keamanan</h4>
+                    <p className="text-sm text-muted-foreground">
+                      PIN 6-digit untuk verifikasi transaksi kasir
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    console.log(`[PROFILE] Change PIN button clicked:`, {
+                      userId: profile?.id,
+                      source: 'profile_page',
+                      timestamp: new Date().toISOString()
+                    });
+                    setIsPinModalOpen(true);
+                  }}
+                  className="border-primary-brand text-primary-brand hover:bg-primary/5 transition-all duration-200"
+                >
+                  Ubah PIN
+                </Button>
+              </div>
+
               {/* Theme Preference */}
               <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg bg-background/50 transition-colors">
                 <div className="flex items-center gap-3">
@@ -697,6 +760,15 @@ export default function ProfilePage() {
           <ChangePasswordModal
             isOpen={isPasswordModalOpen}
             onClose={() => setIsPasswordModalOpen(false)}
+            userId={profile.id}
+          />
+        )}
+
+        {/* Change PIN Modal */}
+        {profile && (
+          <ChangePinModal
+            isOpen={isPinModalOpen}
+            onClose={() => setIsPinModalOpen(false)}
             userId={profile.id}
           />
         )}
