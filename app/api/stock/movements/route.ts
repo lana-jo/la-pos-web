@@ -106,7 +106,10 @@ export async function POST(request: Request) {
 
     if (movementError) {
       console.error("Supabase Movement Error:", movementError);
-      throw new Error(movementError.message || "Failed to create stock movement");
+      return NextResponse.json(
+        { error: movementError.message || "Failed to create stock movement" },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({
