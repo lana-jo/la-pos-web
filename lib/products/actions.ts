@@ -41,6 +41,18 @@ export async function createProductWithVariants(formData: FormData) {
       return { success: false, error: `Barcode "${product.barcode}" sudah digunakan oleh produk "${existingBarcode.name}"` }
     }
 
+    // Check for duplicate product name (case-insensitive)
+    const { data: existingNames } = await (supabase as any)
+      .from('products')
+      .select('id, name')
+      .ilike('name', product.name)
+      .eq('is_active', true)
+      .limit(1)
+
+    if (existingNames && existingNames.length > 0) {
+      return { success: false, error: `Produk dengan nama "${product.name}" sudah terdaftar` }
+    }
+
     // Insert product
     const { data: newProduct, error: productError } = await (supabase as any)
       .from('products')
@@ -121,6 +133,21 @@ export async function updateProductWithVariants(
 
       if (existingBarcode) {
         return { success: false, error: `Barcode "${product.barcode}" sudah digunakan oleh produk "${existingBarcode.name}"` }
+      }
+    }
+
+    // Check for duplicate product name (case-insensitive)
+    if (product.name) {
+      const { data: existingNames } = await (supabase as any)
+        .from('products')
+        .select('id, name')
+        .ilike('name', product.name)
+        .eq('is_active', true)
+        .neq('id', productId)
+        .limit(1)
+
+      if (existingNames && existingNames.length > 0) {
+        return { success: false, error: `Produk dengan nama "${product.name}" sudah terdaftar` }
       }
     }
 
