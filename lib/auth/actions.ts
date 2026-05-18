@@ -1,7 +1,7 @@
 'use server'
 
 import { safeAction } from '@/lib/utils/action-wrapper'
-import { supabaseServer } from '@/lib/supabase/server'
+import { supabaseServer, createSupabaseServerClient } from '@/lib/supabase/server'
 import bcrypt from 'bcryptjs'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -89,7 +89,7 @@ export async function loginWithCookie(email: string, password: string) {
 
     // 4. Berhasil! Kembalikan role untuk keperluan redirect di UI
     return { success: true, role: profile.role }
-    
+
   } catch (err) {
     console.error('Login action error:', err)
     return { success: false, error: 'Terjadi kesalahan sistem saat login' }
@@ -106,12 +106,12 @@ const db = (table: string) => client.from(table)
 export async function createProfile(userId: string, email: string, fullName?: string) {
   try {
     const { error } = await db('profiles').upsert(
-        { 
-          id: userId, 
-          full_name: fullName || email, 
-          role: 'customer' 
-        },
-        { onConflict: 'id' }
+      {
+        id: userId,
+        full_name: fullName || email,
+        role: 'customer'
+      },
+      { onConflict: 'id' }
     )
 
     if (error) throw error
@@ -123,17 +123,17 @@ export async function createProfile(userId: string, email: string, fullName?: st
 }
 
 export async function createCashierAccount(data: {
-  email:    string
+  email: string
   password: string
   fullName: string
-  pin:      string
+  pin: string
 }) {
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.admin.createUser({
-      email:          data.email,
-      password:       data.password,
-      email_confirm:  true,
-      user_metadata:  { full_name: data.fullName, role: 'cashier' },
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.fullName, role: 'cashier' },
     })
 
     if (authError) throw authError
@@ -141,8 +141,8 @@ export async function createCashierAccount(data: {
     const pinHash = await bcrypt.hash(data.pin, 10)
 
     const { error: profileError } = await db('profiles')
-        .update({ pin_hash: pinHash, role: 'cashier' })
-        .eq('id', authData.user.id)   // ← was missing! without this, ALL profiles get updated
+      .update({ pin_hash: pinHash, role: 'cashier' })
+      .eq('id', authData.user.id)   // ← was missing! without this, ALL profiles get updated
 
     if (profileError) {
       // Roll back the auth user if profile update fails
@@ -158,14 +158,14 @@ export async function createCashierAccount(data: {
 }
 
 export async function createAdminAccount(data: {
-  email:    string
+  email: string
   password: string
   fullName: string
 }) {
   try {
     const { data: authData, error: authError } = await supabaseServer.auth.admin.createUser({
-      email:         data.email,
-      password:      data.password,
+      email: data.email,
+      password: data.password,
       email_confirm: true,
       user_metadata: { full_name: data.fullName, role: 'admin' },
     })
@@ -173,8 +173,8 @@ export async function createAdminAccount(data: {
     if (authError) throw authError
 
     const { error: profileError } = await db('profiles')
-        .update({ role: 'admin' })
-        .eq('id', authData.user.id)
+      .update({ role: 'admin' })
+      .eq('id', authData.user.id)
 
     if (profileError) {
       await supabaseServer.auth.admin.deleteUser(authData.user.id)
@@ -188,17 +188,26 @@ export async function createAdminAccount(data: {
   }
 }
 
-export async function verifyCashierPin(pin: string): Promise<boolean> {
+export async function verifyCashierPin(pin: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data, error } = await (supabaseServer as any).rpc('fn_verify_pin', {
-      p_pin: pin,
+    const supabase = await createSupabaseServerClient()
+    const { data, error } = await (supabase as any).rpc('fn_verify_pin', {
+      pinhash: pin,
     })
 
-    if (error) throw error
-    return data ?? false
+    if (error) {
+      console.error('RPC Error verifying PIN:', error)
+      return { success: false, error: 'Gagal memverifikasi PIN (Database error)' }
+    }
+    
+    if (data === true) {
+      return { success: true }
+    } else {
+      return { success: false, error: 'PIN salah. Silakan coba lagi.' }
+    }
   } catch (error) {
     console.error('Error verifying PIN:', error)
-    return false
+    return { success: false, error: 'Terjadi kesalahan sistem saat verifikasi PIN' }
   }
 }
 
@@ -217,25 +226,25 @@ export async function checkRole(requiredRoles: ('owner' | 'manager' | 'cashier')
 }
 
 export async function logCashierAction(data: {
-  cashierId:   string
-  actionType:  'void' | 'discount' | 'refund' | 'stock_adjustment' | 'shift_open' | 'shift_close'
-  targetId?:   string
+  cashierId: string
+  actionType: 'void' | 'discount' | 'refund' | 'stock_adjustment' | 'shift_open' | 'shift_close'
+  targetId?: string
   targetType?: string
   pinVerified: boolean
-  notes?:      string
-  metadata?:   any
-  shiftId?:    string
+  notes?: string
+  metadata?: any
+  shiftId?: string
 }) {
   try {
     const { error } = await db('cashier_actions').insert({
-      cashier_id:  data.cashierId,
-      shift_id:    data.shiftId    ?? null,
+      cashier_id: data.cashierId,
+      shift_id: data.shiftId ?? null,
       action_type: data.actionType,
-      target_id:   data.targetId   ?? null,
+      target_id: data.targetId ?? null,
       target_type: data.targetType ?? null,
       pin_verified: data.pinVerified,
-      notes:       data.notes      ?? null,
-      metadata:    data.metadata   ?? null,
+      notes: data.notes ?? null,
+      metadata: data.metadata ?? null,
     })
 
     if (error) throw error
@@ -249,14 +258,14 @@ export async function logCashierAction(data: {
 export async function updateUserRole(userId: string, role: 'admin' | 'cashier' | 'customer') {
   try {
     const { error: profileError } = await db('profiles')
-        .update({ role })
-        .eq('id', userId)
+      .update({ role })
+      .eq('id', userId)
 
     if (profileError) throw profileError
 
     const { error: authError } = await supabaseServer.auth.admin.updateUserById(
-        userId,
-        { user_metadata: { role } }
+      userId,
+      { user_metadata: { role } }
     )
 
     if (authError) throw authError

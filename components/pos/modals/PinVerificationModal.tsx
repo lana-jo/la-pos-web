@@ -36,21 +36,21 @@ export function PinVerificationModal({
   };
 
   const handleVerify = async () => {
-    if (pin.length < 4) {
-      toast.error("PIN minimal 4 digit");
+    if (pin.length !== 6) {
+      toast.error("PIN harus 6 digit");
       return;
     }
 
     setLoading(true);
     try {
-      const isValid = await verifyCashierPin(pin);
-      if (isValid) {
+      const result = await verifyCashierPin(pin);
+      if (result.success) {
         toast.success("Verifikasi berhasil");
         onSuccess();
         onClose();
         setPin("");
       } else {
-        toast.error("PIN salah");
+        toast.error(result.error || "PIN salah");
         setPin("");
       }
     } catch (error) {
@@ -129,7 +129,7 @@ export function PinVerificationModal({
             <Button
               className="w-full mt-8 h-14 text-lg font-bold pos-action-button rounded-2xl"
               onClick={handleVerify}
-              disabled={loading || pin.length < 4}
+              disabled={loading || pin.length !== 6}
             >
               {loading ? (
                 <div className="pos-loading-spinner h-6 w-6 border-2" />

@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Database } from "@/types";
 
 type Discount = Database["public"]["Tables"]["discounts"]["Row"];
@@ -17,12 +23,6 @@ interface DiscountModalProps {
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }
-
-const toDatetimeLocal = (iso: string | null | undefined) => {
-  if (!iso) return "";
-  // Convert ISO → format accepted by <input type="datetime-local">
-  return iso.slice(0, 16);
-};
 
 export function DiscountModal({
   discount,
@@ -40,8 +40,8 @@ export function DiscountModal({
     max_usage: null as number | null,
     is_active: true,
     is_stackable: false,
-    valid_from: toDatetimeLocal(new Date().toISOString()),
-    valid_until: "" as string,
+    valid_from: new Date().toISOString().split("T")[0],
+    valid_until: null as string | null
   });
   const [loading, setLoading] = useState(false);
 
@@ -50,15 +50,15 @@ export function DiscountModal({
       setFormData({
         name: discount.name,
         code: discount.code || "",
-        discount_type: discount.discount_type as "percentage" | "fixed",
+        discount_type: discount.discount_type,
         value: discount.value,
         min_purchase: discount.min_purchase,
         max_discount: discount.max_discount,
         max_usage: discount.max_usage,
         is_active: discount.is_active,
         is_stackable: discount.is_stackable,
-        valid_from: toDatetimeLocal(discount.valid_from),
-        valid_until: toDatetimeLocal(discount.valid_until),
+        valid_from: discount.valid_from.split("T")[0],
+        valid_until: discount.valid_until ? discount.valid_until.split("T")[0] : null
       });
     } else {
       setFormData({
@@ -71,8 +71,8 @@ export function DiscountModal({
         max_usage: null,
         is_active: true,
         is_stackable: false,
-        valid_from: toDatetimeLocal(new Date().toISOString()),
-        valid_until: "",
+        valid_from: new Date().toISOString().split("T")[0],
+        valid_until: null
       });
     }
   }, [discount, isOpen]);
@@ -80,69 +80,64 @@ export function DiscountModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const payload = {
+    
+    // Process numeric fields
+    const submissionData = {
       ...formData,
-      code: formData.code.trim() || null,
-      // Convert datetime-local strings back to ISO; if empty treat as null
-      valid_from: formData.valid_from
-        ? new Date(formData.valid_from).toISOString()
-        : new Date().toISOString(),
-      valid_until: formData.valid_until
-        ? new Date(formData.valid_until).toISOString()
-        : null,
+      value: Number(formData.value),
+      min_purchase: Number(formData.min_purchase),
+      max_discount: formData.max_discount ? Number(formData.max_discount) : null,
+      max_usage: formData.max_usage ? Number(formData.max_usage) : null,
+      code: formData.code || null,
+      valid_until: formData.valid_until || null
     };
-    await onSubmit(payload);
-    setLoading(false);
-    onClose();
+
+    try {
+      await onSubmit(submissionData);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting discount:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{discount ? "Edit Diskon" : "Tambah Diskon Baru"}</DialogTitle>
-          <DialogDescription>
-            {discount
-              ? "Perbarui pengaturan diskon yang sudah ada."
-              : "Isi detail untuk membuat diskon baru."}
-          </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name + Code */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="disc-name">Nama Diskon</Label>
-              <Input
-                id="disc-name"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="disc-code">Kode Promo (Opsional)</Label>
-              <Input
-                id="disc-code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                placeholder="e.g. DISKON20"
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nama Diskon</Label>
+            <Input
+              id="name"
+              required
+              placeholder="Misal: Promo Akhir Tahun"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
           </div>
 
-          {/* Type + Value */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="disc-type">Tipe Diskon</Label>
+              <Label htmlFor="code">Kode Promo (Opsional)</Label>
+              <Input
+                id="code"
+                placeholder="PROMO2024"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="discount_type">Tipe Potongan</Label>
               <Select
                 value={formData.discount_type}
-                onValueChange={(v: "percentage" | "fixed") =>
-                  setFormData({ ...formData, discount_type: v, max_discount: null })
-                }
+                onValueChange={(value: "percentage" | "fixed") => setFormData({ ...formData, discount_type: value })}
               >
-                <SelectTrigger id="disc-type">
-                  <SelectValue />
+                <SelectTrigger id="discount_type">
+                  <SelectValue placeholder="Pilih tipe" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="percentage">Persentase (%)</SelectItem>
@@ -150,125 +145,111 @@ export function DiscountModal({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="disc-value">
-                Nilai {formData.discount_type === "percentage" ? "(%)" : "(Rp)"}
-              </Label>
-              <Input
-                id="disc-value"
-                type="number"
-                required
-                min={1}
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 0 })}
-              />
-            </div>
           </div>
 
-          {/* Min purchase + Max discount (only for percentage) */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="disc-min">Min. Pembelian (Rp)</Label>
+              <Label htmlFor="value">Nilai Potongan</Label>
               <Input
-                id="disc-min"
+                id="value"
+                type="number"
+                required
+                min={0}
+                value={formData.value}
+                onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="min_purchase">Minimal Pembelian</Label>
+              <Input
+                id="min_purchase"
                 type="number"
                 min={0}
                 value={formData.min_purchase}
-                onChange={(e) =>
-                  setFormData({ ...formData, min_purchase: parseInt(e.target.value) || 0 })
-                }
+                onChange={(e) => setFormData({ ...formData, min_purchase: Number(e.target.value) })}
               />
             </div>
-            {formData.discount_type === "percentage" && (
-              <div className="space-y-2">
-                <Label htmlFor="disc-maxd">Maks. Potongan (Rp, Opsional)</Label>
-                <Input
-                  id="disc-maxd"
-                  type="number"
-                  min={0}
-                  value={formData.max_discount ?? ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      max_discount: e.target.value ? parseInt(e.target.value) : null,
-                    })
-                  }
-                />
-              </div>
-            )}
           </div>
 
-          {/* Max usage */}
-          <div className="space-y-2">
-            <Label htmlFor="disc-usage">Maks. Penggunaan (Opsional — kosongkan = tidak terbatas)</Label>
-            <Input
-              id="disc-usage"
-              type="number"
-              min={1}
-              value={formData.max_usage ?? ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  max_usage: e.target.value ? parseInt(e.target.value) : null,
-                })
-              }
-            />
-          </div>
-
-          {/* Validity period */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="disc-from">Berlaku Dari</Label>
+              <Label htmlFor="max_discount">Maksimal Potongan (Opsional)</Label>
               <Input
-                id="disc-from"
-                type="datetime-local"
+                id="max_discount"
+                type="number"
+                placeholder="Tak terbatas"
+                value={formData.max_discount ?? ""}
+                onChange={(e) => setFormData({ ...formData, max_discount: e.target.value === "" ? null : Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="max_usage">Batas Penggunaan (Opsional)</Label>
+              <Input
+                id="max_usage"
+                type="number"
+                placeholder="Tak terbatas"
+                value={formData.max_usage ?? ""}
+                onChange={(e) => setFormData({ ...formData, max_usage: e.target.value === "" ? null : Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="valid_from">Berlaku Dari</Label>
+              <Input
+                id="valid_from"
+                type="date"
                 required
                 value={formData.valid_from}
                 onChange={(e) => setFormData({ ...formData, valid_from: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="disc-until">Berlaku Sampai (Opsional)</Label>
+              <Label htmlFor="valid_until">Berlaku Hingga (Opsional)</Label>
               <Input
-                id="disc-until"
-                type="datetime-local"
-                value={formData.valid_until}
-                onChange={(e) => setFormData({ ...formData, valid_until: e.target.value })}
+                id="valid_until"
+                type="date"
+                value={formData.valid_until ?? ""}
+                onChange={(e) => setFormData({ ...formData, valid_until: e.target.value === "" ? null : e.target.value })}
               />
             </div>
           </div>
 
-          {/* Toggles */}
-          <div className="flex items-center gap-8 pt-1">
-            <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 gap-4 pt-2">
+            <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <Label htmlFor="is_active">Status Aktif</Label>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  Apakah diskon ini bisa digunakan saat ini
+                </p>
+              </div>
               <Switch
-                id="disc-active"
+                id="is_active"
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
-              <Label htmlFor="disc-active">Status Aktif</Label>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <Label htmlFor="is_stackable">Dapat Ditumpuk</Label>
+                <p className="text-[0.8rem] text-muted-foreground">
+                  Bisa digabung dengan diskon lainnya
+                </p>
+              </div>
               <Switch
-                id="disc-stackable"
+                id="is_stackable"
                 checked={formData.is_stackable}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_stackable: checked })}
               />
-              <Label htmlFor="disc-stackable" className="text-sm">
-                Bisa Digabung
-                <span className="block text-xs text-muted-foreground font-normal">
-                  Izinkan dengan diskon lain
-                </span>
-              </Label>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Batal
-            </Button>
+          <DialogFooter className="pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Batal</Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Menyimpan..." : "Simpan"}
+              {loading ? "Menyimpan..." : (discount ? "Simpan Perubahan" : "Tambah Diskon")}
             </Button>
           </DialogFooter>
         </form>

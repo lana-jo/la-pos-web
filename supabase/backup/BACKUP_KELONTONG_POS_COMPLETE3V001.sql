@@ -778,11 +778,11 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.fn_verify_pin(p_pin TEXT)
+CREATE OR REPLACE FUNCTION public.fn_verify_pin(p_pin TEXT, p_user_id UUID DEFAULT auth.uid())
 RETURNS BOOLEAN LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_hash TEXT;
 BEGIN
-    SELECT pin_hash INTO v_hash FROM public.profiles WHERE id = auth.uid();
+    SELECT pin_hash INTO v_hash FROM public.profiles WHERE id = p_user_id;
     IF v_hash IS NULL THEN RETURN false; END IF;
     RETURN v_hash = crypt(p_pin, v_hash);
 END;
@@ -2217,7 +2217,7 @@ GRANT EXECUTE ON FUNCTION public.fn_get_user_role()                             
 GRANT EXECUTE ON FUNCTION public.fn_is_owner()                                              TO authenticated;
 GRANT EXECUTE ON FUNCTION public.fn_is_owner_or_manager()                                  TO authenticated;
 GRANT EXECUTE ON FUNCTION public.fn_is_staff()                                              TO authenticated;
-GRANT EXECUTE ON FUNCTION public.fn_verify_pin(TEXT)                                        TO authenticated;
+GRANT EXECUTE ON FUNCTION public.fn_verify_pin(TEXT, UUID)                                  TO authenticated;
 GRANT EXECUTE ON FUNCTION public.fn_set_pin(TEXT)                                           TO authenticated;
 GRANT EXECUTE ON FUNCTION public.fn_adjust_stock(UUID, INTEGER, public.movement_type, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.fn_close_shift(UUID, INTEGER, TEXT)                        TO authenticated;

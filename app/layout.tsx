@@ -33,20 +33,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <BodyWrapper>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-            storageKey="pos-theme"
-          >
+        <ThemeProvider>
+          <BodyWrapper>
             <AuthProvider>
               {children}
-              <Toaster richColors position="top-center" /> {/* ✅ tambahkan ini */}
+              <Toaster richColors position="top-center" />
             </AuthProvider>
-          </ThemeProvider>
-        </BodyWrapper>
+          </BodyWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -18,10 +18,12 @@ import {
   TransactionHistoryModal,
   TransactionDetailModal,
   EndOfDayReportModal,
+  PinVerificationModal,
 } from "@/components/pos/modals";
 import { usePOSCameraScanner } from "@/hooks/usePOSCameraScanner";
 import { useUserProfile, useProducts, useTransactions, useReports } from "@/hooks/usePOSData";
 import { useModalState } from "@/hooks/useModalState";
+import { usePinVerification } from "@/hooks/usePinVerification";
 import { useCartStore } from "@/store/cart";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/pos/utils";
@@ -70,6 +72,15 @@ export default function POSPage() {
     setSelectedTransaction,
     resetManualProduct,
   } = useModalState();
+
+  const {
+    isPinModalOpen,
+    requestVerification,
+    handlePinSuccess,
+    handlePinClose,
+    pinTitle,
+    pinDescription
+  } = usePinVerification();
 
   // Camera scanner hook
   const cameraScanner = usePOSCameraScanner({
@@ -241,12 +252,24 @@ export default function POSPage() {
   };
   const handleManualEntry = () => openModal("showManualEntry");
   const handleTransactionHistory = () => {
-    openModal("showTransactionHistory");
-    fetchTransactions();
+    requestVerification(
+      () => {
+        openModal("showTransactionHistory");
+        fetchTransactions();
+      },
+      "Verifikasi Riwayat",
+      "Masukkan PIN untuk melihat riwayat transaksi"
+    );
   };
   const handleEndOfDayReport = () => {
-    openModal("showEndOfDayReport");
-    generateReport();
+    requestVerification(
+      () => {
+        openModal("showEndOfDayReport");
+        generateReport();
+      },
+      "Verifikasi Laporan",
+      "Masukkan PIN untuk melihat laporan akhir hari"
+    );
   };
 
   // Redirect if not authenticated
@@ -403,6 +426,14 @@ export default function POSPage() {
           isOpen={modalState.showCameraScanner}
           onClose={() => closeModal("showCameraScanner")}
           onBarcodeDetected={handleCameraBarcodeDetected}
+        />
+
+        <PinVerificationModal
+          isOpen={isPinModalOpen}
+          onClose={handlePinClose}
+          onSuccess={handlePinSuccess}
+          title={pinTitle}
+          description={pinDescription}
         />
       </div>
     </ErrorBoundary>

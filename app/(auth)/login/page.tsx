@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { loginWithCookie } from '@/lib/auth/actions' 
 import { Button } from '@/components/ui/button'
@@ -18,12 +18,17 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 export default function LoginPage() {
+  const [mounted, setMounted] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const router = useRouter()
   const { theme, setTheme } = useProfileTheme()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,7 +74,15 @@ export default function LoginPage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10">
-              {theme === 'light' ? <Sun className="h-5 w-5" /> : theme === 'dark' ? <Moon className="h-5 w-5" /> : <Laptop className="h-5 w-5" />}
+              {!mounted ? (
+                <div className="h-5 w-5" />
+              ) : theme === 'light' ? (
+                <Sun className="h-5 w-5" />
+              ) : theme === 'dark' ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Laptop className="h-5 w-5" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

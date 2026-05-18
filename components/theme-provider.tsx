@@ -12,7 +12,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       enableSystem
       storageKey="pos-theme"
       themes={['light', 'dark', 'system']}
-      disableTransitionOnChange={false}
+      disableTransitionOnChange
       {...props}
     >
       {children}

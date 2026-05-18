@@ -222,189 +222,188 @@ export function CartPanel({ onAddItem }: CartPanelProps) {
 
   return (
     <>
-    <Card className="w-full pos-modal-content border-none shadow-xl">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
-          <div className="flex items-center gap-2 text-primary">
-            <div className="w-2 h-6 bg-primary-brand rounded-full"></div>
-            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-primary-brand" />
-            Keranjang Belanja
-            <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">{getTotalItems()} item</Badge>
-          </div>
-          <div className="flex items-center gap-2">
-            {onAddItem && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs sm:text-sm border-primary-brand text-primary-brand hover:bg-primary-brand hover:text-white"
-                onClick={onAddItem}
-              >
-                <AddIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                <span className="hidden sm:inline">Tambah Item</span>
+      <Card className="w-full pos-modal-content border-none shadow-xl">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center justify-between text-lg sm:text-xl">
+            <div className="flex items-center gap-2 text-primary">
+              <div className="w-2 h-6 bg-primary-brand rounded-full"></div>
+              <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-primary-brand" />
+              Keranjang Belanja
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">{getTotalItems()} item</Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              {onAddItem && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs sm:text-sm border-primary-brand text-primary-brand hover:bg-primary-brand hover:text-white"
+                  onClick={onAddItem}
+                >
+                  <AddIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="hidden sm:inline">Tambah Item</span>
+                </Button>
+              )}
+              <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={clearCart}>
+                Bersihkan
               </Button>
-            )}
-            <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={clearCart}>
-              Bersihkan
-            </Button>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto pr-2">
-          {cart.map((item) => (
-            <div
-              key={item.product.id + (item.variant?.id || '')}
-              className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm sm:text-base truncate text-foreground">
-                  {item.variant ? `${item.product.name} - ${item.variant.variant_name}` : item.product.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatCurrency(item.unit_price)} × {item.quantity}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto pr-2">
+            {cart.map((item) => (
+              <div
+                key={item.product.id + (item.variant?.id || '')}
+                className="flex items-center justify-between p-3 rounded-lg bg-background/50 border border-border/50"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm sm:text-base truncate text-foreground">
+                    {item.variant ? `${item.product.name} - ${item.variant.variant_name}` : item.product.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatCurrency(item.unit_price)} × {item.quantity}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 hover:bg-primary/10"
+                      onClick={() =>
+                        updateItemQuantity(item.product.id, item.quantity - 1, item.variant?.id || null)
+                      }
+                      disabled={item.quantity <= 1}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-6 text-center font-bold text-sm text-foreground">
+                      {item.quantity}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 hover:bg-primary/10"
+                      onClick={() =>
+                        updateItemQuantity(item.product.id, item.quantity + 1, item.variant?.id || null)
+                      }
+                      disabled={
+                        item.product.track_stock ? (
+                          item.variant ? (
+                            item.quantity >= Math.floor((item.product.cached_stock ?? item.product.stock ?? 0) / (item.variant.conversion_qty || 1))
+                          ) : (
+                            item.quantity >= (item.product.cached_stock ?? item.product.stock ?? 0)
+                          )
+                        ) : false
+                      }
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 hover:bg-primary/10"
-                    onClick={() =>
-                      updateItemQuantity(item.product.id, item.quantity - 1, item.variant?.id || null)
-                    }
-                    disabled={item.quantity <= 1}
+                    className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
+                    onClick={() => removeItem(item.product.id, item.variant?.id || null)}
                   >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="w-6 text-center font-bold text-sm text-foreground">
-                    {item.quantity}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 hover:bg-primary/10"
-                    onClick={() =>
-                      updateItemQuantity(item.product.id, item.quantity + 1, item.variant?.id || null)
-                    }
-                    disabled={
-                      item.product.track_stock ? (
-                        item.variant ? (
-                          item.quantity >= Math.floor((item.product.cached_stock ?? item.product.stock ?? 0) / (item.variant.conversion_qty || 1))
-                        ) : (
-                          item.quantity >= (item.product.cached_stock ?? item.product.stock ?? 0)
-                        )
-                      ) : false
-                    }
-                  >
-                    <Plus className="h-3 w-3" />
+                    <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
-                  onClick={() => removeItem(item.product.id, item.variant?.id || null)}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="border-t border-border pt-4 space-y-2">
-          {/* Subtotal (only shown when discount is active) */}
-          {appliedDiscount && (
-            <div className="flex justify-between items-center text-sm text-muted-foreground">
-              <span>Subtotal</span>
-              <span>{formatCurrency(getSubtotal())}</span>
-            </div>
-          )}
-
-          {/* Discount row */}
-          {appliedDiscount && (
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-1.5">
-                <Tag className="h-3.5 w-3.5 text-green-600" />
-                <span className="text-green-700 font-medium truncate max-w-[140px]">{appliedDiscount.name}</span>
-                {appliedDiscount.code && (
-                  <Badge variant="secondary" className="text-xs font-mono px-1 py-0">{appliedDiscount.code}</Badge>
-                )}
-                <button
-                  onClick={() => applyDiscount(null)}
-                  className="h-4 w-4 rounded-full bg-muted hover:bg-destructive/20 flex items-center justify-center"
-                  title="Hapus diskon"
-                >
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              </div>
-              <span className="text-green-600 font-semibold">−{formatCurrency(getDiscountAmount())}</span>
-            </div>
-          )}
-
-          {/* Total */}
-          <div className="flex justify-between items-center">
-            <span className="text-base sm:text-lg font-bold text-muted-foreground">Total:</span>
-            <span className="text-xl sm:text-2xl font-black text-primary-brand">{formatCurrency(getTotal())}</span>
+            ))}
           </div>
 
-          {/* Discount button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className={`w-full h-9 text-xs font-medium gap-1.5 ${
-              appliedDiscount
-                ? "border-green-500 text-green-700 bg-green-50/50 hover:bg-green-50"
-                : "border-dashed border-primary/40 text-primary hover:bg-primary/5"
-            }`}
-            onClick={handleDiscountClick}
-            disabled={isProcessing}
-          >
-            <Tag className="h-3.5 w-3.5" />
-            {appliedDiscount ? "Ganti Diskon" : "Terapkan Diskon"}
-          </Button>
+          <div className="border-t border-border pt-4 space-y-2">
+            {/* Subtotal (only shown when discount is active) */}
+            {appliedDiscount && (
+              <div className="flex justify-between items-center text-sm text-muted-foreground">
+                <span>Subtotal</span>
+                <span>{formatCurrency(getSubtotal())}</span>
+              </div>
+            )}
 
-          {/* Payment buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            {/* Discount row */}
+            {appliedDiscount && (
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5 text-green-600" />
+                  <span className="text-green-700 font-medium truncate max-w-[140px]">{appliedDiscount.name}</span>
+                  {appliedDiscount.code && (
+                    <Badge variant="secondary" className="text-xs font-mono px-1 py-0">{appliedDiscount.code}</Badge>
+                  )}
+                  <button
+                    onClick={() => applyDiscount(null)}
+                    className="h-4 w-4 rounded-full bg-muted hover:bg-destructive/20 flex items-center justify-center"
+                    title="Hapus diskon"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </div>
+                <span className="text-green-600 font-semibold">−{formatCurrency(getDiscountAmount())}</span>
+              </div>
+            )}
+
+            {/* Total */}
+            <div className="flex justify-between items-center">
+              <span className="text-base sm:text-lg font-bold text-muted-foreground">Total:</span>
+              <span className="text-xl sm:text-2xl font-black text-primary-brand">{formatCurrency(getTotal())}</span>
+            </div>
+
+            {/* Discount button */}
             <Button
-              className="w-full h-11 pos-button-primary text-sm shadow-lg font-bold"
+              variant="outline"
               size="sm"
-              onClick={handleCashPayment}
-              disabled={isProcessing || cart.length === 0}
+              className={`w-full h-9 text-xs font-medium gap-1.5 ${appliedDiscount
+                  ? "border-green-500 text-green-700 bg-green-50/50 hover:bg-green-50"
+                  : "border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                }`}
+              onClick={handleDiscountClick}
+              disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Banknote className="h-4 w-4 mr-2" />Bayar Tunai</>}
+              <Tag className="h-3.5 w-3.5" />
+              {appliedDiscount ? "Ganti Diskon" : "Terapkan Diskon"}
             </Button>
-            <Button
-              className="w-full h-11 pos-qris-button text-sm shadow-lg font-bold"
-              size="sm"
-              onClick={handlePayment}
-              disabled={isProcessing || cart.length === 0}
-            >
-              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShoppingCart className="h-4 w-4 mr-2" />Bayar QRIS</>}
-            </Button>
+
+            {/* Payment buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <Button
+                className="w-full h-11 pos-button-primary text-sm shadow-lg font-bold"
+                size="sm"
+                onClick={handleCashPayment}
+                disabled={isProcessing || cart.length === 0}
+              >
+                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Banknote className="h-4 w-4 mr-2" />Bayar Tunai</>}
+              </Button>
+              <Button
+                className="w-full h-11 pos-qris-button text-sm shadow-lg font-bold"
+                size="sm"
+                onClick={handlePayment}
+                disabled={isProcessing || cart.length === 0}
+              >
+                {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ShoppingCart className="h-4 w-4 mr-2" />Bayar QRIS</>}
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
 
-    {/* PIN gate */}
-    <PinVerificationModal
-      isOpen={showPinModal}
-      onClose={() => setShowPinModal(false)}
-      onSuccess={handlePinSuccess}
-      title="Verifikasi PIN Diskon"
-      description="Masukkan PIN kasir untuk menerapkan diskon pada transaksi ini"
-    />
+      {/* PIN gate */}
+      <PinVerificationModal
+        isOpen={showPinModal}
+        onClose={() => setShowPinModal(false)}
+        onSuccess={handlePinSuccess}
+        title="Verifikasi PIN Diskon"
+        description="Masukkan PIN kasir untuk menerapkan diskon pada transaksi ini"
+      />
 
-    {/* Discount picker */}
-    <DiscountModal
-      isOpen={showDiscountModal}
-      onClose={() => setShowDiscountModal(false)}
-      cartSubtotal={getSubtotal()}
-      onApply={handleApplyDiscount}
-      currentDiscount={appliedDiscount}
-    />
-  </>
+      {/* Discount picker */}
+      <DiscountModal
+        isOpen={showDiscountModal}
+        onClose={() => setShowDiscountModal(false)}
+        cartSubtotal={getSubtotal()}
+        onApply={handleApplyDiscount}
+        currentDiscount={appliedDiscount}
+      />
+    </>
   );
 }

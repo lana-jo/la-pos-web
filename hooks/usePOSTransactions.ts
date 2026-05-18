@@ -194,7 +194,7 @@ export function usePOSTransactions({ cashierId }: UsePOSTransactionsProps = {}) 
       const { data: pinValid, error: pinError } = await (supabase as any)
         .rpc('fn_verify_pin', { 
           p_user_id: session.user.id, 
-          p_pin: pin 
+          pinhash: pin 
         });
 
       if (pinError || !pinValid) {
